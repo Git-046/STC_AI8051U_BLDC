@@ -1,0 +1,1 @@
+"..\LIB\Soft_I2C.c" XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEBUG PRINT(.\Listings\Soft_I2C.lst) OBJECT(.\Objects\Soft_I2C.obj)

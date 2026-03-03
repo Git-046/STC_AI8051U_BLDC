@@ -1,0 +1,278 @@
+C251 COMPILER V5.60.0,  interrpt                                                           03/03/26  16:23:13  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE interrpt
+OBJECT MODULE PLACED IN .\Objects\interrpt.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\Motor\interrpt.c XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Mot
+                    -or) DEBUG PRINT(.\Listings\interrpt.lst) OBJECT(.\Objects\interrpt.obj) 
+
+stmt  level    source
+
+    1          #include "AI8051U.h"
+    2          #include "interrupt.h"
+    3          #include "State_Machine.h"
+    4          #include "Motor.h"
+    5          #include "PWM.h"
+    6          #include "SPI.h"
+    7          #include "Foc.h"
+    8          #include "def.h"
+    9          
+   10          /*---------------------------------------
+   11          @ function  :   void TM0_Isr() interrupt TMR0_VECTOR
+   12          @ describe  :   ¶¨Ê±Æ÷ 0 ÖÐ¶Ï´¦Àíº¯Êý
+   13          @ parameter :   None
+   14          @ date      :   2026-2-24
+   15          -----------------------------------------*/
+   16          void TM0_Isr() interrupt TMR0_VECTOR
+   17          {
+   18   1              if(TCON & 0x20)
+   19   1          {
+   20   2              TCON &= ~0x20;  //Çå³ýÒç³öÖÐ¶Ï±êÖ¾Î»
+   21   2          }
+   22   1          
+   23   1          Speed_Update(&motor_speed);     //¸üÐÂ×ªËÙ¡¢Õ¼¿Õ±ÈµÈ
+   24   1          Motor_Speed_Ramp(&motor_speed); //Í¨¹ýËÙ¶ÈÐ±ÆÂÇúÏß£¬¸üÐÂËÙ¶È¿ØÖÆÐÅºÅ
+   25   1          
+   26   1          /* ËÙ¶È»· */
+   27   1          Speed_Loop();
+   28   1          
+   29   1          /* ±£»¤¹¦ÄÜ */ 
+   30   1          
+   31   1          
+   32   1          /* ×´Ì¬»ú */
+   33   1          State_Machine();
+   34   1          Motor_Run_Stop_Control();
+   35   1      }
+   36          
+   37          /*---------------------------------------
+   38          @ function  :   void ADC_ISR() interrupt ADC_VECTOR
+   39          @ describe  :   ADCÖÐ¶Ï´¦Àíº¯Êý
+   40          @ parameter :   None
+   41          @ date      :   2026-2-27
+   42          -----------------------------------------*/
+   43          void ADC_ISR() interrupt ADC_VECTOR
+   44          {
+   45   1              /*ÖÐ¶ÏÈÎÎñ*/
+   46   1              //1.¶ÁÈ¡²ÉÑùµçÁ÷
+   47   1              /*ÒÑ¾­ÔÚDMAÖÐ×Ô¶¯°áÔËADC²ÉÑù½á¹ûÁË*/
+   48   1              
+   49   1              ADC_CONTR &= ~0x10;     //ADC×ª»»½áÊø±êÖ¾Î»ADC_FLAGÇåÁã
+   50   1          
+   51   1          if(motor_state == motor_run || motor_state == motor_start)
+   52   1          {
+   53   2              /* µçÁ÷»· */
+   54   2              Current_Loop();
+   55   2          }
+   56   1      }
+   57          
+   58          /*---------------------------------------
+C251 COMPILER V5.60.0,  interrpt                                                           03/03/26  16:23:13  PAGE 2   
+
+   59          @ function  :   void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
+   60          @ describe  :   DMAÖÐ¶Ï´¦Àíº¯Êý
+   61          @ parameter :   None
+   62          @ date      :   2026-2-27
+   63          -----------------------------------------*/
+   64          u8 flag_switch = 1;             //µ÷ÊÔÓÃ
+   65          void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
+   66          {
+   67   1              static u8 i = 4;
+   68   1      
+   69   1              //ÂÖÁ÷±ä»»TLE5012BµÄ»ñÈ¡ÐÅÏ¢Ö¸Áî
+   70   1              SPI_TX_Buffer[i] = Tx_cmd_arr[i];
+   71   1              SPI_TX_Buffer[i+1] = Tx_cmd_arr[i+1];
+   72   1              i += 2;
+   73   1      
+   74   1              //½«»ñÈ¡µ½µÄ´Å±àÂëÆ÷Êý¾Ýtle5012b_data½øÐÐ´¦Àí£¬²¢¸³Öµ¸ømotor_data
+   75   1              if(DMA_SPI_STA & 0x01)
+   76   1              {
+   77   2                      switch(i)
+   78   2                      {
+   79   3                              case 2:
+   80   3                                      tle5012b_data.angle = (SPI_RX_Buffer[0] << 8) || SPI_RX_Buffer[1];      //»úÐµ½Ç¶È·Ö¶ÈÖµ
+   81   3                                      motor_data.machine_angle = tle5012b_data.angle * PI_DQ14 ;                      //»úÐµ½Ç¶È»¡¶ÈÖµ
+   82   3      //                while(motor_data.machine_angle > PI)
+   83   3      //                    motor_data.machine_angle -= 2 * PI;
+   84   3      //                while(motor_data.machine_angle < -PI)
+   85   3      //                    motor_data.machine_angle += 2 * PI;
+   86   3                      motor_data.electrical_angle = motor_data.machine_angle * MOTOR_POLE_PAIRS;  //µçÆ÷½Ç¶È»¡¶
+             -ÈÖµ
+   87   3                                      break;
+   88   3                              
+   89   3                              case 4:
+   90   3                                      tle5012b_data.speed = (SPI_RX_Buffer[0] << 8) || SPI_RX_Buffer[1];      //×ªËÙ£¨¡ã/s£©
+   91   3                                      motor_data.speed = DPS_TO_RPM(tle5012b_data.speed);                                     //×ªËÙ£¨RPM£©
+   92   3                              
+   93   3                                      tle5012b_data.loop  = (SPI_RX_Buffer[2] << 8) || SPI_RX_Buffer[3];      //×ª¹ýµÄÈ¦Êý£¨ÄæÊ±ÕëÎªÕý£©
+   94   3                                      motor_data.loop  = tle5012b_data.loop;                                                          //È¦Êý                                          
+   95   3                                      break;
+   96   3                              
+   97   3                              default:
+   98   3                                      break;
+   99   3                      }
+  100   2                      
+  101   2                      DMA_SPI_STA = DMA_SPI_STA & ~0x01;                                                      //ÖÐ¶Ï±êÖ¾Î»ÇåÁã
+  102   2              }
+  103   1              
+  104   1              if(flag_switch)
+  105   1              {
+  106   2                      if(DMA_SPI_STA & 0x02)  DMA_SPI_STA = DMA_SPI_STA & ~0x02;      //ÂúÊý¾Ý×Ô¶¯¶ªÆúÊý¾ÝÎ»ÇåÁã
+  107   2                      if(DMA_SPI_STA & 0x04)  DMA_SPI_STA = DMA_SPI_STA & ~0x04;      //Êý¾Ý¸²Ð´µ¼ÖÂ´«ÊäÊ§°ÜµÄ±êÖ¾Î»ÇåÁã
+  108   2              }
+  109   1              
+  110   1              if(i > 7)       //ÖØ¸´TLE5012BµÄÖ¸ÁîÊý×éÏÂ±ê
+  111   1              {
+  112   2                      i = 4;
+  113   2              }
+  114   1      }
+  115          
+  116          
+  117          /*------------------------------------------------------------
+  118          @ function  :   void PWMB_Capture() interrupt PWMB_VECTOR
+  119          @ describe  :   PWMB²¶»ñ/±È½ÏÖÐ¶Ï´¦Àíº¯Êý
+  120          @ parameter :   None
+  121          @ date      :   2026-3-2
+  122          -------------------------------------------------------------*/
+  123          u16 xdata cc1 = 0, cc2 = 0;     //Í¨µÀ1ºÍÍ¨µÀ2
+C251 COMPILER V5.60.0,  interrpt                                                           03/03/26  16:23:13  PAGE 3   
+
+  124          u16 xdata cc1_last = 0;         //Í¨µÀ1ÉÏÒ»´ÎµÄ²¶»ñÖµ
+  125          u16 xdata cc1_rise_last = 0;    //ÉÏÉýÑØµÄÉÏÒ»´Î²¶»ñÖµ
+  126          u16 xdata count = 0;           //¼ÆÊýÆ÷Òç³ö´ÎÊý
+  127          
+  128          volatile u32 xdata period_ticks = 0;        //ÖÜÆÚ¼ÆÊýÖµ
+  129          volatile u32 xdata high_ticks = 0;
+  130          volatile float xdata pwm_freq = 0;
+  131          volatile float xdata pwm_duty = 0;
+  132          volatile u32 xdata pwm_period_us = 0;
+  133          volatile bit xdata new_data_ready = 0;  // ÐÂÊý¾Ý¾ÍÐ÷±êÖ¾
+  134          
+  135          bit xdata period_valid = 0;                   //ÖÜÆÚÊý¾ÝÓÐÐ§±êÖ¾
+  136          
+  137          void PWMB_Capture() interrupt PWMB_VECTOR
+  138          {
+  139   1          u8 sr1;
+  140   1          u32 total_ticks;
+  141   1          u32 high_ticks_temp;
+  142   1          
+  143   1          sr1 = ReadPWMB(PWMB_SR1);
+  144   1          
+  145   1          //1.1 ´¦Àí¸üÐÂÖÐ¶Ï£¨Òç³ö£©
+  146   1          if(sr1 & 0x01)
+  147   1          {
+  148   2              count++;
+  149   2              if(count > 65535)
+  150   2              {
+  151   3                  count = 65535;
+  152   3              }
+  153   2          }
+  154   1          
+  155   1          //1.2 ´¦Àí²¶»ñÊý¾ÝÖÐ¶Ï
+  156   1          if(sr1 & 0x04)     //PWM6£¨²¶»ñÉÏÉýÑØ£©
+  157   1          {
+  158   2              cc1 = ReadPWMB((u8)(&PWMB_CCR6H));    //Òì²½¶ÁÈ¡¼Ä´æÆ÷Êý¾Ý
+  159   2              cc1 = cc1 << 8 + ReadPWMB((u8)&PWMB_CCR6L);
+  160   2              if(cc1_last != 0)
+  161   2              {
+  162   3                  if(cc1 >= cc1_last)     //Ã»ÓÐÒç³ö£¬Ê¹ÓÃµ±Ç°µÄcount
+  163   3                  {
+  164   4                      total_ticks = (u32)count * 65536 + (cc1 - cc1_last);
+  165   4                  }
+  166   3                  else                    //ÓÐÒç³ö
+  167   3                  {
+  168   4                      if(count > 0)       //Ò»°ãÒç³öµÄÇé¿ö
+  169   4                      {
+  170   5                          total_ticks = (u32)(count - 1) * 65536 + (65536 - cc1_last + cc1);
+  171   5                      }
+  172   4                      else if(count == 0) //Òç³öË²¼ä²¶»ñµÄÇé¿ö
+  173   4                      {
+  174   5                          total_ticks = (u32)(65536 - cc1_last + cc1);
+  175   5                      }
+  176   4                  }
+  177   3              }
+  178   2              
+  179   2              period_ticks = total_ticks;
+  180   2              period_valid = 1;
+  181   2              count = 0;      //Òç³ö¼ÆÊýÆ÷¸´Î»
+  182   2          }
+  183   1          cc1_last = cc1;     //±£ÁôÉÏÒ»´ÎµÄÖµ
+  184   1          cc1_rise_last = cc1;
+  185   1          
+  186   1          //2.1 ´¦Àí²¶»ñÊý¾ÝÖÐ¶Ï
+  187   1          if(sr1 | 0x08)     //PWM7£¨²¶»ñÏÂ½µÑØ£©
+  188   1          {
+  189   2              cc2 = ReadPWMB((u8)(&PWMB_CCR7H));    //Òì²½¶ÁÈ¡¼Ä´æÆ÷Êý¾Ý
+C251 COMPILER V5.60.0,  interrpt                                                           03/03/26  16:23:13  PAGE 4   
+
+  190   2              cc2 = cc2 << 8 + ReadPWMB((u8)(&PWMB_CCR7L));
+  191   2              
+  192   2              //¼ÆËã¸ßµçÆ½Ê±¼ä
+  193   2              if(cc1_rise_last != 0)
+  194   2              {
+  195   3                  if(cc2 >= cc1_rise_last)
+  196   3                  {
+  197   4                      high_ticks_temp = count * 65536ul + (cc2 - cc1_rise_last);
+  198   4                  }
+  199   3                  else
+  200   3                  {
+  201   4                      if(count > 0)
+  202   4                      {
+  203   5                          high_ticks_temp = (u32)(count - 1) * 65536 + (65536 - cc1_rise_last + cc2);
+  204   5                      }
+  205   4                      else
+  206   4                      {
+  207   5                          high_ticks_temp = (u32)(65536 + (65536 - cc1_rise_last + cc2));
+  208   5                      }
+  209   4                  }
+  210   3                  high_ticks = high_ticks_temp;
+  211   3                  
+  212   3                  // Èç¹ûÓÐÖÜÆÚÊý¾Ý£¬¿ÉÒÔÁ¢¼´¼ÆËã
+  213   3                  if(period_ticks > 0 && high_ticks <= period_ticks) 
+  214   3                  {
+  215   4                      new_data_ready = 1;
+  216   4                  }
+  217   3              }
+  218   2          }
+  219   1          
+  220   1          /* ¼ÆËã²¶»ñPWMÐÅºÅµÄÆµÂÊÓëÕ¼¿Õ±È */
+  221   1          motor_speed.pwm_freq = PWMB_SOURCE_FREQUENCY / period_ticks;
+  222   1          if(high_ticks <= period_ticks)
+  223   1          {
+  224   2              motor_speed.pwm_duty = high_ticks * PWM_DUTY_BASE / period_ticks;
+  225   2          }
+  226   1          else
+  227   1          {
+  228   2              motor_speed.pwm_duty = 0;    //²¶»ñ´íÎó
+  229   2          }
+  230   1          
+  231   1          
+  232   1          // Çå³ýÖÐ¶Ï±êÖ¾
+  233   1          WritePWMB((u8)(&PWMB_SR1), 0x00);
+  234   1          
+  235   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =        20     ------
+  ecode size           =      1118     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =        28     ------
+  xdata-const size     =    ------     ------
+  edata size           =         4          5
+  bit size             =         2     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        89     ------
+End of Module Information.
+
+C251 COMPILER V5.60.0,  interrpt                                                           03/03/26  16:23:13  PAGE 5   
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

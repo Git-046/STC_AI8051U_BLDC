@@ -1,0 +1,1 @@
+"..\Motor\main.c" XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEBUG PRINT(.\Listings\main.lst) OBJECT(.\Objects\main.obj)

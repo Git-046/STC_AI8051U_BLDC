@@ -1,0 +1,1 @@
+"..\LIB\Timer.c" XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEBUG PRINT(.\Listings\Timer.lst) OBJECT(.\Objects\Timer.obj)

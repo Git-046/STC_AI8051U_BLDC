@@ -1,0 +1,1 @@
+"..\LIB\Exti.c" XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEBUG PRINT(.\Listings\Exti.lst) OBJECT(.\Objects\Exti.obj)

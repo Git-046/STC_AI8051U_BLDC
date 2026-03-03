@@ -1,0 +1,252 @@
+C251 COMPILER V5.60.0,  SPI                                                                03/03/26  16:23:12  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE SPI
+OBJECT MODULE PLACED IN .\Objects\SPI.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\LIB\SPI.c XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEB
+                    -UG PRINT(.\Listings\SPI.lst) OBJECT(.\Objects\SPI.obj) 
+
+stmt  level    source
+
+    1          /*---------------------------------------------------------------------*/
+    2          /* --- Web: www.STCAI.com ---------------------------------------------*/
+    3          /*---------------------------------------------------------------------*/
+    4          
+    5          #include "SPI.h"
+    6          
+    7          bit B_SPI_Busy; //发送忙标志
+    8          bit SPI_RxTimerOut;
+    9          bit SPI_TimerOutEn;
+   10          u8      SPI_RxCnt;
+   11          u8  SPI_BUF_type SPI_RxBuffer[SPI_BUF_LENTH];
+   12          
+   13          
+   14          
+   15          void SPI_Init()
+   16          {
+   17   1              SPI_InitTypeDef SPI_InitStructure;
+   18   1              SPI_InitStructure.SPI_Pin_Select = 0x00;                                //脚位选择
+   19   1              
+   20   1              SPI_InitStructure.SPI_Interrupt_En = DISABLE;                   //禁用SPI中断
+   21   1              
+   22   1              SPI_InitStructure.SPI_SS_Hold_Time = 4;         //高速模式时SPI通信中SS控制信号的HOLD时间
+   23   1              SPI_InitStructure.SPI_SS_SetUp_Time = 4;        //高速模式时SPI通信中SS控制信号的SETUP时间
+   24   1              
+   25   1              SPI_InitStructure.SPI_MISO_MOSI_Exchange_En = DISABLE;  //禁用引脚功能交换
+   26   1              SPI_InitStructure.SPI_High_Speed_En = ENABLE;                   //高速SPI使能
+   27   1              SPI_InitStructure.SPI_FIFO_En = ENABLE;                                 //高速SPI的FIFO功能使能
+   28   1              SPI_InitStructure.SPI_SS_Deactive_Time = 4;                             //高速模式时SS控制信号的DEACTIVE时间
+   29   1              
+   30   1              SPI_InitStructure.SPI_Clock_Div = 0;                                    //高速SPI时钟分频器
+   31   1              
+   32   1              SPI_InitStructure.SPI_SSIG = DISABLE;                                   //忽略SS引脚功能
+   33   1              SPI_InitStructure.SPI_Enable = ENABLE;                                  //使能SPI功能
+   34   1              SPI_InitStructure.SPI_MSB_LSB = 0;                                              //0 先发送/接收数据的高位(SPI_MSB), 1 先发送/接收数据的低位(SPI_
+             -LSB)
+   35   1              SPI_InitStructure.SPI_Master_Slave = SPI_Mode_Master;   //设定主机模式
+   36   1              SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;                              //设置时钟极性
+   37   1              SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;                    //设置时钟相位
+   38   1              SPI_InitStructure.SPI_Speed = SPI_Speed_2;                              //设置SPI时钟分频
+   39   1              
+   40   1              SPI_InitStructure.TimeOutEnable = DISABLE;              //SPI从机超时功能
+   41   1              SPI_InitStructure.TimeOutINTEnable = DISABLE;   //SPI从机超时中断
+   42   1              SPI_InitStructure.TimeOutScale = 1;                             //SPI从机计数器时钟源选择       
+   43   1              SPI_InitStructure.TimeOutTimer = 0x10;                  //SPI超时长度控制寄存器
+   44   1              
+   45   1              SPI_Configuration(&SPI_InitStructure);
+   46   1      }
+   47          
+   48          //========================================================================
+   49          // 函数: void SPI_Configuration(SPI_InitTypeDef *SPIx)
+   50          // 描述: SPI初始化程序.
+   51          // 参数: SPIx: 结构参数,请参考spi.h里的定义.
+   52          // 返回: none.
+   53          // 版本: V1.0, 2012-11-22
+   54          //========================================================================
+   55          void SPI_Configuration(SPI_InitTypeDef *SPIx)
+   56          {
+   57   1              P_SW1 = P_SW1 & ~0x0C | SPIx->SPI_Pin_Select;   //SPI功能脚选择位
+C251 COMPILER V5.60.0,  SPI                                                                03/03/26  16:23:12  PAGE 2   
+
+   58   1              IE2  = IE2 & ~0x02 | SPIx->SPI_Interrupt_En;    //SPI中断使能
+   59   1              
+   60   1              HSSPI_CFG = HSSPI_CFG & ~0xF0 | SPIx->SPI_SS_Hold_Time;         //高速模式时SPI通信中SS控制信号的HOLD时间
+   61   1              HSSPI_CFG = HSSPI_CFG & ~0x0F | SPIx->SPI_SS_SetUp_Time;        //高速模式时SPI通信中SS控制信号的SETUP时间
+   62   1              
+   63   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x40 | SPIx->SPI_MISO_MOSI_Exchange_En;      //MISO、MOSI功能脚位交换使能位
+   64   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x20 | SPIx->SPI_High_Speed_En;                      //高速SPI使能位
+   65   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x10 | SPIx->SPI_FIFO_En;                            //FIFO功能使能位
+   66   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x0F | SPIx->SPI_SS_Deactive_Time;           //高速模式时SS控制信号的DEACTIVE时间
+   67   1              
+   68   1              HSSPI_PSCR = SPIx->SPI_Clock_Div;       //高速SPI时钟分频器(工作频率 = 高速SPI输入时钟 / HSSPI_PSCR[7:0] + 1)
+   69   1              
+   70   1              SPCTL = SPCTL & ~0x80 | SPIx->SPI_SSIG;         //片选位
+   71   1              SPCTL = SPCTL & ~0x40 | SPIx->SPI_Enable;       //SPI功能启动使能
+   72   1              SPCTL = SPCTL & ~0x20 | SPIx->SPI_MSB_LSB;      //0 先发送/接收数据的高位(SPI_MSB), 1 先发送/接收数据的低位(S
+             -PI_LSB)
+   73   1              SPCTL = SPCTL & ~0x10 | SPIx->SPI_Master_Slave; //主机/从机选择位
+   74   1              SPCTL = SPCTL & ~0x08 | SPIx->SPI_CPOL;         //SPI时钟极性选择
+   75   1              SPCTL = SPCTL & ~0x04 | SPIx->SPI_CPHA;         //SPI时钟相位选择
+   76   1              SPCTL = SPCTL & ~0x03 | SPIx->SPI_Speed;        //SPI时钟频率分频选择
+   77   1              
+   78   1              SPITOCR = SPITOCR & ~0x80 | SPIx->TimeOutEnable;        //从机超时使能
+   79   1              SPITOCR = SPITOCR & ~0x40 | SPIx->TimeOutINTEnable;     //超时中断使能
+   80   1              SPITOCR = SPITOCR & ~0x20 | SPIx->TimeOutScale; //超时时钟源选择
+   81   1              
+   82   1              SPITOTL = (u8)SPIx->TimeOutTimer;               //超时时间
+   83   1              SPITOTH = (u8)(SPIx->TimeOutTimer >> 8);
+   84   1              SPITOTE = (u8)(SPIx->TimeOutTimer >> 16);
+   85   1              
+   86   1              SPI_RxTimerOut = 0;
+   87   1          B_SPI_Busy = 0;
+   88   1          SPI_RxCnt = 0;
+   89   1              
+   90   1      //    if(SPIx->SPI_SSIG == ENABLE) SSIG = 1;     //conform Master or Slave by SPI_Mode(ignore SS)
+   91   1      //    else                         SSIG = 0;     //conform Master or Slave by SS pin.
+   92   1      //    SPI_Start(SPIx->SPI_Enable);
+   93   1      //    SPI_FirstBit_Set(SPIx->SPI_MSB_LSB);
+   94   1      //    SPI_Mode_Set(SPIx->SPI_Master_Slave);
+   95   1      //    SPI_CPOL_Set(SPIx->SPI_CPOL);
+   96   1      //    SPI_CPHA_Set(SPIx->SPI_CPHA);
+   97   1      //    SPI_Clock_Select(SPIx->SPI_Speed);
+   98   1      
+   99   1      //    if(SPIx->TimeOutScale == TO_SCALE_SYSCLK)   SPITOCR |= 0x20;  //超时计数时钟源：系统时钟
+  100   1      //    else
+  101   1      //    {
+  102   1      //        SET_TPS();          //设置系统等待时间单元，用于控制EEPROM操作、SPI/I2C超时时间以及休眠唤醒等待
+             -时间
+  103   1      //        SPITOCR &= ~0x20;   //超时计数时钟源：1us时钟(1MHz时钟)
+  104   1      //    }
+  105   1      
+  106   1      //    if((SPIx->TimeOutTimer > 0) && (SPIx->TimeOutTimer <= 0xffffff))
+  107   1      //    {
+  108   1      //        SPITOTL = (u8)SPIx->TimeOutTimer;
+  109   1      //        SPITOTH = (u8)(SPIx->TimeOutTimer>>8);
+  110   1      //        SPITOTE = (u8)(SPIx->TimeOutTimer>>16); //写 SPITOTE 后，新的TM值才会生效
+  111   1      //    }
+  112   1      //    
+  113   1      //    if((SPIx->SPI_Master_Slave == SPI_Mode_Slave) && (SPIx->TimeOutEnable == ENABLE))
+  114   1      //    {
+  115   1      //        SPI_TimerOutEn = 1;
+  116   1      //        SPITOCR |= 0x80;    //从机接收超时功能使能
+  117   1      //    }
+  118   1      //    else
+  119   1      //    {
+  120   1      //        SPI_TimerOutEn = 0;
+  121   1      //        SPITOCR &= ~0x80;   //从机接收超时功能禁止
+C251 COMPILER V5.60.0,  SPI                                                                03/03/26  16:23:12  PAGE 3   
+
+  122   1      //    }
+  123   1      
+  124   1      //    if(SPIx->TimeOutINTEnable == ENABLE) SPITOCR |= 0x40;   //从机接收超时中断使能
+  125   1      //    else                                 SPITOCR &= ~0x40;  //从机接收超时中断禁止
+  126   1      }
+  127          
+  128          //========================================================================
+  129          // 函数: void SPI_SetMode(u8 mode)
+  130          // 描述: SPI设置主从模式函数.
+  131          // 参数: mode: 指定模式, 取值 SPI_Mode_Master 或 SPI_Mode_Slave.
+  132          // 返回: none.
+  133          // 版本: V1.0, 2012-11-22
+  134          //========================================================================
+  135          void SPI_SetMode(u8 mode)
+  136          {
+  137   1          if(mode == SPI_Mode_Slave)
+  138   1          {
+  139   2              MSTR = 0;     //重新设置为从机待机
+  140   2              SSIG = 0;     //SS引脚确定主从
+  141   2              if(SPI_TimerOutEn)
+  142   2              {
+  143   3                  SPI_TOIFClear();
+  144   3                  SPITOCR |= 0x80;    //从机接收超时功能使能
+  145   3              }
+  146   2          }
+  147   1          else
+  148   1          {
+  149   2              SPITOCR &= ~0x80;   //从机接收超时功能禁止
+  150   2              MSTR = 1;     //使能 SPI 主机模式
+  151   2              SSIG = 1;     //忽略SS引脚功能
+  152   2          }
+  153   1      }
+  154          
+  155          //========================================================================
+  156          // 函数: void SPI_WriteByte(u8 dat)
+  157          // 描述: SPI发送一个字节数据.
+  158          // 参数: dat: 要发送的数据.
+  159          // 返回: none.
+  160          // 版本: V1.0, 2020-09-14
+  161          //========================================================================
+  162          void SPI_WriteByte(u8 dat)  //SPI发送一个字节数据
+  163          {
+  164   1          if(ESPI)
+  165   1          {
+  166   2              B_SPI_Busy = 1;
+  167   2              SPDAT = dat;
+  168   2              while(B_SPI_Busy);  //中断模式
+  169   2          }
+  170   1          else
+  171   1          {
+  172   2              SPDAT = dat;
+  173   2              while(SPIF == 0);   //查询模式
+  174   2              SPI_ClearFlag();    //清除SPIF和WCOL标志
+  175   2          }
+  176   1      }
+  177          
+  178          //========================================================================
+  179          // 函数: void SPI_ReadByte(u8 dat)
+  180          // 描述: SPI查询模式读取一个字节数据.
+  181          // 参数: none.
+  182          // 返回: 读取的数据.
+  183          // 版本: V1.0, 2020-09-14
+  184          //========================================================================
+  185          u8 SPI_ReadByte(void)
+  186          {
+  187   1          SPDAT = 0xff;
+C251 COMPILER V5.60.0,  SPI                                                                03/03/26  16:23:12  PAGE 4   
+
+  188   1          if(ESPI)
+  189   1          {
+  190   2              B_SPI_Busy = 1;
+  191   2              while(B_SPI_Busy);  //中断模式
+  192   2          }
+  193   1          else
+  194   1          {
+  195   2              while(SPIF == 0);   //查询模式
+  196   2              SPI_ClearFlag();    //清除SPIF和WCOL标志
+  197   2          }
+  198   1          return (SPDAT);
+  199   1      }
+  200          
+  201          //SPI中断处理函数
+  202          void SPI_Interrupt(void) interrupt SPI_VECTOR
+  203          {
+  204   1              if(ESPI)
+  205   1              {
+  206   2                      B_SPI_Busy = 0;
+  207   2                      SPIF = 0;
+  208   2              }
+  209   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =         4     ------
+  ecode size           =       572     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =       129         23
+  bit size             =         3     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

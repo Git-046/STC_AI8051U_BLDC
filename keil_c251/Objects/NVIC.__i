@@ -1,0 +1,1 @@
+"..\LIB\NVIC.c" XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEBUG PRINT(.\Listings\NVIC.lst) OBJECT(.\Objects\NVIC.obj)

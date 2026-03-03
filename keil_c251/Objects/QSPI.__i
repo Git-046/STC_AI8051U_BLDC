@@ -1,0 +1,1 @@
+"..\LIB\QSPI.c" INTR2 BROWSE INCDIR(..\LIB) DEBUG PRINT(.\Listings\QSPI.lst) OBJECT(.\Objects\QSPI.obj)

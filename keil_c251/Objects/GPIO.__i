@@ -1,0 +1,1 @@
+"..\LIB\GPIO.c" XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEBUG PRINT(.\Listings\GPIO.lst) OBJECT(.\Objects\GPIO.obj)

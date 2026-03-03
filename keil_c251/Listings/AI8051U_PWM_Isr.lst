@@ -1,0 +1,149 @@
+C251 COMPILER V5.60.0,  AI8051U_PWM_Isr                                                    31/10/25  08:14:12  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE AI8051U_PWM_Isr
+OBJECT MODULE PLACED IN .\Objects\AI8051U_PWM_Isr.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\LIB\AI8051U_PWM_Isr.c INTR2 BROWSE INCDIR(..\LIB) DEBUG PRINT(.\Lis
+                    -tings\AI8051U_PWM_Isr.lst) OBJECT(.\Objects\AI8051U_PWM_Isr.obj) 
+
+stmt  level    source
+
+    1          /*---------------------------------------------------------------------*/
+    2          /* --- Web: www.STCAI.com ---------------------------------------------*/
+    3          /*---------------------------------------------------------------------*/
+    4          
+    5          #include "AI8051U_PWM.h"
+    6          
+    7          //========================================================================
+    8          // 函数: PWMA_ISR_Handler
+    9          // 描述: PWMA中断函数.
+   10          // 参数: none.
+   11          // 返回: none.
+   12          // 版本: V1.0, 2023-04-15
+   13          //========================================================================
+   14          void PWMA_ISR_Handler (void) interrupt PWMA_VECTOR
+   15          {
+   16   1              // TODO: 在此处添加用户代码
+   17   1          if (PWMA_SR1 & 0x01)    //UIFA 更新中断
+   18   1          {
+   19   2              PWMA_SR1 &= ~0x01;
+   20   2      
+   21   2          }
+   22   1          if (PWMA_SR1 & 0x02)    //CC1IF 捕获/比较中断
+   23   1          {
+   24   2              PWMA_SR1 &= ~0x02;
+   25   2      
+   26   2          }
+   27   1          if (PWMA_SR1 & 0x04)    //CC2IF 捕获/比较中断
+   28   1          {
+   29   2              PWMA_SR1 &= ~0x04;
+   30   2      
+   31   2          }
+   32   1          if (PWMA_SR1 & 0x08)    //CC3IF 捕获/比较中断
+   33   1          {
+   34   2              PWMA_SR1 &= ~0x08;
+   35   2      
+   36   2          }
+   37   1          if (PWMA_SR1 & 0x10)    //CC4IF 捕获/比较中断
+   38   1          {
+   39   2              PWMA_SR1 &= ~0x10;
+   40   2      
+   41   2          }
+   42   1          if (PWMA_SR1 & 0x20)    //COMIFA 中断
+   43   1          {
+   44   2              PWMA_SR1 &= ~0x20;
+   45   2      
+   46   2          }
+   47   1          if (PWMA_SR1 & 0x40)    //TIFA 触发器中断
+   48   1          {
+   49   2              PWMA_SR1 &= ~0x40;
+   50   2      
+   51   2          }
+   52   1          if (PWMA_SR1 & 0x80)    //BIFA 刹车中断
+   53   1          {
+   54   2              PWMA_SR1 &= ~0x80;
+   55   2      
+   56   2          }
+   57   1      }
+   58          
+C251 COMPILER V5.60.0,  AI8051U_PWM_Isr                                                    31/10/25  08:14:12  PAGE 2   
+
+   59          //========================================================================
+   60          // 函数: PWMB_ISR_Handler
+   61          // 描述: PWMB中断函数.
+   62          // 参数: none.
+   63          // 返回: none.
+   64          // 版本: V1.0, 2023-04-15
+   65          //========================================================================
+   66          void PWMB_ISR_Handler (void) interrupt PWMB_VECTOR
+   67          {
+   68   1              // TODO: 在此处添加用户代码
+   69   1          if (PWMB_SR1 & 0x01)    //UIFB 更新中断
+   70   1          {
+   71   2              PWMB_SR1 &= ~0x01;
+   72   2      
+   73   2          }
+   74   1          if (PWMB_SR1 & 0x02)    //CC5IF 捕获/比较中断
+   75   1          {
+   76   2              PWMB_SR1 &= ~0x02;
+   77   2      
+   78   2          }
+   79   1          if (PWMB_SR1 & 0x04)    //CC6IF 捕获/比较中断
+   80   1          {
+   81   2              PWMB_SR1 &= ~0x04;
+   82   2      
+   83   2          }
+   84   1          if (PWMB_SR1 & 0x08)    //CC7IF 捕获/比较中断
+   85   1          {
+   86   2              PWMB_SR1 &= ~0x08;
+   87   2      
+   88   2          }
+   89   1          if (PWMB_SR1 & 0x10)    //CC8IF 捕获/比较中断
+   90   1          {
+   91   2              PWMB_SR1 &= ~0x10;
+   92   2      
+   93   2          }
+   94   1          if (PWMB_SR1 & 0x20)    //COMIFB 中断
+   95   1          {
+   96   2              PWMB_SR1 &= ~0x20;
+   97   2      
+   98   2          }
+   99   1          if (PWMB_SR1 & 0x40)    //TIFB 触发器中断
+  100   1          {
+  101   2              PWMB_SR1 &= ~0x40;
+  102   2      
+  103   2          }
+  104   1          if (PWMB_SR1 & 0x80)    //BIFB 刹车中断
+  105   1          {
+  106   2              PWMB_SR1 &= ~0x80;
+  107   2      
+  108   2          }
+  109   1      }
+  110          
+  111          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       272     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+C251 COMPILER V5.60.0,  AI8051U_PWM_Isr                                                    31/10/25  08:14:12  PAGE 3   
+
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,56 @@
+C251 COMPILER V5.60.0,  AI8051U_ADC_Isr                                                    31/10/25  08:14:11  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE AI8051U_ADC_Isr
+OBJECT MODULE PLACED IN .\Objects\AI8051U_ADC_Isr.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\LIB\AI8051U_ADC_Isr.c INTR2 BROWSE INCDIR(..\LIB) DEBUG PRINT(.\Lis
+                    -tings\AI8051U_ADC_Isr.lst) OBJECT(.\Objects\AI8051U_ADC_Isr.obj) 
+
+stmt  level    source
+
+    1          /*---------------------------------------------------------------------*/
+    2          /* --- Web: www.STCAI.com ---------------------------------------------*/
+    3          /*---------------------------------------------------------------------*/
+    4          
+    5          #include "AI8051U_ADC.h"
+    6          
+    7          //========================================================================
+    8          // 函数: ADC_ISR_Handler
+    9          // 描述: ADC中断函数.
+   10          // 参数: none.
+   11          // 返回: none.
+   12          // 版本: V1.0, 2020-09-23
+   13          //========================================================================
+   14          void ADC_ISR_Handler (void) interrupt ADC_VECTOR
+   15          {
+   16   1              ADC_FLAG = 0;                   //清除中断标志
+   17   1              
+   18   1              // TODO: 在此处添加用户代码
+   19   1              
+   20   1      }
+   21          
+   22          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =        11     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

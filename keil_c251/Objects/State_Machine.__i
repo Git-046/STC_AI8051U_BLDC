@@ -1,0 +1,1 @@
+"..\Motor\State_Machine.c" XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEBUG PRINT(.\Listings\State_Machine.lst) OBJECT(.\Objects\State_Machine.obj)

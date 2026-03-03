@@ -1,0 +1,293 @@
+/*---------------------------------------------------------------------*/
+/* --- Web: www.STCAI.com ---------------------------------------------*/
+/*---------------------------------------------------------------------*/
+#include "AI8051U.h"
+#include "DMA.h"
+#include "ADC.h"
+#include "SPI.h"
+#include "PWM.h"
+#include "UART.h"
+#include "Motor.h"
+
+u16 xdata ADC_Result_Buffer[4];		//ADC转换结果
+
+void DMA_ADC_Init(void)
+{
+	DMA_ADC_InitTypeDef xdata DMA_ADC_InitStructure;
+	DMA_ADC_InitStructure.DMA_Enable = ENABLE;
+	DMA_ADC_InitStructure.DMA_Channel = ADC_DMA_CHANNEL_0 | ADC_DMA_CHANNEL_1 | ADC_DMA_CHANNEL_2 | ADC_DMA_CHANNEL_2;//ADC0、ADC1、ADC2、ADC3
+	DMA_ADC_InitStructure.DMA_Buffer_Address = (u16)&ADC_Result_Buffer[0]; 	//设定DMA存放ADC数据的地址
+	DMA_ADC_InitStructure.DMA_Times = ADC_4_Times;	//每个通道转换次数(自动采样多次并取均值)
+	DMA_ADC_InitStructure.DMA_Scan_Times = 0xFFFF;	//无限循环采样
+	DMA_ADC_Inilize(&DMA_ADC_InitStructure);		//调用初始化函数
+}
+
+void DMA_SPI_Init(void)
+{
+	DMA_SPI_InitTypeDef xdata DMA_SPI_InitStructure;
+	DMA_SPI_InitStructure.SPI_DMA_Interrupt_En = ENABLE;		//使能SPI_DMA中断
+	DMA_SPI_InitStructure.SPI_DMA_TX_En = ENABLE;				//使能SPI_DMA发送数据
+	DMA_SPI_InitStructure.SPI_DMA_RX_En = ENABLE;				//使能SPI_DMA接收数据
+	DMA_SPI_InitStructure.SPI_DMA_Interrupt_Priority = 0x01;	//设置SPI_DMA中断优先级
+	DMA_SPI_InitStructure.SPI_DMA_BusData_Priority = 0x01;		//设置SPI_DMA总线数据优先级
+	
+	DMA_SPI_InitStructure.SPI_DMA_Enable = ENABLE;				//使能DMA_SPI功能
+	DMA_SPI_InitStructure.SPI_DMA_Master_Mode_Triggle = ENABLE;	//使能主机模式触发控制
+	DMA_SPI_InitStructure.SPI_DMA_Slave_Mode_Triggle = DISABLE;	//失能从机模式触发控制
+	DMA_SPI_InitStructure.SPI_DMA_FIFO_Clear_En = ENABLE;		//使能SPI_DMA操作前先清空FIFO
+	
+	DMA_SPI_InitStructure.SPI_DMA_Length = 0xFFFF;						//设置SPI_DMA传输总字节数(DMA_SPI_AMT为FFFFH时无限循环)
+	DMA_SPI_InitStructure.SPI_DMA_Tx_Buffer = (u8)&SPI_TX_Buffer[1];	//SPI发送地址寄存器低8位
+	DMA_SPI_InitStructure.SPI_DMA_Tx_Buffer |= (u8)&SPI_TX_Buffer[0];	//SPI发送地址寄存器高8位
+	DMA_SPI_InitStructure.SPI_DMA_Rx_Buffer = (u8)&SPI_RX_Buffer[1];	//SPI发送地址寄存器低8位
+	DMA_SPI_InitStructure.SPI_DMA_Rx_Buffer |= (u8)&SPI_RX_Buffer[0];	//SPI发送地址寄存器高8位
+	
+	DMA_SPI_InitStructure.SPI_DMA_AUTO_SS = ENABLE;				//SPI_DMA传输过程中自动控制SS引脚
+	DMA_SPI_InitStructure.SPI_DMA_SS_Sel = 0x00;				//设置SS片选引脚
+	DMA_SPI_InitStructure.SPI_DMA_Transport_Time_Gap = 0;		//设置SPI_DMA传输间隔时间(默认为3, 0 最快)
+	
+	DMA_SPI_Inilize(&DMA_SPI_InitStructure);
+}
+
+//========================================================================
+// 函数: void DMA_ADC_Inilize(DMA_ADC_InitTypeDef *DMA)
+// 描述: DMA ADC 初始化程序.
+// 参数: DMA: 结构参数,请参考DMA.h里的定义.
+// 返回: none.
+// 版本: V1.0, 2021-05-17
+//========================================================================
+void DMA_ADC_Inilize(DMA_ADC_InitTypeDef xdata *DMA)
+{
+	DMA_ADC_STA = 0x00;
+	DMA_ADC_CHSW1 = (u8)(DMA->DMA_Channel>>8);
+	DMA_ADC_CHSW0 = (u8)(DMA->DMA_Channel);
+	DMA_ADC_RXAH = (u8)(DMA->DMA_Buffer_Address>>8);
+	DMA_ADC_RXAL = (u8)(DMA->DMA_Buffer_Address);
+	DMA_ADC_CFG2 = DMA->DMA_Times;	//设定每一个通道的重复扫描次数
+	
+	DMA_ADC_AMT = DMA->DMA_Scan_Times;
+	DMA_ADC_AMTH = DMA->DMA_Scan_Times >> 8;	//设定通道循环扫描次数
+	
+	if(DMA->DMA_Enable == ENABLE)
+	{
+		DMA_ADC_CR |= 0x80;	//使能ADC DMA
+	}
+	else DMA_ADC_CR &= ~0x80;	//禁止ADC DMA
+}
+
+//========================================================================
+// 函数: void DMA_M2M_Inilize(DMA_M2M_InitTypeDef *DMA)
+// 描述: DMA M2M 初始化程序.
+// 参数: DMA: 结构参数,请参考DMA.h里的定义.
+// 返回: none.
+// 版本: V1.0, 2021-05-17
+//========================================================================
+void DMA_M2M_Inilize(DMA_M2M_InitTypeDef *DMA)
+{
+	DMA_M2M_STA = 0x00;
+	DMA_M2M_RXAH = (u8)(DMA->SPI_DMA_Rx_Buffer>>8);
+	DMA_M2M_RXAL = (u8)(DMA->SPI_DMA_Rx_Buffer);
+	DMA_M2M_TXAH = (u8)(DMA->SPI_DMA_Tx_Buffer>>8);
+	DMA_M2M_TXAL = (u8)(DMA->SPI_DMA_Tx_Buffer);
+	DMA_M2M_AMT = (u8)DMA->SPI_DMA_Length;				//设置传输总字节数(低8位)：n+1
+	DMA_M2M_AMTH = (u8)(DMA->SPI_DMA_Length>>8);	//设置传输总字节数(高8位)：n+1
+	
+	if(DMA->DMA_SRC_Dir == M2M_ADDR_DEC)		DMA_M2M_CFG |= 0x20;	//数据读完后地址自减
+	else DMA_M2M_CFG &= ~0x20;	//数据读完后地址自减
+	if(DMA->DMA_DEST_Dir == M2M_ADDR_DEC)		DMA_M2M_CFG |= 0x10;	//数据写入后地址自减
+	else DMA_M2M_CFG &= ~0x10;	//数据写入后地址自减
+	
+	if(DMA->DMA_Enable == ENABLE)		DMA_M2M_CR |= 0x80;	//使能M2M DMA
+	else DMA_M2M_CR &= ~0x80;	//禁止M2M DMA
+}
+
+//========================================================================
+// 函数: void DMA_SPI_Inilize(DMA_SPI_InitTypeDef *DMA)
+// 描述: DMA SPI 初始化程序.
+// 参数: DMA: 结构参数,请参考DMA.h里的定义.
+// 返回: none.
+// 版本: V1.0, 2021-05-17
+//========================================================================
+void DMA_SPI_Inilize(DMA_SPI_InitTypeDef xdata *DMA)
+{
+	DMA_SPI_STA = 0x00;			//清空状态寄存器标志位
+	
+	DMA_SPI_CFG = DMA_SPI_CFG & ~0x80 | DMA->SPI_DMA_Interrupt_En;			//SPI_DMA中断使能
+	DMA_SPI_CFG = DMA_SPI_CFG & ~0x40 | DMA->SPI_DMA_TX_En;					//SPI_DMA发送数据控制位
+	DMA_SPI_CFG = DMA_SPI_CFG & ~0x20 | DMA->SPI_DMA_RX_En;					//SPI_DMA接收数据控制位
+	DMA_SPI_CFG = DMA_SPI_CFG & ~0x0C | DMA->SPI_DMA_Interrupt_Priority;	//SPI_DMA中断优先级
+	DMA_SPI_CFG = DMA_SPI_CFG & ~0x03 | DMA->SPI_DMA_BusData_Priority;		//SPI_DMA总线数据优先级
+	
+	DMA_SPI_CR = DMA_SPI_CR & ~0x80 | DMA->SPI_DMA_Enable;					//DMA使能
+	DMA_SPI_CR = DMA_SPI_CR & ~0x40 | DMA->SPI_DMA_Master_Mode_Triggle;		//主机模式触发控制位
+	DMA_SPI_CR = DMA_SPI_CR & ~0x20 | DMA->SPI_DMA_Slave_Mode_Triggle;		//从机模式触发控制位
+	DMA_SPI_CR = DMA_SPI_CR & ~0x01 | DMA->SPI_DMA_FIFO_Clear_En;			//SPI_DMA操作前清空FIFO
+	
+	DMA_SPI_AMT = (u8)DMA->SPI_DMA_Length;			//设置传输总字节数(低8位)：n+1
+	DMA_SPI_AMTH = (u8)(DMA->SPI_DMA_Length>>8);	//设置传输总字节数(高8位)：n+1
+	
+	DMA_SPI_RXAH = (u8)(DMA->SPI_DMA_Rx_Buffer>>8);	//接收数据存储地址（高8位）
+	DMA_SPI_RXAL = (u8)(DMA->SPI_DMA_Rx_Buffer);	//接收数据存储地址（低8位）
+	DMA_SPI_TXAH = (u8)(DMA->SPI_DMA_Tx_Buffer>>8);	//发送数据存储地址（高8位）
+	DMA_SPI_TXAL = (u8)(DMA->SPI_DMA_Tx_Buffer);	//发送数据存储地址（低8位）
+	
+	DMA_SPI_CFG2 = DMA_SPI_CFG2 & ~0x04 | DMA->SPI_DMA_AUTO_SS;	//自动控制SS脚使能
+	DMA_SPI_CFG2 = DMA_SPI_CFG2 & ~0x03 | DMA->SPI_DMA_SS_Sel;	//自动控制SS脚选择
+	
+	DMA_SPI_ITVH = (u8)(DMA->SPI_DMA_Transport_Time_Gap >> 8);	//设置SPI_DMA传输的间隔时间（高8位）
+	DMA_SPI_ITVL = (u8)DMA->SPI_DMA_Transport_Time_Gap ;		//设置SPI_DMA传输的间隔时间（低8位）
+	
+//	if(DMA->SPI_DMA_SS_Sel <= SPI_SS_P35) DMA_SPI_CFG2 = (DMA_SPI_CFG2 & 0xfc) | DMA->SPI_DMA_SS_Sel;	//自动控制SS脚选择
+
+//	if(DMA->SPI_DMA_TX_En == ENABLE)		DMA_SPI_CFG |= 0x40;	//使能SPI发送数据
+//	else DMA_SPI_CFG &= ~0x40;	//禁止SPI发送数据
+
+//	if(DMA->SPI_DMA_RX_En == ENABLE)		DMA_SPI_CFG |= 0x20;	//使能SPI接收数据
+//	else DMA_SPI_CFG &= ~0x20;	//禁止SPI接收数据
+	
+//	if(DMA->SPI_DMA_AUTO_SS == ENABLE)		DMA_SPI_CFG2 |= 0x04;	//使能SS自动控制
+//	else DMA_SPI_CFG2 &= ~0x04;	//禁止SS自动控制
+
+//	if(DMA->SPI_DMA_Enable == ENABLE)		DMA_SPI_CR |= 0x80;	//使能SPI DMA
+//	else DMA_SPI_CR &= ~0x80;	//禁止SPI DMA
+}
+
+//========================================================================
+// 函数: void DMA_UART_Inilize(u8 UARTx, DMA_UART_InitTypeDef *DMA)
+// 描述: DMA UART 初始化程序.
+// 参数: UARTx: UART组号, DMA: 结构参数,请参考DMA.h里的定义.
+// 返回: none.
+// 版本: V1.0, 2021-05-17
+//========================================================================
+void DMA_UART_Inilize(u8 UARTx, DMA_UART_InitTypeDef *DMA)
+{
+#ifdef UART1
+	if(UARTx == UART1)
+	{
+		DMA_UR1T_STA = 0x00;
+		DMA_UR1R_STA = 0x00;
+		DMA_UR1T_AMT = (u8)DMA->DMA_TX_Length;
+		DMA_UR1T_AMTH = (u8)(DMA->DMA_TX_Length>>8);
+		DMA_UR1T_TXAH = (u8)(DMA->DMA_TX_Buffer>>8);
+		DMA_UR1T_TXAL = (u8)(DMA->DMA_TX_Buffer);
+		DMA_UR1R_RXAH = (u8)(DMA->DMA_RX_Buffer>>8);
+		DMA_UR1R_RXAL = (u8)(DMA->DMA_RX_Buffer);
+		DMA_UR1R_AMT = (u8)DMA->DMA_RX_Length;			//设置传输总字节数(低8位)：n+1
+		DMA_UR1R_AMTH = (u8)(DMA->DMA_RX_Length>>8);	//设置传输总字节数(高8位)：n+1
+
+		if(DMA->DMA_TX_Enable == ENABLE)		DMA_UR1T_CR |= 0x80;	//使能UART1 TX DMA
+		else DMA_UR1T_CR &= ~0x80;	//禁止UART1 TX DMA
+		if(DMA->DMA_RX_Enable == ENABLE)		DMA_UR1R_CR |= 0x80;	//使能UART1 RX DMA
+		else DMA_UR1R_CR &= ~0x80;	//禁止UART1 RX DMA
+	}
+#endif
+#ifdef UART2
+	if(UARTx == UART2)
+	{
+		DMA_UR2T_STA = 0x00;
+		DMA_UR2R_STA = 0x00;
+		DMA_UR2T_AMT = (u8)DMA->DMA_TX_Length;
+		DMA_UR2T_AMTH = (u8)(DMA->DMA_TX_Length>>8);
+		DMA_UR2T_TXAH = (u8)(DMA->DMA_TX_Buffer>>8);
+		DMA_UR2T_TXAL = (u8)(DMA->DMA_TX_Buffer);
+		DMA_UR2R_RXAH = (u8)(DMA->DMA_RX_Buffer>>8);
+		DMA_UR2R_RXAL = (u8)(DMA->DMA_RX_Buffer);
+		DMA_UR2R_AMT = (u8)DMA->DMA_RX_Length;				//设置传输总字节数(低8位)：n+1
+		DMA_UR2R_AMTH = (u8)(DMA->DMA_RX_Length>>8);	//设置传输总字节数(高8位)：n+1
+
+		if(DMA->DMA_TX_Enable == ENABLE)		DMA_UR2T_CR |= 0x80;	//使能UART2 TX DMA
+		else DMA_UR2T_CR &= ~0x80;	//禁止UART2 TX DMA
+		if(DMA->DMA_RX_Enable == ENABLE)		DMA_UR2R_CR |= 0x80;	//使能UART2 RX DMA
+		else DMA_UR2R_CR &= ~0x80;	//禁止UART2 RX DMA
+	}
+#endif
+#ifdef UART3
+	if(UARTx == UART3)
+	{
+		DMA_UR3T_STA = 0x00;
+		DMA_UR3R_STA = 0x00;
+		DMA_UR3T_AMT = (u8)DMA->DMA_TX_Length;
+		DMA_UR3T_AMTH = (u8)(DMA->DMA_TX_Length>>8);
+		DMA_UR3T_TXAH = (u8)(DMA->DMA_TX_Buffer>>8);
+		DMA_UR3T_TXAL = (u8)(DMA->DMA_TX_Buffer);
+		DMA_UR3R_RXAH = (u8)(DMA->DMA_RX_Buffer>>8);
+		DMA_UR3R_RXAL = (u8)(DMA->DMA_RX_Buffer);
+		DMA_UR3R_AMT = (u8)DMA->DMA_RX_Length;				//设置传输总字节数(低8位)：n+1
+		DMA_UR3R_AMTH = (u8)(DMA->DMA_RX_Length>>8);	//设置传输总字节数(高8位)：n+1
+
+		if(DMA->DMA_TX_Enable == ENABLE)		DMA_UR3T_CR |= 0x80;	//使能UART3 TX DMA
+		else DMA_UR3T_CR &= ~0x80;	//禁止UART3 TX DMA
+		if(DMA->DMA_RX_Enable == ENABLE)		DMA_UR3R_CR |= 0x80;	//使能UART3 RX DMA
+		else DMA_UR3R_CR &= ~0x80;	//禁止UART3 RX DMA
+	}
+#endif
+#ifdef UART4
+	if(UARTx == UART4)
+	{
+		DMA_UR4T_STA = 0x00;
+		DMA_UR4R_STA = 0x00;
+		DMA_UR4T_AMT = (u8)DMA->DMA_TX_Length;
+		DMA_UR4T_AMTH = (u8)(DMA->DMA_TX_Length>>8);
+		DMA_UR4T_TXAH = (u8)(DMA->DMA_TX_Buffer>>8);
+		DMA_UR4T_TXAL = (u8)(DMA->DMA_TX_Buffer);
+		DMA_UR4R_RXAH = (u8)(DMA->DMA_RX_Buffer>>8);
+		DMA_UR4R_RXAL = (u8)(DMA->DMA_RX_Buffer);
+		DMA_UR4R_AMT = (u8)DMA->DMA_RX_Length;				//设置传输总字节数(低8位)：n+1
+		DMA_UR4R_AMTH = (u8)(DMA->DMA_RX_Length>>8);	//设置传输总字节数(高8位)：n+1
+
+		if(DMA->DMA_TX_Enable == ENABLE)		DMA_UR4T_CR |= 0x80;	//使能UART4 TX DMA
+		else DMA_UR4T_CR &= ~0x80;	//禁止UART4 TX DMA
+		if(DMA->DMA_RX_Enable == ENABLE)		DMA_UR4R_CR |= 0x80;	//使能UART4 RX DMA
+		else DMA_UR4R_CR &= ~0x80;	//禁止UART4 RX DMA
+	}
+#endif
+}
+
+//========================================================================
+// 函数: void DMA_LCM_Inilize(DMA_LCM_InitTypeDef *DMA)
+// 描述: DMA LCM 初始化程序.
+// 参数: DMA: 结构参数,请参考DMA.h里的定义.
+// 返回: none.
+// 版本: V1.0, 2021-05-17
+//========================================================================
+void DMA_LCM_Inilize(DMA_LCM_InitTypeDef *DMA)
+{
+	DMA_LCM_STA = 0x00;
+	DMA_LCM_RXAH = (u8)(DMA->SPI_DMA_Rx_Buffer>>8);
+	DMA_LCM_RXAL = (u8)(DMA->SPI_DMA_Rx_Buffer);
+	DMA_LCM_TXAH = (u8)(DMA->SPI_DMA_Tx_Buffer>>8);
+	DMA_LCM_TXAL = (u8)(DMA->SPI_DMA_Tx_Buffer);
+	DMA_LCM_AMT = (u8)DMA->SPI_DMA_Length;				//设置传输总字节数(低8位)：n+1
+	DMA_LCM_AMTH = (u8)(DMA->SPI_DMA_Length>>8);	//设置传输总字节数(高8位)：n+1
+	
+	if(DMA->DMA_Enable == ENABLE)		DMA_LCM_CR |= 0x80;	//使能LCM DMA
+	else DMA_LCM_CR &= ~0x80;	//禁止LCM DMA
+}
+
+//========================================================================
+// 函数: void DMA_I2C_Inilize(DMA_I2C_InitTypeDef *DMA)
+// 描述: DMA I2C 初始化程序.
+// 参数: DMA: 结构参数,请参考DMA.h里的定义.
+// 返回: none.
+// 版本: V1.0, 2021-05-17
+//========================================================================
+void DMA_I2C_Inilize(DMA_I2C_InitTypeDef *DMA)
+{
+	DMA_I2CT_STA = 0x00;
+	DMA_I2CT_TXAH = (u8)(DMA->DMA_TX_Buffer>>8);
+	DMA_I2CT_TXAL = (u8)(DMA->DMA_TX_Buffer);
+	DMA_I2CT_AMT = (u8)DMA->DMA_TX_Length;				//设置传输总字节数(低8位)：n+1
+	DMA_I2CT_AMTH = (u8)(DMA->DMA_TX_Length>>8);	//设置传输总字节数(高8位)：n+1
+
+	DMA_I2CR_STA = 0x00;
+	DMA_I2CR_RXAH = (u8)(DMA->DMA_RX_Buffer>>8);
+	DMA_I2CR_RXAL = (u8)(DMA->DMA_RX_Buffer);
+	DMA_I2CR_AMT = (u8)DMA->DMA_RX_Length;				//设置传输总字节数(低8位)：n+1
+	DMA_I2CR_AMTH = (u8)(DMA->DMA_RX_Length>>8);	//设置传输总字节数(高8位)：n+1
+	
+	if(DMA->DMA_TX_Enable == ENABLE)		DMA_I2CT_CR |= 0x80;	//使能I2CT DMA
+	else DMA_I2CT_CR &= ~0x80;	//禁止I2CT DMA
+	if(DMA->DMA_RX_Enable == ENABLE)		DMA_I2CR_CR |= 0x80;	//使能I2CR DMA
+	else DMA_I2CR_CR &= ~0x80;	//禁止I2CT DMA
+}
+

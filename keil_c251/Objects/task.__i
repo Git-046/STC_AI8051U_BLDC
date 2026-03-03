@@ -1,0 +1,1 @@
+"..\Motor\task.c" INTR2 BROWSE INCDIR(..\LIB) DEBUG PRINT(.\Listings\task.lst) OBJECT(.\Objects\task.obj)

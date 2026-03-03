@@ -1,0 +1,91 @@
+C251 COMPILER V5.60.0,  Motor                                                              03/03/26  16:23:13  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE Motor
+OBJECT MODULE PLACED IN .\Objects\Motor.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\Motor\Motor.c XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor)
+                    - DEBUG PRINT(.\Listings\Motor.lst) OBJECT(.\Objects\Motor.obj) 
+
+stmt  level    source
+
+    1          #include "AI8051U.h"
+    2          #include "Motor.h"
+    3          #include "def.h"
+    4          #include "string.h"
+    5          #include "State_Machine.h"
+    6          
+    7          /*¶¨ÒåÈ«¾Ö±äÁ¿*/
+    8          Motor_Data xdata motor_data;
+    9          Motor_Speed xdata motor_speed;
+   10          
+   11          Phase_Current xdata phase_current;                                          //U¡¢V¡¢WÈýÏàµçÁ÷(µçÁ÷²ÉÑùµç×è)
+   12          Alpha_Beta_Axis_Current xdata alpha_beta_current;           //¦Á¡¢¦ÂÖáµçÁ÷(Clark±ä»¯)
+   13          Direct_Quadrature_Axis_Current xdata dq_current;                //D¡¢QÖáµçÁ÷(Park±ä»»)
+   14          
+   15          Direct_Quadrature_Axis_Current xdata dq_current_ref;            //D¡¢QÖáµçÁ÷ÐèÇóÁ¿
+   16          Direct_Quadrature_Axis_Voltage xdata dq_voltage_ctl;            //D¡¢QÖáµçÑ¹¿ØÖÆÖ¸Áî(PID)
+   17          Direct_Quadrature_Axis_Voltage xdata dq_voltage_ctl_limit;      //µçÑ¹Ô²ÏÞ·ùºóµÄµçÑ¹¿ØÖÆÖ¸Áî
+   18          Alpha_Beta_Axis_Voltage xdata alpha_beta_voltage_ctl;           //¦Á¡¢¦ÂÖáµçÑ¹¿ØÖÆÁ¿(·´Park±ä»»)
+   19          Phase_Voltage xdata phase_voltage_ctl;                                          //U¡¢V¡¢WÈýÏàµçÑ¹(·´Clark±ä»»)
+   20          
+   21          extern u16 xdata ADC_Result_Buffer[4];  //µçÁ÷²ÉÑù
+   22          
+   23          u8 xdata SPI_TX_Buffer[4];                                                      //Ïò´Å±àÂëÆ÷ÇëÇóÊý¾Ý·¢ËÍµÄ¿ØÖÆÖ¸Áî(0x8021ÇëÇó½Ç¶ÈÊý¾Ý  0x8032ÇëÇó½ÇËÙ¶Èº
+             -ÍÈ¦ÊýÊý¾Ý)
+   24          u8 xdata SPI_RX_Buffer[6];                                                      //´Ó´Å±àÂëÆ÷»ñÈ¡µ½µÄÊý¾Ý
+   25          u8 xdata Tx_cmd_arr[TLE5012B_TX_BUFFER_SIZE];           //TLE5012B¿ØÖÆÖ¸ÁîÊý×é
+   26          u8 xdata Rx_data_arr[TLE5012B_RX_BUFFER_SIZE];          //´Å±àÂëÆ÷Êý¾ÝÊý×é
+   27          TLE5012B_Data tle5012b_data;                                            //´Ó´Å±àÂëÆ÷¶ÁÈ¡µ½µÄ½á¹¹Êý¾Ý
+   28          
+   29          void TLE5012B_Init()
+   30          {
+   31   1              //0.Ô¤ÏÈ´æ´¢TLE5012BµÄ¿ØÖÆÖ¸Áî
+   32   1              Tx_cmd_arr[0] = SET_MODE2_CMD >> 2;
+   33   1              Tx_cmd_arr[1] = SET_MODE2_CMD;
+   34   1              
+   35   1              Tx_cmd_arr[2] = MODE2_PARAM >> 2;
+   36   1              Tx_cmd_arr[3] = MODE2_PARAM;
+   37   1              
+   38   1              Tx_cmd_arr[4] = TLE5012B_READ_ANGLE_CMD >> 2;
+   39   1              Tx_cmd_arr[5] = TLE5012B_READ_ANGLE_CMD;
+   40   1              
+   41   1              Tx_cmd_arr[6] = TLE5021B_READ_SPEED_AND_LOOP_CMD >> 2;
+   42   1              Tx_cmd_arr[7] = TLE5021B_READ_SPEED_AND_LOOP_CMD;
+   43   1              
+   44   1              //1.Éè¶¨´Å±àÂëÆ÷¹¤×÷Ä£Ê½
+   45   1              SPI_TX_Buffer[0] = Tx_cmd_arr[0];
+   46   1              SPI_TX_Buffer[1] = Tx_cmd_arr[1];
+   47   1              while(SPI_RX_Buffer[0] == 0 && SPI_RX_Buffer[1] == 0) ; //µÈ´ý·µ»Ø°²È«×Ö
+   48   1              
+   49   1              SPI_RX_Buffer[0] = 0;
+   50   1              SPI_RX_Buffer[1] = 0;
+   51   1              SPI_TX_Buffer[0] = Tx_cmd_arr[2];
+   52   1              SPI_TX_Buffer[1] = Tx_cmd_arr[3];
+   53   1              while(SPI_RX_Buffer[0] == 0 && SPI_RX_Buffer[1] == 0) ; //µÈ´ý·µ»Ø°²È«×Ö
+   54   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+C251 COMPILER V5.60.0,  Motor                                                              03/03/26  16:23:13  PAGE 2   
+
+  code size            =    ------     ------
+  ecode size           =       114     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =       158     ------
+  xdata-const size     =    ------     ------
+  edata size           =         6     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

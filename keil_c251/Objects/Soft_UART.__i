@@ -1,0 +1,1 @@
+"..\LIB\Soft_UART.c" XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEBUG PRINT(.\Listings\Soft_UART.lst) OBJECT(.\Objects\Soft_UART.obj)

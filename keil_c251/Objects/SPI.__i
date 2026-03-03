@@ -1,0 +1,1 @@
+"..\LIB\SPI.c" XSMALL INTR2 ROM(HUGE) BROWSE INCDIR(..\LIB;..\Motor) DEBUG PRINT(.\Listings\SPI.lst) OBJECT(.\Objects\SPI.obj)
