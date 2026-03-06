@@ -26,6 +26,12 @@
 #define SPEED_LOOP_FREQUENT			2000			//速度环的控制周期为电流环的10倍
 #define PID_I_Limit					100				//PID积分限幅
 
+#define SOFTWARE_MODE       0   
+#define PWM_MODE            1
+#define CLK_MODE            2
+#define VSP_MODE            3
+#define SPEED_MODE          PWM_MODE
+
 #define PID_ID_KP      0.60              //电流环D轴比例增益
 #define PID_ID_KI      0.01              //电流环D轴积分增益
 #define PID_ID_KD      0.00              //电流环D轴微分增益
@@ -39,7 +45,7 @@
 #define PID_S_KD      0.00              //速度环微分增益
 
 #define START_PWM_DUTY          50          //启动占空比 5%
-#define STOP_PWM_DUTY           40          //停止占空比 3%
+#define STOP_PWM_DUTY           30          //停止占空比 3%
 #define FULL_SPEED_PWM_DUTY     980         //全速占空比 98%
 #define PWM_DUTY_BASE           1000        //占空比基准
 

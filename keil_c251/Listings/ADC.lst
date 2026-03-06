@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  ADC                                                                03/03/26  16:23:11  PAGE 1   
+C251 COMPILER V5.60.0,  ADC                                                                05/03/26  11:30:50  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE ADC
@@ -66,7 +66,7 @@ stmt  level    source
    56   1      }
    57          
    58          u8 ADC_Pin_Channel_Select(ADC_InitTypeDef* ADC_InitStructure)
-C251 COMPILER V5.60.0,  ADC                                                                03/03/26  16:23:11  PAGE 2   
+C251 COMPILER V5.60.0,  ADC                                                                05/03/26  11:30:50  PAGE 2   
 
    59          {
    60   1              u8 Px_ = (u8)atoi(ADC_InitStructure->ADC_Channel_Pin + 1);      //取引脚端口号
@@ -134,7 +134,7 @@ stmt  level    source
   121   1              if(channel > ADC_CH15)  return  4096;   //错误,返回4096,调用的程序判断  
   122   1              ADC_RES = 0;
   123   1              ADC_RESL = 0;
-C251 COMPILER V5.60.0,  ADC                                                                03/03/26  16:23:11  PAGE 3   
+C251 COMPILER V5.60.0,  ADC                                                                05/03/26  11:30:50  PAGE 3   
 
   124   1      
   125   1              ADC_CONTR = (ADC_CONTR & 0xf0) | channel; //设置ADC转换通道

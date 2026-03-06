@@ -4,7 +4,7 @@
 void main(void)
 {
 	System_Init();
-	motor_state = motor_init;  //电机初始状态
+	motor_state = motor_init;  //进入状态机第一步
     
 	while(1)
 	{

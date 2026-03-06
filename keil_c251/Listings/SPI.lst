@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  SPI                                                                03/03/26  16:23:12  PAGE 1   
+C251 COMPILER V5.60.0,  SPI                                                                05/03/26  11:30:51  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE SPI
@@ -66,7 +66,7 @@ stmt  level    source
    55          void SPI_Configuration(SPI_InitTypeDef *SPIx)
    56          {
    57   1              P_SW1 = P_SW1 & ~0x0C | SPIx->SPI_Pin_Select;   //SPI功能脚选择位
-C251 COMPILER V5.60.0,  SPI                                                                03/03/26  16:23:12  PAGE 2   
+C251 COMPILER V5.60.0,  SPI                                                                05/03/26  11:30:51  PAGE 2   
 
    58   1              IE2  = IE2 & ~0x02 | SPIx->SPI_Interrupt_En;    //SPI中断使能
    59   1              
@@ -134,7 +134,7 @@ stmt  level    source
   119   1      //    {
   120   1      //        SPI_TimerOutEn = 0;
   121   1      //        SPITOCR &= ~0x80;   //从机接收超时功能禁止
-C251 COMPILER V5.60.0,  SPI                                                                03/03/26  16:23:12  PAGE 3   
+C251 COMPILER V5.60.0,  SPI                                                                05/03/26  11:30:51  PAGE 3   
 
   122   1      //    }
   123   1      
@@ -202,7 +202,7 @@ stmt  level    source
   185          u8 SPI_ReadByte(void)
   186          {
   187   1          SPDAT = 0xff;
-C251 COMPILER V5.60.0,  SPI                                                                03/03/26  16:23:12  PAGE 4   
+C251 COMPILER V5.60.0,  SPI                                                                05/03/26  11:30:51  PAGE 4   
 
   188   1          if(ESPI)
   189   1          {

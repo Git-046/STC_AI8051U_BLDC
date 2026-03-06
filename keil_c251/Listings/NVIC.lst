@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 1   
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE NVIC
@@ -66,7 +66,7 @@ stmt  level    source
    56          // 参数: Priority: 中断优先级, NONE.
    57          // 返回: 执行结果 SUCCESS/FAIL.
    58          // 版本: V1.0, 2020-09-29
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 2   
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 2   
 
    59          //========================================================================
    60          u8 NVIC_Timer3_Init(u8 State, u8 Priority)
@@ -134,7 +134,7 @@ stmt  level    source
   122   1              if(State <= ENABLE) INT1_Interrupt(State); else  return FAIL;
   123   1              if(Priority <= Priority_3) INT1_Priority(Priority); else  return FAIL;
   124   1              return SUCCESS;
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 3   
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 3   
 
   125   1      }
   126          
@@ -202,7 +202,7 @@ stmt  level    source
   188          // 函数: NVIC_CMP_Init
   189          // 描述: 比较器嵌套向量中断控制器初始化.
   190          // 参数: State:    中断使能状态, RISING_EDGE/FALLING_EDGE/DISABLE.
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 4   
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 4   
 
   191          // 参数: Priority: 中断优先级, Priority_0,Priority_1,Priority_2,Priority_3.
   192          // 返回: 执行结果 SUCCESS/FAIL.
@@ -270,7 +270,7 @@ stmt  level    source
   254          {
   255   1              if(State <= ENABLE) UART2_Interrupt(State); else  return FAIL;
   256   1              if(Priority <= Priority_3) UART2_Priority(Priority); else  return FAIL;
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 5   
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 5   
 
   257   1              return SUCCESS;
   258   1      }
@@ -338,7 +338,7 @@ stmt  level    source
   319          
   320          //========================================================================
   321          // 函数: NVIC_PWM_Init
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 6   
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 6   
 
   322          // 描述: PWM嵌套向量中断控制器初始化.
   323          // 参数: Channel:  通道, PWMA/PWMB.
@@ -406,7 +406,7 @@ stmt  level    source
   385          // 参数: Bus_Priority: 数据总线访问优先级, Priority_0,Priority_1,Priority_2,Priority_3.
   386          // 返回: 执行结果 SUCCESS/FAIL.
   387          // 版本: V1.0, 2021-05-21
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 7   
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 7   
 
   388          //========================================================================
   389          u8 NVIC_DMA_M2M_Init(u8 State, u8 Priority, u8 Bus_Priority)
@@ -474,7 +474,7 @@ stmt  level    source
   451          //========================================================================
   452          u8 NVIC_DMA_UART1_Rx_Init(u8 State, u8 Priority, u8 Bus_Priority)
   453          {
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 8   
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 8   
 
   454   1              DMA_UR1R_CFG &= ~0x0f;
   455   1              if(Priority <= Priority_3) DMA_UR1R_CFG |= Priority << 2;
@@ -542,7 +542,7 @@ stmt  level    source
   517   1              DMA_UR3T_CFG &= ~0x0f;
   518   1              if(Priority <= Priority_3) DMA_UR3T_CFG |= Priority << 2;
   519   1              if(Bus_Priority <= Priority_3) DMA_UR3T_CFG |= Bus_Priority;    //数据总线访问优先级
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 9   
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 9   
 
   520   1              if(State == ENABLE)
   521   1                      DMA_UR3T_CFG |= 0x80;   //bit7 1:Enable Interrupt
@@ -610,7 +610,7 @@ stmt  level    source
   583   1              if(State == ENABLE)
   584   1                      DMA_UR4R_CFG |= 0x80;   //bit7 1:Enable Interrupt
   585   1              else
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 10  
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 10  
 
   586   1                      DMA_UR4R_CFG &= ~0x80;  //bit7 0:Disable Interrupt
   587   1              return SUCCESS;
@@ -678,7 +678,7 @@ stmt  level    source
   649   1      }
   650          
   651          //========================================================================
-C251 COMPILER V5.60.0,  NVIC                                                               03/03/26  16:23:12  PAGE 11  
+C251 COMPILER V5.60.0,  NVIC                                                               05/03/26  11:30:50  PAGE 11  
 
   652          // 函数: NVIC_DMA_I2CR_Init
   653          // 描述: DMA I2C Rx嵌套向量中断控制器初始化.

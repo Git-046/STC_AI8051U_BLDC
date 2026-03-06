@@ -22,6 +22,13 @@ enum Fault_Flag			//错误状态码
 	motor_lost_phase = 5,		//缺相
 };
 
+enum Time_Count
+{
+    time_us = 0,
+    time_ms = 1,
+    time_s  = 2,
+};
+
 void State_Machine(void);
 void Motor_Init(void);
 void Motor_Start(void);
@@ -29,11 +36,15 @@ void Motor_Run(void);
 void Motor_Fault(void);
 void Motor_Idle(void);
 
+void Stall_Restart(void);
+
 void Parameter_Init(void);
 void Motor_Run_Stop_Control(void);
 
 extern u8 xdata Motor_Run_Flag;                             //电机运行状态位
 extern enum Motor_State xdata motor_state;					//状态机电机状态
 extern enum Fault_Flag xdata fault_flag;					//电机错误码
+extern enum Time_Count xdata time_count;                    //时间计数
+extern u16 restart_times;                                   //电机重启次数
 
 #endif

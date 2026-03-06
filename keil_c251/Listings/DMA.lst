@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  DMA                                                                03/03/26  16:23:11  PAGE 1   
+C251 COMPILER V5.60.0,  DMA                                                                06/03/26  11:21:20  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE DMA
@@ -66,7 +66,7 @@ stmt  level    source
    54          // 描述: DMA ADC 初始化程序.
    55          // 参数: DMA: 结构参数,请参考DMA.h里的定义.
    56          // 返回: none.
-C251 COMPILER V5.60.0,  DMA                                                                03/03/26  16:23:11  PAGE 2   
+C251 COMPILER V5.60.0,  DMA                                                                06/03/26  11:21:20  PAGE 2   
 
    57          // 版本: V1.0, 2021-05-17
    58          //========================================================================
@@ -134,7 +134,7 @@ stmt  level    source
   120   1              
   121   1              DMA_SPI_CR = DMA_SPI_CR & ~0x80 | DMA->SPI_DMA_Enable;                                  //DMA使能
   122   1              DMA_SPI_CR = DMA_SPI_CR & ~0x40 | DMA->SPI_DMA_Master_Mode_Triggle;             //主机模式触发控制位
-C251 COMPILER V5.60.0,  DMA                                                                03/03/26  16:23:11  PAGE 3   
+C251 COMPILER V5.60.0,  DMA                                                                06/03/26  11:21:20  PAGE 3   
 
   123   1              DMA_SPI_CR = DMA_SPI_CR & ~0x20 | DMA->SPI_DMA_Slave_Mode_Triggle;              //从机模式触发控制位
   124   1              DMA_SPI_CR = DMA_SPI_CR & ~0x01 | DMA->SPI_DMA_FIFO_Clear_En;                   //SPI_DMA操作前清空FIFO
@@ -202,7 +202,7 @@ stmt  level    source
   185   1              if(UARTx == UART2)
   186   1              {
   187   2                      DMA_UR2T_STA = 0x00;
-C251 COMPILER V5.60.0,  DMA                                                                03/03/26  16:23:11  PAGE 4   
+C251 COMPILER V5.60.0,  DMA                                                                06/03/26  11:21:20  PAGE 4   
 
   188   2                      DMA_UR2R_STA = 0x00;
   189   2                      DMA_UR2T_AMT = (u8)DMA->DMA_TX_Length;
@@ -270,7 +270,7 @@ stmt  level    source
   251          // 版本: V1.0, 2021-05-17
   252          //========================================================================
   253          void DMA_LCM_Inilize(DMA_LCM_InitTypeDef *DMA)
-C251 COMPILER V5.60.0,  DMA                                                                03/03/26  16:23:11  PAGE 5   
+C251 COMPILER V5.60.0,  DMA                                                                06/03/26  11:21:20  PAGE 5   
 
   254          {
   255   1              DMA_LCM_STA = 0x00;

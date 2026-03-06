@@ -6,7 +6,21 @@
 #define __TIMER_H
 
 #include "config.h"
+#include "def.h"
 
+typedef struct
+{
+    u8 start;
+    u16 count;
+    u8 end;
+}Delay_Ticks;
+
+extern Delay_Ticks s_delay_ticks;
+extern Delay_Ticks ms_delay_ticks;
+
+u8 Timer_Delay_s(u16 s);
+u8 Timer_Delay_ms(u16 ms);
+void Timer_Delay_us(u16 us);
 //========================================================================
 //                             ∂® ±∆˜0…Ë÷√
 //========================================================================
@@ -142,5 +156,6 @@ typedef struct
 } TIM_InitTypeDef;
 
 u8 Timer_Inilize(u8 TIM, TIM_InitTypeDef xdata *TIMx);
+
 
 #endif

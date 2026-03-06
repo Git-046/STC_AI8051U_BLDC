@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  RTC                                                                03/03/26  16:23:12  PAGE 1   
+C251 COMPILER V5.60.0,  RTC                                                                05/03/26  11:30:51  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE RTC
@@ -66,7 +66,7 @@ stmt  level    source
    56   2              RTCCR = 0x01;           //RTC使能
    57   2              while(RTCCFG & 0x01);   //等待初始化完成,需要在 "RTC使能" 之后判断. 
    58   2              //设置RTC时间需要32768Hz的1个周期时间,大约30.5us. 由于同步, 所以实际等待时间是0~30.5us.
-C251 COMPILER V5.60.0,  RTC                                                                03/03/26  16:23:12  PAGE 2   
+C251 COMPILER V5.60.0,  RTC                                                                05/03/26  11:30:51  PAGE 2   
 
    59   2              //如果不等待设置完成就睡眠, 则RTC会由于设置没完成, 停止计数, 唤醒后才继续完成设置并继续计数.
    60   2          }

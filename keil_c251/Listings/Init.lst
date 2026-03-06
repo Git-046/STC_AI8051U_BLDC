@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  Init                                                               03/03/26  16:23:13  PAGE 1   
+C251 COMPILER V5.60.0,  Init                                                               06/03/26  11:21:21  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE Init
@@ -26,64 +26,72 @@ stmt  level    source
    16   1              DMA_SPI_Init();
    17   1      }
    18          
-   19           void Parameter_Init(void)
-   20           {
-   21   1           /*Motor Parameter*/
-   22   1           memset((void*)&motor_data, 0, sizeof(Motor_Data));
-   23   1           memset((void*)&motor_speed, 0, sizeof(Motor_Speed));
-   24   1           
-   25   1           memset((void*)&phase_current, 0, sizeof(Phase_Current));
-   26   1           memset((void*)&alpha_beta_current, 0, sizeof(Alpha_Beta_Axis_Current));
-   27   1           memset((void*)&dq_current, 0, sizeof(Direct_Quadrature_Axis_Current));
-   28   1           
-   29   1           memset((void*)&dq_current_ref, 0, sizeof(Direct_Quadrature_Axis_Current));
-   30   1           memset((void*)&dq_voltage_ctl, 0, sizeof(Direct_Quadrature_Axis_Voltage));
-   31   1           memset((void*)&dq_voltage_ctl_limit, 0, sizeof(Direct_Quadrature_Axis_Voltage));
-   32   1           memset((void*)&alpha_beta_voltage_ctl, 0, sizeof(Alpha_Beta_Axis_Voltage));
-   33   1           memset((void*)&phase_voltage_ctl, 0, sizeof(Phase_Voltage));
-   34   1           
-   35   1           memset((void*)ADC_Result_Buffer, 0, sizeof(u16)*4);
-   36   1           
-   37   1           memset((void*)SPI_TX_Buffer, 0, sizeof(u8)*4);
-   38   1           memset((void*)SPI_RX_Buffer, 0, sizeof(u8)*6);
-   39   1           memset((void*)Tx_cmd_arr, 0, sizeof(u8)*TLE5012B_TX_BUFFER_SIZE);
-   40   1           memset((void*)&tle5012b_data, 0, sizeof(TLE5012B_Data));
-   41   1           
-   42   1           motor_speed.max_speed = SPEED_MAX;
-   43   1           motor_speed.min_speed = SPEED_MIN;
-   44   1           motor_speed.acceleration_speed = SPEED_ACCERELATION;
-   45   1           motor_speed.deceleration_speed = SPEED_DECERELATION;
-   46   1           
-   47   1               /*PID Parameter*/
-   48   1           memset((void*)&pid_structure_d, 0, sizeof(PID_Structure));
-   49   1           memset((void*)&pid_structure_q, 0, sizeof(PID_Structure));
-   50   1           memset((void*)&pid_structure_speed, 0, sizeof(PID_Structure));
-   51   1           
-   52   1           pid_structure_d.P_gain = PID_ID_KP;
-   53   1           pid_structure_d.I_gain = PID_ID_KI;
-   54   1           pid_structure_d.D_gain = PID_ID_KD;
-   55   1           
-   56   1           pid_structure_q.P_gain = PID_IQ_KP;
-   57   1           pid_structure_q.I_gain = PID_IQ_KI;
-   58   1           pid_structure_q.D_gain = PID_IQ_KD;
-C251 COMPILER V5.60.0,  Init                                                               03/03/26  16:23:13  PAGE 2   
+   19          /*------------------------------------------------------------
+   20          @ function  :   void Parameter_Init(void)
+   21          @ describe  :   参数初始化
+   22          @ parameter :   None
+   23          @ date      :   2026-3-1
+   24          -------------------------------------------------------------*/
+   25          void Parameter_Init(void)
+   26          {
+   27   1          restart_times = MOTOR_RESTART_TIMES;
+   28   1      
+   29   1          /*Motor Parameter*/
+   30   1          memset((void*)&motor_data, 0, sizeof(Motor_Data));
+   31   1          memset((void*)&motor_speed, 0, sizeof(Motor_Speed));
+   32   1      
+   33   1          memset((void*)&phase_current, 0, sizeof(Phase_Current));
+   34   1          memset((void*)&alpha_beta_current, 0, sizeof(Alpha_Beta_Axis_Current));
+   35   1          memset((void*)&dq_current, 0, sizeof(Direct_Quadrature_Axis_Current));
+   36   1      
+   37   1          memset((void*)&dq_current_ref, 0, sizeof(Direct_Quadrature_Axis_Current));
+   38   1          memset((void*)&dq_voltage_ctl, 0, sizeof(Direct_Quadrature_Axis_Voltage));
+   39   1          memset((void*)&dq_voltage_ctl_limit, 0, sizeof(Direct_Quadrature_Axis_Voltage));
+   40   1          memset((void*)&alpha_beta_voltage_ctl, 0, sizeof(Alpha_Beta_Axis_Voltage));
+   41   1          memset((void*)&phase_voltage_ctl, 0, sizeof(Phase_Voltage));
+   42   1      
+   43   1          memset((void*)ADC_Result_Buffer, 0, sizeof(u16)*4);
+   44   1      
+   45   1          memset((void*)SPI_TX_Buffer, 0, sizeof(u8)*4);
+   46   1          memset((void*)SPI_RX_Buffer, 0, sizeof(u8)*6);
+   47   1          memset((void*)Tx_cmd_arr, 0, sizeof(u8)*TLE5012B_TX_BUFFER_SIZE);
+   48   1          memset((void*)&tle5012b_data, 0, sizeof(TLE5012B_Data));
+   49   1      
+   50   1          motor_speed.max_speed = SPEED_MAX;
+   51   1          motor_speed.min_speed = SPEED_MIN;
+   52   1          motor_speed.acceleration_speed = SPEED_ACCERELATION;
+   53   1          motor_speed.deceleration_speed = SPEED_DECERELATION;
+   54   1      
+   55   1          /*PID Parameter*/
+   56   1          memset((void*)&pid_structure_d, 0, sizeof(PID_Structure));
+   57   1          memset((void*)&pid_structure_q, 0, sizeof(PID_Structure));
+   58   1          memset((void*)&pid_structure_speed, 0, sizeof(PID_Structure));
+C251 COMPILER V5.60.0,  Init                                                               06/03/26  11:21:21  PAGE 2   
 
-   59   1           
-   60   1           pid_structure_speed.P_gain = PID_S_KP;
-   61   1           pid_structure_speed.I_gain = PID_S_KI;
-   62   1           pid_structure_speed.D_gain = PID_S_KD;
-   63   1           
-   64   1           memset((void*)&speed_ramp, 0, sizeof(Speed_Ramp));
-   65   1           
-   66   1           
-   67   1       }
-   68           
+   59   1      
+   60   1          pid_structure_d.P_gain = PID_ID_KP;
+   61   1          pid_structure_d.I_gain = PID_ID_KI;
+   62   1          pid_structure_d.D_gain = PID_ID_KD;
+   63   1      
+   64   1          pid_structure_q.P_gain = PID_IQ_KP;
+   65   1          pid_structure_q.I_gain = PID_IQ_KI;
+   66   1          pid_structure_q.D_gain = PID_IQ_KD;
+   67   1      
+   68   1          pid_structure_speed.P_gain = PID_S_KP;
+   69   1          pid_structure_speed.I_gain = PID_S_KI;
+   70   1          pid_structure_speed.D_gain = PID_S_KD;
+   71   1      
+   72   1          memset((void*)&speed_ramp, 0, sizeof(Speed_Ramp));
+   73   1          speed_ramp.accelerate_amount = SPEED_ACCERELATION;
+   74   1          speed_ramp.decelerate_amount = SPEED_DECERELATION;
+   75   1      }
+   76           
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =       546     ------
+  ecode size           =       575     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------

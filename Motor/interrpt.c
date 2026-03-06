@@ -2,18 +2,20 @@
 #include "interrupt.h"
 #include "State_Machine.h"
 #include "Motor.h"
+#include "Timer.h"
 #include "PWM.h"
 #include "SPI.h"
 #include "Foc.h"
 #include "def.h"
 
 /*---------------------------------------
-@ function  :   void TM0_Isr() interrupt TMR0_VECTOR
-@ describe  :   定时器 0 中断处理函数
+@ function  :   void TIM11_ISR() interrupt TMR11_VECTOR
+@ describe  :   定时器 11 中断处理函数
+@ time      :   1ms
 @ parameter :   None
 @ date      :   2026-2-24
 -----------------------------------------*/
-void TM0_Isr() interrupt TMR0_VECTOR
+void TIM11_ISR() interrupt TMR11_VECTOR
 {
 	if(TCON & 0x20)
     {
@@ -23,15 +25,40 @@ void TM0_Isr() interrupt TMR0_VECTOR
     Speed_Update(&motor_speed);     //更新转速、占空比等
     Motor_Speed_Ramp(&motor_speed); //通过速度斜坡曲线，更新速度控制信号
     
-    /* 速度环 */
-    Speed_Loop();
-    
     /* 保护功能 */ 
     
     
     /* 状态机 */
     State_Machine();
     Motor_Run_Stop_Control();
+}
+
+/*---------------------------------------
+@ function  :   void TIM4_ISR() interrupt TMR4_VECTOR
+@ describe  :   定时器 4 中断处理函数
+@ time      :   1us
+@ parameter :   None
+@ date      :   2026-3-4
+-----------------------------------------*/
+void TIM4_ISR() interrupt TMR4_VECTOR
+{
+    if(AUXINTIF & 0x04)     //中断服务程序中，硬件自动清零
+    {
+        s_delay_ticks.count++;
+    }
+    
+}
+
+/*---------------------------------------
+@ function  :   void TIM3_ISR() interrupt TMR4_VECTOR
+@ describe  :   定时器 3 中断处理函数
+@ time      :   1s
+@ parameter :   None
+@ date      :   2026-3-4
+-----------------------------------------*/
+void TIM3_ISR() interrupt TMR3_VECTOR
+{
+    
 }
 
 /*---------------------------------------
@@ -136,9 +163,9 @@ bit xdata period_valid = 0;                   //周期数据有效标志
 
 void PWMB_Capture() interrupt PWMB_VECTOR
 {
-    u8 sr1;
-    u32 total_ticks;
-    u32 high_ticks_temp;
+    u8 sr1 = 0;
+    u32 total_ticks = 0;
+    u32 high_ticks_temp = 0;
     
     sr1 = ReadPWMB(PWMB_SR1);
     

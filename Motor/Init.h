@@ -14,6 +14,7 @@
 #include "Motor.h"
 #include "Foc.h"
 #include "State_Machine.h"
+#include "Protect.h"
 
 #ifndef _INIT_H_
 #define _INIT_H_
