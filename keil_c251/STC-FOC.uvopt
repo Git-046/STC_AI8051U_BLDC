@@ -79,8 +79,8 @@
       </OPTFL>
       <CpuCode>255</CpuCode>
       <DebugOpt>
-        <uSim>1</uSim>
-        <uTrg>0</uTrg>
+        <uSim>0</uSim>
+        <uTrg>1</uTrg>
         <sLdApp>1</sLdApp>
         <sGomain>1</sGomain>
         <sRbreak>1</sRbreak>
@@ -103,7 +103,7 @@
         <bEvRecOn>1</bEvRecOn>
         <bSchkAxf>0</bSchkAxf>
         <bTchkAxf>0</bTchkAxf>
-        <nTsel>-1</nTsel>
+        <nTsel>1</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
         <sDlgDll></sDlgDll>
@@ -114,8 +114,25 @@
         <tDlgDll></tDlgDll>
         <tDlgPa></tDlgPa>
         <tIfile></tIfile>
-        <pMon></pMon>
+        <pMon>BIN\STCMON251.DLL</pMon>
       </DebugOpt>
+      <TargetDriverDllRegistry>
+        <SetRegEntry>
+          <Number>0</Number>
+          <Key>STCMON251</Key>
+          <Name>-S0 -B0 -O3847</Name>
+        </SetRegEntry>
+        <SetRegEntry>
+          <Number>0</Number>
+          <Key>DLGTC51</Key>
+          <Name>(94=-1,-1,-1,-1,0)(80=-1,-1,-1,-1,0)(81=-1,-1,-1,-1,0)(82=-1,-1,-1,-1,0)(83=-1,-1,-1,-1,0)(1200=-1,-1,-1,-1,0)(90=-1,-1,-1,-1,0)(91=-1,-1,-1,-1,0)</Name>
+        </SetRegEntry>
+        <SetRegEntry>
+          <Number>0</Number>
+          <Key>MON251</Key>
+          <Name>-S1 -B115200 -O0</Name>
+        </SetRegEntry>
+      </TargetDriverDllRegistry>
       <Breakpoint/>
       <Tracepoint>
         <THDelay>0</THDelay>
@@ -128,7 +145,7 @@
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>
         <aPa>0</aPa>
-        <viewmode>0</viewmode>
+        <viewmode>1</viewmode>
         <vrSel>0</vrSel>
         <aSym>0</aSym>
         <aTbox>0</aTbox>

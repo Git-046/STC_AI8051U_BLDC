@@ -126,6 +126,10 @@ void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
 		}
 		
 		DMA_SPI_STA = DMA_SPI_STA & ~0x01;							//中断标志位清零
+        if(i > 7)	//重复TLE5012B的指令数组下标
+        {
+            i = 4;
+        }
 	}
 	
 	if(flag_switch)
@@ -134,10 +138,7 @@ void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
 		if(DMA_SPI_STA & 0x04)  DMA_SPI_STA = DMA_SPI_STA & ~0x04;	//数据覆写导致传输失败的标志位清零
 	}
 	
-	if(i > 7)	//重复TLE5012B的指令数组下标
-	{
-		i = 4;
-	}
+	
 }
 
 
