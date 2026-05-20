@@ -1,0 +1,43 @@
+# .gitignore for STC AI8051U Keil project
+# Build/artifact directories
+Objects/        # 忽略 Keil 编译生成的对象目录
+Listings/       # 忽略编译输出列表文件目录
+
+# Compiled outputs and temporary files
+*.hex           # 忽略规划器/下载用的 hex 文件
+*.bin           # 忽略二进制输出文件
+*.lst           # 忽略汇编/列表文件
+*.map           # 忽略链接器生成的 map 文件
+*.o             # 忽略目标文件
+*.axf           # 忽略 ARM/Keil AXF 可执行文件
+*.elf           # 忽略 ELF 可执行文件
+*.crf           # 忽略编译器生成的中间文件
+
+# Keil/μVision generated or user-specific files
+*.uvgui.cjr     # 忽略 μVision GUI 会话文件
+*.uvopt         # 忽略 μVision 工程选项文件
+*.uvuser        # 忽略 μVision 用户设置文件
+
+# IDE and OS
+.vscode/        # 忽略 VS Code 配置目录
+.vs/            # 忽略 Visual Studio 配置目录
+*.user          # 忽略用户级别设置文件
+*.log           # 忽略日志文件
+Thumbs.db       # 忽略 Windows 缩略图缓存
+.DS_Store       # 忽略 macOS 文件夹属性
+
+# Editor temp files
+*~              # 忽略编辑器自动生成的临时文件
+# swap files
+*.sw?           # 忽略 Vim/其他编辑器 swap 文件
+*.swo
+*.tmp           # 忽略临时文件
+*.bak           # 忽略备份文件
+
+# Secrets/config
+*.key           # 忽略私钥文件
+*.pem           # 忽略证书文件
+.env            # 忽略环境变量文件
+
+# Allow tracking of specific important files even if matched above:
+!STC-FOC.uvproj  # 强制保留此工程文件的跟踪
