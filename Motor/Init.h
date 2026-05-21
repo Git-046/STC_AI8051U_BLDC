@@ -1,3 +1,5 @@
+#ifndef _INIT_H_
+#define _INIT_H_
 #include "AI8051U.h"
 #include "stdlib.h"
 #include "string.h"
@@ -15,9 +17,6 @@
 #include "Foc.h"
 #include "State_Machine.h"
 #include "Protect.h"
-
-#ifndef _INIT_H_
-#define _INIT_H_
 
 void System_Init(void);
 void Parameter_Init(void);

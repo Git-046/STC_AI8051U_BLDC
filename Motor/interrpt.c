@@ -1,3 +1,4 @@
+#include "Context.h"
 #include "AI8051U.h"
 #include "interrupt.h"
 #include "State_Machine.h"
@@ -22,10 +23,9 @@ void TIM11_ISR() interrupt TMR11_VECTOR
         TCON &= ~0x20;  //清除溢出中断标志位
     }
     
-    Speed_Update(&motor_speed);     //更新转速、占空比等
-    Motor_Speed_Ramp(&motor_speed); //通过速度斜坡曲线，更新速度控制信号
-    
-    /* 保护功能 */ 
+    Speed_Update(&g_ctx->motor_speed);     //更新转速、占空比等
+    Motor_Speed_Ramp(&g_ctx->motor_speed); //通过速度斜坡曲线，更新速度控制信号    
+    /* 保护功能 */  
     
     
     /* 状态机 */
@@ -41,7 +41,7 @@ void TIM11_ISR() interrupt TMR11_VECTOR
 @ date      :   2026-3-4
 -----------------------------------------*/
 void TIM4_ISR() interrupt TMR4_VECTOR
-{
+		{
     if(AUXINTIF & 0x04)     //中断服务程序中，硬件自动清零
     {
         s_delay_ticks.count++;
@@ -75,7 +75,7 @@ void ADC_ISR() interrupt ADC_VECTOR
 	
 	ADC_CONTR &= ~0x10;	//ADC转换结束标志位ADC_FLAG清零
     
-    if(motor_state == motor_run || motor_state == motor_start)
+    if(g_ctx->motor_state == motor_run || g_ctx->motor_state == motor_start)
     {
         /* 电流环 */
         Current_Loop();
@@ -88,37 +88,31 @@ void ADC_ISR() interrupt ADC_VECTOR
 @ parameter :   None
 @ date      :   2026-2-27
 -----------------------------------------*/
-u8 flag_switch = 1;		//调试用
 void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
 {
 	static u8 i = 4;
 
 	//轮流变换TLE5012B的获取信息指令
-	SPI_TX_Buffer[i] = Tx_cmd_arr[i];
-	SPI_TX_Buffer[i+1] = Tx_cmd_arr[i+1];
+	SPI_TX_Buffer[i] = g_ctx->tx_cmd_arr[i];
+	SPI_TX_Buffer[i+1] = g_ctx->tx_cmd_arr[i+1];
 	i += 2;
 
-	//将获取到的磁编码器数据tle5012b_data进行处理，并赋值给motor_data
 	if(DMA_SPI_STA & 0x01)
 	{
 		switch(i)
 		{
 			case 2:
-				tle5012b_data.angle = (SPI_RX_Buffer[0] << 8) || SPI_RX_Buffer[1];	//机械角度分度值
-				motor_data.machine_angle = tle5012b_data.angle * PI_DQ14 ;			//机械角度弧度值
-//                while(motor_data.machine_angle > PI)
-//                    motor_data.machine_angle -= 2 * PI;
-//                while(motor_data.machine_angle < -PI)
-//                    motor_data.machine_angle += 2 * PI;
-                motor_data.electrical_angle = motor_data.machine_angle * MOTOR_POLE_PAIRS;  //电器角度弧度值
+				g_ctx->motor_data.machine_angle = (s16)((SPI_RX_Buffer[0] << 8) | SPI_RX_Buffer[1]) * PI_DQ14;
+				while(g_ctx->motor_data.machine_angle > PI)
+				    g_ctx->motor_data.machine_angle -= 2 * PI;
+				while(g_ctx->motor_data.machine_angle < -PI)
+				    g_ctx->motor_data.machine_angle += 2 * PI;
+				g_ctx->motor_data.electrical_angle = g_ctx->motor_data.machine_angle * MOTOR_POLE_PAIRS;
 				break;
 			
 			case 4:
-				tle5012b_data.speed = (SPI_RX_Buffer[0] << 8) || SPI_RX_Buffer[1];	//转速（°/s）
-				motor_data.speed = DPS_TO_RPM(tle5012b_data.speed);					//转速（RPM）
-			
-				tle5012b_data.loop  = (SPI_RX_Buffer[2] << 8) || SPI_RX_Buffer[3];	//转过的圈数（逆时针为正）
-				motor_data.loop  = tle5012b_data.loop;								//圈数						
+				g_ctx->motor_data.speed = (s16)((SPI_RX_Buffer[0] << 8) | SPI_RX_Buffer[1]) * 60;
+				g_ctx->motor_data.loop  = (SPI_RX_Buffer[2] << 8) | SPI_RX_Buffer[3];
 				break;
 			
 			default:
@@ -132,11 +126,8 @@ void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
         }
 	}
 	
-	if(flag_switch)
-	{
-		if(DMA_SPI_STA & 0x02)	DMA_SPI_STA = DMA_SPI_STA & ~0x02;	//满数据自动丢弃数据位清零
+		if(DMA_SPI_STA & 0x02)	DMA_SPI_STA = DMA_SPI_STA & ~0x02;  //满数据自动丢弃数据位清零
 		if(DMA_SPI_STA & 0x04)  DMA_SPI_STA = DMA_SPI_STA & ~0x04;	//数据覆写导致传输失败的标志位清零
-	}
 	
 	
 }
@@ -151,16 +142,11 @@ void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
 u16 xdata cc1 = 0, cc2 = 0;     //通道1和通道2
 u16 xdata cc1_last = 0;         //通道1上一次的捕获值
 u16 xdata cc1_rise_last = 0;    //上升沿的上一次捕获值
-u16 xdata count = 0;           //计数器溢出次数
+u16 xdata count = 0;            //计数器溢出次数
 
 volatile u32 xdata period_ticks = 0;        //周期计数值
 volatile u32 xdata high_ticks = 0;
-volatile float xdata pwm_freq = 0;
-volatile float xdata pwm_duty = 0;
-volatile u32 xdata pwm_period_us = 0;
-volatile bit xdata new_data_ready = 0;  // 新数据就绪标志
 
-bit xdata period_valid = 0;                   //周期数据有效标志
 
 void PWMB_Capture() interrupt PWMB_VECTOR
 {
@@ -181,10 +167,10 @@ void PWMB_Capture() interrupt PWMB_VECTOR
     }
     
     //1.2 处理捕获数据中断
-    if(sr1 & 0x04)     //PWM6（捕获上升沿）
+    if(sr1 & 0x04)      //PWM6（捕获上升沿）
     {
         cc1 = ReadPWMB((u8)(&PWMB_CCR6H));    //异步读取寄存器数据
-        cc1 = cc1 << 8 + ReadPWMB((u8)&PWMB_CCR6L);
+        cc1 = (cc1 << 8) | ReadPWMB((u8)&PWMB_CCR6L);
         if(cc1_last != 0)
         {
             if(cc1 >= cc1_last)     //没有溢出，使用当前的count
@@ -205,17 +191,16 @@ void PWMB_Capture() interrupt PWMB_VECTOR
         }
         
         period_ticks = total_ticks;
-        period_valid = 1;
         count = 0;      //溢出计数器复位
     }
     cc1_last = cc1;     //保留上一次的值
     cc1_rise_last = cc1;
     
     //2.1 处理捕获数据中断
-    if(sr1 | 0x08)     //PWM7（捕获下降沿）
+    if(sr1 & 0x08)     //PWM7（捕获下降沿）
     {
         cc2 = ReadPWMB((u8)(&PWMB_CCR7H));    //异步读取寄存器数据
-        cc2 = cc2 << 8 + ReadPWMB((u8)(&PWMB_CCR7L));
+        cc2 = (cc2 << 8) | ReadPWMB((u8)(&PWMB_CCR7L));
         
         //计算高电平时间
         if(cc1_rise_last != 0)
@@ -238,22 +223,18 @@ void PWMB_Capture() interrupt PWMB_VECTOR
             high_ticks = high_ticks_temp;
             
             // 如果有周期数据，可以立即计算
-            if(period_ticks > 0 && high_ticks <= period_ticks) 
-            {
-                new_data_ready = 1;
-            }
         }
     }
     
     /* 计算捕获PWM信号的频率与占空比 */
-    motor_speed.pwm_freq = PWMB_SOURCE_FREQUENCY / period_ticks;
+    g_ctx->motor_speed.pwm_freq = PWMB_SOURCE_FREQUENCY / period_ticks;
     if(high_ticks <= period_ticks)
     {
-        motor_speed.pwm_duty = high_ticks * PWM_DUTY_BASE / period_ticks;
+        g_ctx->motor_speed.pwm_duty = high_ticks * PWM_DUTY_BASE / period_ticks;
     }
     else
     {
-        motor_speed.pwm_duty = 0;    //捕获错误
+        g_ctx->motor_speed.pwm_duty = 0;   //捕获错误
     }
     
     

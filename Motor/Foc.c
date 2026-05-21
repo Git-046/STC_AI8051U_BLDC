@@ -1,88 +1,80 @@
+#include "Context.h"
 #include "AI8051U.h"
 #include "Foc.h"
-#include "Motor.h"		//µç»ú²ÎÊý
+#include "Motor.h"		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿?
 #include "math.h"
 #include "Protect.h"
 #include "def.h"
 
-float xdata V_bus;
-PID_Structure xdata pid_structure_d;
-PID_Structure xdata pid_structure_q;
-PID_Structure xdata pid_structure_speed;
-
-Speed_Ramp xdata speed_ramp;
-
 void Current_Loop(void)
 {
     //1.
-    float ModulationRatio;  //µ÷ÖÆ±È
+    float ModulationRatio;  //ï¿½ï¿½ï¿½Æ±ï¿½
     
-	//2. ÔËÐÐ²½Öè
-	//2.1.¸üÐÂ²ÉÑùµçÁ÷
-	phase_current.current_u = ADC_Result_Buffer[0];
-	phase_current.current_v = ADC_Result_Buffer[1];
-	phase_current.current_w = ADC_Result_Buffer[2];
-	//2.2.ÂË²¨
-	First_Order_LPF(phase_current.current_u, phase_current.current_u_filtered, phase_current.last_value, 0.1);
-	First_Order_LPF(phase_current.current_v, phase_current.current_v_filtered, phase_current.last_value, 0.1);
-	First_Order_LPF(phase_current.current_w, phase_current.current_w_filtered, phase_current.last_value, 0.1);
-//	First_Order_LPF_Current(phase_current, 0.1);	//ÏàµçÁ÷¸üÐÂ¡¢ÂË²¨
+	//2. ï¿½ï¿½ï¿½Ð²ï¿½ï¿½ï¿½
+	//2.1.ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	g_ctx->phase_current.current_u = ADC_Result_Buffer[0];
+	g_ctx->phase_current.current_v = ADC_Result_Buffer[1];
+	g_ctx->phase_current.current_w = ADC_Result_Buffer[2];
+	//2.2.ï¿½Ë²ï¿½
+	First_Order_LPF(&g_ctx->phase_current, 0.1);
+//	First_Order_LPF_Current(g_ctx->phase_current, 0.1);	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¡ï¿½ï¿½Ë²ï¿?
 	
-	//3.Clarke±ä»»
-	alpha_beta_current.current_alpha = phase_current.current_u;
-	alpha_beta_current.current_beta = (phase_current.current_u + 2 * phase_current.current_w) / ONE_DIVIDE_THE_SQUARE_OF_THREE;
+	//3.Clarkeï¿½ä»»
+	g_ctx->alpha_beta_current.current_alpha = g_ctx->phase_current.current_u;
+	g_ctx->alpha_beta_current.current_beta = (g_ctx->phase_current.current_u + 2 * g_ctx->phase_current.current_w) / ONE_DIVIDE_THE_SQUARE_OF_THREE;
 	
-	//4.Park±ä»»
-	dq_current.current_d = alpha_beta_current.current_alpha * cos(motor_data.electrical_angle) + alpha_beta_current.current_beta * sin(motor_data.electrical_angle);
-	dq_current.current_q = (-alpha_beta_current.current_alpha) * sin(motor_data.electrical_angle) + alpha_beta_current.current_beta * cos(motor_data.electrical_angle);
+	//4.Parkï¿½ä»»
+	g_ctx->dq_current.current_d = g_ctx->alpha_beta_current.current_alpha * cos(g_ctx->motor_data.electrical_angle) + g_ctx->alpha_beta_current.current_beta * sin(g_ctx->motor_data.electrical_angle);
+	g_ctx->dq_current.current_q = (-g_ctx->alpha_beta_current.current_alpha) * sin(g_ctx->motor_data.electrical_angle) + g_ctx->alpha_beta_current.current_beta * cos(g_ctx->motor_data.electrical_angle);
 	
-	//5.µçÁ÷»·PID
-    pid_structure_d.error = dq_current_ref.current_d - dq_current.current_d;
-	PID(&pid_structure_d);
-    pid_structure_q.error = dq_current_ref.current_q - dq_current.current_q;
-    PID(&pid_structure_q);
+	//5.ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PID
+    g_ctx->pid_d.error = g_ctx->dq_current_ref.current_d - g_ctx->dq_current.current_d;
+	PID(&g_ctx->pid_d);
+    g_ctx->pid_q.error = g_ctx->dq_current_ref.current_q - g_ctx->dq_current.current_q;
+    PID(&g_ctx->pid_q);
     
-    //6.PIDÊä³öµÄ¿ØÖÆÁ¿
-    dq_voltage_ctl.voltage_d = pid_structure_d.output;
-    dq_voltage_ctl.voltage_q = pid_structure_q.output;
+    //6.PIDï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿?
+    g_ctx->dq_voltage_ctl.voltage_d = g_ctx->pid_d.output;
+    g_ctx->dq_voltage_ctl.voltage_q = g_ctx->pid_q.output;
     
-    /* µçÁ÷ÏÞÁ÷ */
+    /* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
     if(CURRENT_LIMIT_EN == ENABLE)
     {
-        Current_Limit(&dq_voltage_ctl.voltage_q);
+        Current_Limit(&g_ctx->dq_voltage_ctl.voltage_q);
     }
     
-    //7.µ¥Î»Ô²µ÷ÖÆ£¬µçÑ¹ÏÞÖÆ
-    V_bus = ADC_Result_Buffer[3] * ADC_V_REF * V_BUS_VOLTAGE_DIVISION_RATIO / 4095 ;
-    ModulationRatio = ONE_DIVIDE_THE_SQUARE_OF_THREE_PLUS_ZERO_POINT_NINE * V_bus / sqrt(SQUARE(dq_voltage_ctl.voltage_d) + SQUARE(dq_voltage_ctl.voltage_q));
-    if(ModulationRatio < 1.0)   //µ÷ÖÆ±ÈÐ¡ÓÚ1£¬µçÑ¹¹ýµ÷ÖÆ
+    //7.ï¿½ï¿½Î»Ô²ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½
+    g_ctx->v_bus = ADC_Result_Buffer[3] * ADC_V_REF * V_BUS_VOLTAGE_DIVISION_RATIO / 4095 ;
+    ModulationRatio = ONE_DIVIDE_THE_SQUARE_OF_THREE_PLUS_ZERO_POINT_NINE * g_ctx->v_bus / sqrt(SQUARE(g_ctx->dq_voltage_ctl.voltage_d) + SQUARE(g_ctx->dq_voltage_ctl.voltage_q));
+    if(ModulationRatio < 1.0)   //ï¿½ï¿½ï¿½Æ±ï¿½Ð¡ï¿½ï¿½1ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     {
-        /*»ý·ÖËø¶¨*/
-        pid_structure_d.I_EN_FLAG = 0;
-        pid_structure_q.I_EN_FLAG = 0;
-        /*µçÑ¹¿ØÖÆÖ¸ÁîÏÞ·ù*/
-        dq_voltage_ctl_limit.voltage_d = dq_voltage_ctl.voltage_d * ModulationRatio;
-        dq_voltage_ctl_limit.voltage_q = dq_voltage_ctl.voltage_q * ModulationRatio;
+        /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+        g_ctx->pid_d.I_EN_FLAG = 0;
+        g_ctx->pid_q.I_EN_FLAG = 0;
+        /*ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Þ·ï¿½*/
+        g_ctx->dq_voltage_ctl_limit.voltage_d = g_ctx->dq_voltage_ctl.voltage_d * ModulationRatio;
+        g_ctx->dq_voltage_ctl_limit.voltage_q = g_ctx->dq_voltage_ctl.voltage_q * ModulationRatio;
     }
     else
     {
-        /*»ý·Ö½âËø*/
-        pid_structure_d.I_EN_FLAG = 1;
-        pid_structure_q.I_EN_FLAG = 1;
+        /*ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½*/
+        g_ctx->pid_d.I_EN_FLAG = 1;
+        g_ctx->pid_q.I_EN_FLAG = 1;
         
-        dq_voltage_ctl_limit.voltage_d = dq_voltage_ctl.voltage_d;
-        dq_voltage_ctl_limit.voltage_q = dq_voltage_ctl.voltage_q;
+        g_ctx->dq_voltage_ctl_limit.voltage_d = g_ctx->dq_voltage_ctl.voltage_d;
+        g_ctx->dq_voltage_ctl_limit.voltage_q = g_ctx->dq_voltage_ctl.voltage_q;
     }
     
-    //8.·´park±ä»»
-    alpha_beta_voltage_ctl.voltage_alpha = dq_voltage_ctl_limit.voltage_d * cos(motor_data.electrical_angle) - dq_voltage_ctl_limit.voltage_q * sin(motor_data.electrical_angle);
-    alpha_beta_voltage_ctl.voltage_beta  = dq_voltage_ctl_limit.voltage_d * sin(motor_data.electrical_angle) + dq_voltage_ctl_limit.voltage_q * cos(motor_data.electrical_angle);
+    //8.ï¿½ï¿½parkï¿½ä»»
+    g_ctx->alpha_beta_voltage_ctl.voltage_alpha = g_ctx->dq_voltage_ctl_limit.voltage_d * cos(g_ctx->motor_data.electrical_angle) - g_ctx->dq_voltage_ctl_limit.voltage_q * sin(g_ctx->motor_data.electrical_angle);
+    g_ctx->alpha_beta_voltage_ctl.voltage_beta  = g_ctx->dq_voltage_ctl_limit.voltage_d * sin(g_ctx->motor_data.electrical_angle) + g_ctx->dq_voltage_ctl_limit.voltage_q * cos(g_ctx->motor_data.electrical_angle);
     
-    //9.SVPWMÊä³öÕ¼¿Õ±È
-    SVPWM(&alpha_beta_voltage_ctl, V_bus, 0.00005);
+    //9.SVPWMï¿½ï¿½ï¿½Õ¼ï¿½Õ±ï¿?
+    SVPWM(&g_ctx->alpha_beta_voltage_ctl, g_ctx->v_bus, 0.00005);
 }
 
-void SVPWM(Alpha_Beta_Axis_Voltage xdata *alpha_beta_voltage, float V_bus, float T_pwm)
+void SVPWM(Alpha_Beta_Axis_Voltage xdata *alpha_beta_voltage, float v_bus, float T_pwm)
 {
     Phase_Voltage xdata voltage_abc;
     u8 xdata n;
@@ -90,21 +82,21 @@ void SVPWM(Alpha_Beta_Axis_Voltage xdata *alpha_beta_voltage, float V_bus, float
     int16 xdata x, y, z;
     uint16 xdata timeA, timeB, timeC;
     
-    //1.ClarkÄæ±ä»»
+    //1.Clarkï¿½ï¿½ä»?
     voltage_abc.voltage_u = alpha_beta_voltage->voltage_beta;
     voltage_abc.voltage_v =SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha - 0.5 * alpha_beta_voltage->voltage_beta;
     voltage_abc.voltage_w = -SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha - 0.5 * alpha_beta_voltage->voltage_beta;
     
-    //2.¼ÆËãµçÑ¹Ê¸Á¿ËùÔÚµÄÉÈÇø
+    //2.ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹Ê¸ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿?
     a = (voltage_abc.voltage_u > 0) ? 1 : 0;
     b = (voltage_abc.voltage_v > 0) ? 1 : 0;
     c = (voltage_abc.voltage_w > 0) ? 1 : 0;
-    n = c << 2 + b << 1 + c;
+    n = (c << 2) | (b << 1) | a;
     
-    //3.¼ÆËãÖÐ¼ä±äÁ¿(¸÷ÉÈÇøµÄ»ù±¾×÷ÓÃÊ±¼ä)
-    x = (int16)(SQUARE_ROOT_3 * alpha_beta_voltage->voltage_beta / V_bus * (T_pwm));
-    y = (int16)(SQUARE_ROOT_3 * (SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha + 0.5 * alpha_beta_voltage->voltage_beta) / V_bus * T_pwm);
-    z = (int16)(SQUARE_ROOT_3 * (-SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha + 0.5 * alpha_beta_voltage->voltage_beta) / V_bus * T_pwm);
+    //3.ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½ï¿?(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½)
+    x = (int16)(SQUARE_ROOT_3 * alpha_beta_voltage->voltage_beta / v_bus * (T_pwm));
+    y = (int16)(SQUARE_ROOT_3 * (SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha + 0.5 * alpha_beta_voltage->voltage_beta) / v_bus * T_pwm);
+    z = (int16)(SQUARE_ROOT_3 * (-SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha + 0.5 * alpha_beta_voltage->voltage_beta) / v_bus * T_pwm);
     
     //
     switch(n)
@@ -154,22 +146,23 @@ void SVPWM(Alpha_Beta_Axis_Voltage xdata *alpha_beta_voltage, float V_bus, float
     PWMA_CCR3L = (u8)(timeC & 0xFF);
 }
 
-/*Ò»½×µÍÍ¨ÂË²¨ÂË²¨º¯Êý*/
-void First_Order_LPF(float new_value, float filtered_value, float last_value, float alpha)
+/*Ò»ï¿½×µï¿½Í¨ï¿½Ë²ï¿½ï¿½Ë²ï¿½ï¿½ï¿½ï¿½ï¿½*/
+void First_Order_LPF(Phase_Current xdata *phase_current, float alpha)
 {
-	filtered_value = alpha * new_value + (1 - alpha) * last_value;
-	last_value = filtered_value;
+	phase_current->current_u_filtered = alpha * phase_current->current_u + (1 - alpha) * phase_current->current_u_filtered;
+	phase_current->current_v_filtered = alpha * phase_current->current_v + (1 - alpha) * phase_current->current_v_filtered;
+	phase_current->current_w_filtered = alpha * phase_current->current_w + (1 - alpha) * phase_current->current_w_filtered;
 }
 
 void PID(PID_Structure xdata *pid_structure)
 {
-	//±ÈÀý»·½Ú
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     pid_structure->P_out = pid_structure->error * pid_structure->P_gain;
     
-    //»ý·Ö»·½Ú
+    //ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½
     if(pid_structure->I_EN_FLAG == 1)
     {
-        pid_structure->I_sum += pid_structure->error * pid_structure->I_period;  //»ý·ÖÀÛ¼Ó
+        pid_structure->I_sum += pid_structure->error * pid_structure->I_period;  //ï¿½ï¿½ï¿½ï¿½ï¿½Û¼ï¿½
         if(pid_structure->I_sum > pid_structure->I_limit)
         {
             pid_structure->I_sum = pid_structure->I_limit;    
@@ -180,37 +173,37 @@ void PID(PID_Structure xdata *pid_structure)
         }
         pid_structure->I_out = pid_structure->I_sum * pid_structure->I_gain;
     }
-    //Î¢·Ö»·½Ú
+    //Î¢ï¿½Ö»ï¿½ï¿½ï¿½
     pid_structure->D_out = (pid_structure->error - pid_structure->pre_error) * pid_structure->D_gain;
-    pid_structure->pre_error = pid_structure->error;        //±£´æÉÏÒ»´ÎÎó²î
+    pid_structure->pre_error = pid_structure->error;        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿?
     
-    //×ÜÊä³ö
+    //ï¿½ï¿½ï¿½ï¿½ï¿?
     pid_structure->output_ref = pid_structure->P_out + pid_structure->I_out +pid_structure->D_out;
     if(pid_structure->output_ref > pid_structure->output_limit)
     {
         pid_structure->output = pid_structure->output_limit;
     }
-    else if(pid_structure->output < -pid_structure->output_limit)
+    else if(pid_structure->output_ref < -pid_structure->output_limit)
     {
         pid_structure->output = -pid_structure->output_limit;
     }
     
-    //»ý·Ö¿¹±¥ºÍ
+    //ï¿½ï¿½ï¿½Ö¿ï¿½ï¿½ï¿½ï¿½ï¿½
     pid_structure->I_sum -= pid_structure->Kc_gain * (pid_structure->output_ref - pid_structure->output);
 }
 
 /*---------------------------------------------
-    @ function  : ËÙ¶ÈÐ±ÆÂº¯Êý
-    @ describe  : ´¦ÀíÊäÈëËÙ¶ÈÖ¸Áî
-    @ param     : Motor_Speed ½á¹¹ÌåÖ¸Õë
+    @ function  : ï¿½Ù¶ï¿½Ð±ï¿½Âºï¿½ï¿½ï¿½
+    @ describe  : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½Ö¸ï¿½ï¿½
+    @ param     : Motor_Speed ï¿½á¹¹ï¿½ï¿½Ö¸ï¿½ï¿½
     @ date      : 2026-2-1
 -----------------------------------------------*/
 void Motor_Speed_Ramp(Motor_Speed xdata *speed)
 {
-    if(speed->motor_speed > 0)      //Õý×ª
+    if(speed->motor_speed > 0)      //ï¿½ï¿½×ª
     {
         speed->set_speed = speed->motor_speed;
-        if(speed->target_speed > speed->motor_speed)   //¼ÓËÙ
+        if(speed->target_speed > speed->motor_speed)   //ï¿½ï¿½ï¿½ï¿½
         {
             if(speed->target_speed - speed->motor_speed > speed->acceleration_speed)
             {
@@ -221,7 +214,7 @@ void Motor_Speed_Ramp(Motor_Speed xdata *speed)
                 speed->set_speed = speed->target_speed;
             }
         }
-        else                                            //¼õËÙ
+        else                                            //ï¿½ï¿½ï¿½ï¿½
         {
             if(speed->motor_speed - speed->target_speed > speed->deceleration_speed)
             {
@@ -233,10 +226,10 @@ void Motor_Speed_Ramp(Motor_Speed xdata *speed)
             }
         }
     }
-    else    //·´×ª
+    else    //ï¿½ï¿½×ª
     {
         speed->set_speed = speed->motor_speed;
-        if(speed->target_speed < speed->motor_speed)   //¼ÓËÙ
+        if(speed->target_speed < speed->motor_speed)   //ï¿½ï¿½ï¿½ï¿½
         {
             if(speed->target_speed - speed->motor_speed < -speed->acceleration_speed)
             {
@@ -247,7 +240,7 @@ void Motor_Speed_Ramp(Motor_Speed xdata *speed)
                 speed->set_speed = speed->target_speed;
             }
         }
-        else                                            //¼õËÙ
+        else                                            //ï¿½ï¿½ï¿½ï¿½
         {
             if(speed->motor_speed - speed->target_speed < -speed->deceleration_speed)
             {
@@ -262,26 +255,26 @@ void Motor_Speed_Ramp(Motor_Speed xdata *speed)
 }
 
 /*---------------------------------------------
-    @ function  : ËÙ¶È±äÁ¿¸üÐÂº¯Êý
-    @ describe  : ´¦ÀíÊäÈëËÙ¶ÈÖ¸Áî
-    @ param     : Motor_Speed ½á¹¹ÌåÖ¸Õë
+    @ function  : ï¿½Ù¶È±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Âºï¿½ï¿½ï¿½
+    @ describe  : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½Ö¸ï¿½ï¿½
+    @ param     : Motor_Speed ï¿½á¹¹ï¿½ï¿½Ö¸ï¿½ï¿½
     @ date      : 2026-2-6
 -----------------------------------------------*/
 void Speed_Update(Motor_Speed xdata *speed)
 {
-    speed->motor_speed = motor_data.speed;
-    speed->target_speed = SPEED_MAX * speed->pwm_duty / PWM_DUTY_BASE;      //Ä¿±ê×ªËÙ = ×î´ó×ªËÙ * Õ¼¿Õ±È 
+    speed->motor_speed = g_ctx->motor_data.speed;
+    speed->target_speed = SPEED_MAX * speed->pwm_duty / PWM_DUTY_BASE;      //Ä¿ï¿½ï¿½×ªï¿½ï¿½ = ï¿½ï¿½ï¿½×?ï¿½ï¿½ * Õ¼ï¿½Õ±ï¿½ 
 }
 
 /*---------------------------------------------
     @ function   : Speed_Loop
-    @ describe   : ËÙ¶È»·
+    @ describe   : ï¿½Ù¶È»ï¿½
     @ param      : None
     @ date       : 2026-2-24
 ----------------------------------------------*/
 void Speed_Loop(void)
 {
-    pid_structure_speed.error = motor_speed.target_speed - motor_speed.motor_speed;
-    PID(&pid_structure_speed);
-    dq_voltage_ctl.voltage_q = pid_structure_speed.output;
+    g_ctx->pid_speed.error = g_ctx->motor_speed.target_speed - g_ctx->motor_speed.motor_speed;
+    PID(&g_ctx->pid_speed);
+    g_ctx->dq_voltage_ctl.voltage_q = g_ctx->pid_speed.output;
 }

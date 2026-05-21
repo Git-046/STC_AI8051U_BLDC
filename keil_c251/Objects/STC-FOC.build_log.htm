@@ -21,17 +21,23 @@ Target DLL:      STCMON251.DLL V0, 1, 2, 0
 Dialog DLL:      TCORE51.DLL V2.66.4.0
  
 <h2>Project:</h2>
-C:\Users\cjr\Desktop\STC-FOC\AI8051U\STC AI8051U FOC\keil_c251\STC-FOC.uvproj
+C:\Users\cjr\Desktop\STC\AI8051U\1.STC AI8051U FOC\keil_c251\STC-FOC.uvproj
 Project File Date:  03/06/2026
 
 <h2>Output:</h2>
 Build target 'Target_1'
 compiling interrpt.c...
 linking...
-Program Size: data=8.5 edata+hdata=565 xdata=1231 const=183 code=37705
-creating hex file from ".\Objects\STC-FOC"...
-".\Objects\STC-FOC" - 0 Error(s), 0 Warning(s).
-Build Time Elapsed:  00:00:01
+*** ERROR L127: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  set_pwm_duty
+    MODULE:  .\Objects\PWM.obj (PWM)
+*** ERROR L128: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  set_pwm_duty
+    MODULE:  .\Objects\PWM.obj (PWM)
+    ADDRESS: FF024CH
+Program Size: data=8.3 edata+hdata=555 xdata=1209 const=485 code=39254
+Target not created.
+Build Time Elapsed:  00:00:00
 </pre>
 </body>
 </html>

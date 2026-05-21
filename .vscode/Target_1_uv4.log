@@ -1,0 +1,14 @@
+Build target 'Target_1'
+linking...
+*** ERROR L127: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  set_pwm_duty
+    MODULE:  .\Objects\PWM.obj (PWM)
+
+*** ERROR L128: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  set_pwm_duty
+    MODULE:  .\Objects\PWM.obj (PWM)
+    ADDRESS: FF024CH
+
+Program Size: data=8.3 edata+hdata=555 xdata=1209 const=485 code=39254
+Target not created.
+Build Time Elapsed:  00:00:00

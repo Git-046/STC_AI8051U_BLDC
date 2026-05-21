@@ -25,8 +25,8 @@
 #define LOWER_VOLTAGE_PROTECT_RECOVER_VALUE     21          //(V) 低压保护恢复阈值
 #define OVER_VOLTAGE_DETECT_TIME                100         //(ms) 过压检测时间阈值
 #define OVER_VOLTAGE_RECOVER_DETECT_TIME        100         //(ms) 过压恢复检测时间阈值
-#define LOVER_VOLTAGE_DETECT_TIME               100         //(ms) 低压检测时间阈值
-#define LOVER_VOLTAGE_RECOVER_DETECT_TIME       100         //(ms) 低压恢复检测时间阈值
+#define LOWER_VOLTAGE_DETECT_TIME               100         //(ms) 低压检测时间阈值
+#define LOWER_VOLTAGE_RECOVER_DETECT_TIME       100         //(ms) 低压恢复检测时间阈值
 
 #define MOTOR_RESTART_EN        0           //重启功能(0 关闭  1 开启)
 #define MOTOR_RESTART_DELAY     3000        //(ms) 故障重启延时时间

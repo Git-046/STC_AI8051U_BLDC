@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  Timer                                                              05/03/26  13:45:20  PAGE 1   
+C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE Timer
@@ -66,7 +66,7 @@ stmt  level    source
    54   2      
    55   2              TM2PS = TIMx->TIM_PS;
    56   2              Timer2_Run(TIMx->TIM_Run);
-C251 COMPILER V5.60.0,  Timer                                                              05/03/26  13:45:20  PAGE 2   
+C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 2   
 
    57   2              return    SUCCESS;        //成功
    58   2          }
@@ -134,7 +134,7 @@ stmt  level    source
              -ReloadNoMask
   120   1          u8    TIM_ClkMode;    //模式选择       TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
   121   1          u8    TIM_ClkSource;  //时钟源         TIM_SOURCE_SYSCLK,TIM_SOURCE_HIRC,TIM_SOURCE_X32K,TIM_SOURCE_L
-C251 COMPILER V5.60.0,  Timer                                                              05/03/26  13:45:20  PAGE 3   
+C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 3   
 
              -IRC
   122   1          u8    TIM_ClkOut;     //定时器时钟输出, ENABLE,DISABLE
@@ -202,7 +202,7 @@ stmt  level    source
   184   2              {
   185   3                  elapsed = (0xFFFF - start) + current + 1;
   186   3              }
-C251 COMPILER V5.60.0,  Timer                                                              05/03/26  13:45:20  PAGE 4   
+C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 4   
 
   187   2              
   188   2              if (elapsed >= us) 
@@ -270,7 +270,7 @@ stmt  level    source
   250   1          if(ms_delay_ticks.start == 0)
   251   1          {
   252   2              ms_delay_ticks.count = 0;    //计数清零
-C251 COMPILER V5.60.0,  Timer                                                              05/03/26  13:45:20  PAGE 5   
+C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 5   
 
   253   2              ms_delay_ticks.end = 0;      //结束标志位清零
   254   2              ms_delay_ticks.start = 1;    //开始计数

@@ -1,3 +1,4 @@
+#include "Context.h"
 #include "AI8051U.h"
 #include "Protect.h"
 #include "Motor.h"
@@ -18,13 +19,13 @@ void Current_Limit(float xdata *Q_axis_current)
 void Over_Current_Protect(void)
 {
     static u16 time_count = 0;
-    if(dq_current.current_q > OVER_CURRENT_PROTECT_VALUE)
+    if(g_ctx->dq_current.current_q > OVER_CURRENT_PROTECT_VALUE)
     {
         time_count++;
         if(time_count >= OVER_CURRENT_DETECT_TIME)
         {
-            motor_state = motor_fault;
-            fault_flag = motor_over_current;
+            g_ctx->motor_state = motor_fault;
+            g_ctx->fault_flag = motor_over_current;
         }
     }
     else
@@ -36,22 +37,22 @@ void Over_Current_Protect(void)
 void Motor_Stall_Protect(void)
 {
     static u16 time_count;
-    if(motor_speed.motor_speed < 0 && motor_speed.motor_speed > -motor_speed.min_speed)
+    if(g_ctx->motor_speed.motor_speed < 0 && g_ctx->motor_speed.motor_speed > -g_ctx->motor_speed.min_speed)
     {
         time_count++;
         if(time_count >= MOTOR_STALL_DETECT_TIME)
         {
-            motor_state = motor_fault;
-            fault_flag = motor_stall;
+            g_ctx->motor_state = motor_fault;
+            g_ctx->fault_flag = motor_stall;
         }
     }
-    else if(motor_speed.motor_speed > 0 && motor_speed.motor_speed < motor_speed.min_speed)
+    else if(g_ctx->motor_speed.motor_speed > 0 && g_ctx->motor_speed.motor_speed < g_ctx->motor_speed.min_speed)
     {
         time_count++;
         if(time_count >= MOTOR_STALL_DETECT_TIME)
         {
-            motor_state = motor_fault;
-            fault_flag = motor_stall;
+            g_ctx->motor_state = motor_fault;
+            g_ctx->fault_flag = motor_stall;
         }
     }
     else
