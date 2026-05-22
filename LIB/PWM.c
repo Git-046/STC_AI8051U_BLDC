@@ -27,7 +27,7 @@ void PWM_Init(void)
 	PWMx_InitStructure.PWM_Output_Channel_Select = ENO1P;	//PWM1P输出使能(PWMx_ENO[7:0])
 	strcpy(PWMx_InitStructure.PWM_IO_Pin_Select, "P2.4");	//选择引脚(PWMx_PS[7:0])
 	PWMx_InitStructure.PWM_OC_Mode = CCMRn_PWM_MODE2;		//计数器大于比较值，输出高电平(PWMx_CCMR1[6:4])
-	PWMx_InitStructure.PWM_Duty = PWMx_InitStructure.PWM_Pscr / 1000 * set_pwm_duty;	//占空比(PWMx_PSCRH、PWMx_PSCRL) 0~Period 对应 0~100%
+	PWMx_InitStructure.PWM_Duty = PWMx_InitStructure.PWM_Pscr / 1000 * 0;	//占空比(PWMx_PSCRH、PWMx_PSCRL) 0~Period 对应 0~100%
 	PWMx_InitStructure.PWM_Capture_Edge_or_Valid_Level = 1;	//高电平有效(PWMx_CCER1)
 	PWM_Configuration_2(PWM1, &PWMx_InitStructure);//根据结构体成员要求，配置对应的寄存器
 

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  11:19:12  PAGE 1   
+C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE interrpt
@@ -66,7 +66,7 @@ stmt  level    source
    55          @ time      :   1s
    56          @ parameter :   None
    57          @ date      :   2026-3-4
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  11:19:12  PAGE 2   
+C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 2   
 
    58          -----------------------------------------*/
    59          void TIM3_ISR() interrupt TMR3_VECTOR
@@ -134,7 +134,7 @@ stmt  level    source
   121   2                      
   122   2                      DMA_SPI_STA = DMA_SPI_STA & ~0x01;                                                      //�жϱ�־λ����
   123   2              if(i > 7)       //�ظ�TLE5012B��ָ�������±�
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  11:19:12  PAGE 3   
+C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 3   
 
   124   2              {
   125   3                  i = 4;
@@ -202,7 +202,7 @@ stmt  level    source
   185   5                      }
   186   4                      else if(count == 0) //���˲�䲶������
   187   4                      {
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  11:19:12  PAGE 4   
+C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 4   
 
   188   5                          total_ticks = (u32)(65536 - cc1_last + cc1);
   189   5                      }
@@ -271,7 +271,7 @@ Module Information          Static   Overlayable
   idata size           =    ------     ------
   pdata size           =    ------     ------
   xdata size           =        16     ------
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  11:19:12  PAGE 5   
+C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 5   
 
   xdata-const size     =    ------     ------
   edata size           =         3          5

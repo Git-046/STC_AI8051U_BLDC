@@ -34,7 +34,7 @@ typedef struct
 	uint16_t execution_frequency;			//执行频率(速度环频率)
 }Speed_Ramp;
 
-//函数声明
+//锟斤拷锟斤拷锟斤拷锟斤拷
 void Current_Loop(void);
 void PID(PID_Structure xdata *pid_structure);
 void SVPWM(Alpha_Beta_Axis_Voltage xdata *alpha_beta_voltage, float v_bus, float T_pwm);

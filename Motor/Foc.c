@@ -6,11 +6,72 @@
 #include "Protect.h"
 #include "def.h"
 
+/*==================== Sin/Cos LUT (Q15) ====================*/
+/* Auto-generated, 256 entries, Q15 format (32767 = 1.0)
+ * Index = electrical_angle * 40.743665 (256 / (2*PI))
+ */
+const int16 SIN_TABLE_Q15[256] = {
+         0,    804,   1608,   2410,   3212,   4011,   4808,   5602,
+      6393,   7179,   7962,   8739,   9512,  10278,  11039,  11793,
+     12539,  13279,  14010,  14732,  15446,  16151,  16846,  17530,
+     18204,  18868,  19519,  20159,  20787,  21403,  22005,  22594,
+     23170,  23731,  24279,  24811,  25329,  25832,  26319,  26790,
+     27245,  27683,  28105,  28510,  28898,  29268,  29621,  29956,
+     30273,  30571,  30852,  31113,  31356,  31580,  31785,  31971,
+     32137,  32285,  32412,  32521,  32609,  32678,  32728,  32757,
+     32767,  32757,  32728,  32678,  32609,  32521,  32412,  32285,
+     32137,  31971,  31785,  31580,  31356,  31113,  30852,  30571,
+     30273,  29956,  29621,  29268,  28898,  28510,  28105,  27683,
+     27245,  26790,  26319,  25832,  25329,  24811,  24279,  23731,
+     23170,  22594,  22005,  21403,  20787,  20159,  19519,  18868,
+     18204,  17530,  16846,  16151,  15446,  14732,  14010,  13279,
+     12539,  11793,  11039,  10278,   9512,   8739,   7962,   7179,
+      6393,   5602,   4808,   4011,   3212,   2410,   1608,    804,
+         0,   -803,  -1607,  -2409,  -3211,  -4010,  -4807,  -5601,
+     -6392,  -7178,  -7961,  -8738,  -9511, -10277, -11038, -11792,
+    -12538, -13278, -14009, -14731, -15445, -16150, -16845, -17529,
+    -18203, -18867, -19518, -20158, -20786, -21402, -22004, -22593,
+    -23169, -23730, -24278, -24810, -25328, -25831, -26318, -26789,
+    -27244, -27682, -28104, -28509, -28897, -29267, -29620, -29955,
+    -30272, -30570, -30851, -31112, -31355, -31579, -31784, -31970,
+    -32136, -32284, -32411, -32520, -32608, -32677, -32727, -32756,
+    -32766, -32756, -32727, -32677, -32608, -32520, -32411, -32284,
+    -32136, -31970, -31784, -31579, -31355, -31112, -30851, -30570,
+    -30272, -29955, -29620, -29267, -28897, -28509, -28104, -27682,
+    -27244, -26789, -26318, -25831, -25328, -24810, -24278, -23730,
+    -23169, -22593, -22004, -21402, -20786, -20158, -19518, -18867,
+    -18203, -17529, -16845, -16150, -15445, -14731, -14009, -13278,
+    -12538, -11792, -11038, -10277,  -9511,  -8738,  -7961,  -7178,
+     -6392,  -5601,  -4807,  -4010,  -3211,  -2409,  -1607,   -803
+};
+
+#define TWO_PI           6.283185307f
+#define INDEX_SCALE      40.743665f       /* 256 / (2*PI) */
+#define Q15_TO_FLOAT     0.000030517578f  /* 1.0f / 32768.0f */
+
+static int16 sin_q15(float angle_rad)
+{
+    uint16 idx;
+    if (angle_rad < 0.0f)        angle_rad += TWO_PI;
+    if (angle_rad >= TWO_PI)     angle_rad -= TWO_PI;
+    idx = (uint16)(angle_rad * INDEX_SCALE);
+    return SIN_TABLE_Q15[idx & 0xFF];
+}
+
+static int16 cos_q15(float angle_rad)
+{
+    return sin_q15(angle_rad + 1.570796327f);  /* cos(¦È) = sin(¦È + ¦Ð/2) */
+}
+
+#define SIN_F(angle)  ((float)sin_q15(angle) * Q15_TO_FLOAT)
+#define COS_F(angle)  ((float)cos_q15(angle) * Q15_TO_FLOAT)
+
 
 void Current_Loop(void)
 {
-    //1.
+    //1.define local variables
     float ModulationRatio;
+    float angle, sin_f, cos_f;
 
     //2. current sampling
     //2.1. read ADC
@@ -24,9 +85,12 @@ void Current_Loop(void)
     g_ctx->alpha_beta_current.current_alpha = (g_ctx->phase_current.current_v - g_ctx->phase_current.current_w) * ONE_DIVIDE_THE_SQUARE_OF_THREE;
     g_ctx->alpha_beta_current.current_beta  = g_ctx->phase_current.current_u;
 
-    //4. Park transform
-    g_ctx->dq_current.current_d = g_ctx->alpha_beta_current.current_alpha * cos(g_ctx->motor_data.electrical_angle) + g_ctx->alpha_beta_current.current_beta * sin(g_ctx->motor_data.electrical_angle);
-    g_ctx->dq_current.current_q = (-g_ctx->alpha_beta_current.current_alpha) * sin(g_ctx->motor_data.electrical_angle) + g_ctx->alpha_beta_current.current_beta * cos(g_ctx->motor_data.electrical_angle);
+    //4. Park transform (sin/cos from LUT, single lookup)
+    angle = g_ctx->motor_data.electrical_angle;
+    sin_f = SIN_F(angle);
+    cos_f = COS_F(angle);
+    g_ctx->dq_current.current_d = g_ctx->alpha_beta_current.current_alpha * cos_f + g_ctx->alpha_beta_current.current_beta * sin_f;
+    g_ctx->dq_current.current_q = (-g_ctx->alpha_beta_current.current_alpha) * sin_f + g_ctx->alpha_beta_current.current_beta * cos_f;
 
     //5. current PID
     g_ctx->pid_d.error = g_ctx->dq_current_ref.current_d - g_ctx->dq_current.current_d;
@@ -45,7 +109,8 @@ void Current_Loop(void)
     }
 
     //7. voltage limit circle
-    g_ctx->v_bus = ADC_Result_Buffer[3] * ADC_V_REF * V_BUS_VOLTAGE_DIVISION_RATIO / 4095 ;
+    //  g_ctx->v_bus = ADC_Result_Buffer[3] * ADC_V_REF * V_BUS_VOLTAGE_DIVISION_RATIO / 4095;
+        g_ctx->v_bus = ADC_Result_Buffer[3] * ADC_V_REF * V_BUS_VOLTAGE_DIVISION_RATIO * 0.000244140625;
     ModulationRatio = ONE_DIVIDE_THE_SQUARE_OF_THREE_PLUS_ZERO_POINT_NINE * g_ctx->v_bus / sqrt(SQUARE(g_ctx->dq_voltage_ctl.voltage_d) + SQUARE(g_ctx->dq_voltage_ctl.voltage_q));
     if(ModulationRatio < 1.0)
     {
@@ -66,9 +131,9 @@ void Current_Loop(void)
         g_ctx->dq_voltage_ctl_limit.voltage_q = g_ctx->dq_voltage_ctl.voltage_q;
     }
 
-    //8. inverse Park
-    g_ctx->alpha_beta_voltage_ctl.voltage_alpha = g_ctx->dq_voltage_ctl_limit.voltage_d * cos(g_ctx->motor_data.electrical_angle) - g_ctx->dq_voltage_ctl_limit.voltage_q * sin(g_ctx->motor_data.electrical_angle);
-    g_ctx->alpha_beta_voltage_ctl.voltage_beta  = g_ctx->dq_voltage_ctl_limit.voltage_d * sin(g_ctx->motor_data.electrical_angle) + g_ctx->dq_voltage_ctl_limit.voltage_q * cos(g_ctx->motor_data.electrical_angle);
+    //8. inverse Park (reuse sin_f/cos_f from Park)
+    g_ctx->alpha_beta_voltage_ctl.voltage_alpha = g_ctx->dq_voltage_ctl_limit.voltage_d * cos_f - g_ctx->dq_voltage_ctl_limit.voltage_q * sin_f;
+    g_ctx->alpha_beta_voltage_ctl.voltage_beta  = g_ctx->dq_voltage_ctl_limit.voltage_d * sin_f + g_ctx->dq_voltage_ctl_limit.voltage_q * cos_f;
 
     //9. SVPWM -> PWM duty
     SVPWM(&g_ctx->alpha_beta_voltage_ctl, g_ctx->v_bus, 0.00005);

@@ -813,7 +813,7 @@ typedef struct
 
 u8   PWM_Configuration(u8 PWM, PWMx_InitDefine *PWMx);
 
-extern u8 xdata set_pwm_duty;
+// extern u8 xdata set_pwm_duty;
 
 //new function
 void PWM_Init(void);
