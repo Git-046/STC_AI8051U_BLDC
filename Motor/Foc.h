@@ -34,19 +34,11 @@ typedef struct
 	uint16_t execution_frequency;			//执行频率(速度环频率)
 }Speed_Ramp;
 
-//全局变量声明
-extern PID_Structure xdata pid_structure;
-extern Speed_Ramp xdata speed_ramp;
-
-extern PID_Structure xdata pid_structure_d;
-extern PID_Structure xdata pid_structure_q;
-extern PID_Structure xdata pid_structure_speed;
-
 //函数声明
 void Current_Loop(void);
 void PID(PID_Structure xdata *pid_structure);
-void SVPWM(Alpha_Beta_Axis_Voltage xdata *alpha_beta_voltage, float V_bus, float T_pwm);
-void First_Order_LPF(float new_value, float filtered_value, float last_value, float alpha);
+void SVPWM(Alpha_Beta_Axis_Voltage xdata *alpha_beta_voltage, float v_bus, float T_pwm);
+void First_Order_LPF(Phase_Current xdata *phase_current, float alpha);
 
 void Speed_Update(Motor_Speed xdata *speed);
 void Motor_Speed_Ramp(Motor_Speed xdata *speed);

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  Motor                                                              21/05/26  16:23:46  PAGE 1   
+C251 COMPILER V5.60.0,  Motor                                                              22/05/26  11:19:12  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE Motor
@@ -13,38 +13,32 @@ stmt  level    source
     3          #include "Motor.h"
     4          #include "def.h"
     5          #include "string.h"
-    6          
-    7          #include "State_Machine.h"
-    8          
-    9          u8 xdata SPI_TX_Buffer[8];
-   10          u8 xdata SPI_RX_Buffer[4];
-   11          
-   12          void TLE5012B_Init()
-   13          {
-   14   1              //0.Ԥ�ȴ洢TLE5012B�Ŀ���ָ��
-   15   1              g_ctx->tx_cmd_arr[0] = SET_MODE2_CMD >> 2;
-   16   1              g_ctx->tx_cmd_arr[1] = SET_MODE2_CMD;
-   17   1              
-   18   1              g_ctx->tx_cmd_arr[2] = MODE2_PARAM >> 2;
-   19   1              g_ctx->tx_cmd_arr[3] = MODE2_PARAM;
-   20   1              
-   21   1              g_ctx->tx_cmd_arr[4] = TLE5012B_READ_ANGLE_CMD >> 2;
-   22   1              g_ctx->tx_cmd_arr[5] = TLE5012B_READ_ANGLE_CMD;
-   23   1              
-   24   1              g_ctx->tx_cmd_arr[6] = TLE5021B_READ_SPEED_AND_LOOP_CMD >> 2;
-   25   1              g_ctx->tx_cmd_arr[7] = TLE5021B_READ_SPEED_AND_LOOP_CMD;
-   26   1              
-   27   1              //1.�趨�ű���������ģʽ
-   28   1              SPI_TX_Buffer[0] = g_ctx->tx_cmd_arr[0];
-   29   1              SPI_TX_Buffer[1] = g_ctx->tx_cmd_arr[1];
-   30   1              while(SPI_RX_Buffer[0] == 0 && SPI_RX_Buffer[1] == 0) ; //�ȴ����ذ�ȫ��
-   31   1              
-   32   1              SPI_RX_Buffer[0] = 0;
-   33   1              SPI_RX_Buffer[1] = 0;
-   34   1              SPI_TX_Buffer[0] = g_ctx->tx_cmd_arr[2];
-   35   1              SPI_TX_Buffer[1] = g_ctx->tx_cmd_arr[3];
-   36   1              while(SPI_RX_Buffer[0] == 0 && SPI_RX_Buffer[1] == 0) ; //�ȴ����ذ�ȫ��
-   37   1      }
+    6          #include "State_Machine.h"
+    7          
+    8          u8 xdata SPI_TX_Buffer[8];
+    9          u8 xdata SPI_RX_Buffer[4];
+   10          
+   11          void TLE5012B_Init()
+   12          {
+   13   1              g_ctx->tx_cmd_arr[0] = SET_MODE2_CMD >> 2;
+   14   1              g_ctx->tx_cmd_arr[1] = SET_MODE2_CMD;
+   15   1              g_ctx->tx_cmd_arr[2] = MODE2_PARAM >> 2;
+   16   1              g_ctx->tx_cmd_arr[3] = MODE2_PARAM;
+   17   1              g_ctx->tx_cmd_arr[4] = TLE5012B_READ_ANGLE_CMD >> 2;
+   18   1              g_ctx->tx_cmd_arr[5] = TLE5012B_READ_ANGLE_CMD;
+   19   1              g_ctx->tx_cmd_arr[6] = TLE5021B_READ_SPEED_AND_LOOP_CMD >> 2;
+   20   1              g_ctx->tx_cmd_arr[7] = TLE5021B_READ_SPEED_AND_LOOP_CMD;
+   21   1      
+   22   1              SPI_TX_Buffer[0] = g_ctx->tx_cmd_arr[0];
+   23   1              SPI_TX_Buffer[1] = g_ctx->tx_cmd_arr[1];
+   24   1              while(SPI_RX_Buffer[0] == 0 && SPI_RX_Buffer[1] == 0) ;
+   25   1      
+   26   1              SPI_RX_Buffer[0] = 0;
+   27   1              SPI_RX_Buffer[1] = 0;
+   28   1              SPI_TX_Buffer[0] = g_ctx->tx_cmd_arr[2];
+   29   1              SPI_TX_Buffer[1] = g_ctx->tx_cmd_arr[3];
+   30   1              while(SPI_RX_Buffer[0] == 0 && SPI_RX_Buffer[1] == 0) ;
+   31   1      }
 
 
 Module Information          Static   Overlayable

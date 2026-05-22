@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  Init                                                               21/05/26  16:23:46  PAGE 1   
+C251 COMPILER V5.60.0,  Init                                                               22/05/26  11:19:12  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE Init
@@ -58,15 +58,15 @@ stmt  level    source
    48   1      
    49   1          g_ctx->motor_speed.max_speed = SPEED_MAX;
    50   1          g_ctx->motor_speed.min_speed = SPEED_MIN;
-   51   1          g_ctx->motor_speed.acceleration_speed = SPEED_ACCELERATION;
-   52   1          g_ctx->motor_speed.deceleration_speed = SPEED_DECELERATION;
+   51   1          g_ctx->motor_speed.acceleration_speed = SPEED_ACCERELATION;
+   52   1          g_ctx->motor_speed.deceleration_speed = SPEED_DECERELATION;
    53   1      
    54   1          /*PID Parameter*/
    55   1          memset((void*)&g_ctx->pid_d, 0, sizeof(PID_Structure));
    56   1          memset((void*)&g_ctx->pid_q, 0, sizeof(PID_Structure));
    57   1          memset((void*)&g_ctx->pid_speed, 0, sizeof(PID_Structure));
    58   1      
-C251 COMPILER V5.60.0,  Init                                                               21/05/26  16:23:46  PAGE 2   
+C251 COMPILER V5.60.0,  Init                                                               22/05/26  11:19:12  PAGE 2   
 
    59   1          g_ctx->pid_d.P_gain = PID_ID_KP;
    60   1          g_ctx->pid_d.I_gain = PID_ID_KI;
@@ -80,17 +80,32 @@ stmt  level    source
    68   1          g_ctx->pid_speed.I_gain = PID_S_KI;
    69   1          g_ctx->pid_speed.D_gain = PID_S_KD;
    70   1      
-   71   1          memset((void*)&g_ctx->speed_ramp, 0, sizeof(Speed_Ramp));
-   72   1          g_ctx->speed_ramp.accelerate_amount = SPEED_ACCELERATION;
-   73   1          g_ctx->speed_ramp.decelerate_amount = SPEED_DECELERATION;
-   74   1      }
-   75           
+   71   1          g_ctx->pid_d.output_limit = PID_I_Limit;
+   72   1          g_ctx->pid_d.I_limit = PID_I_Limit;
+   73   1          g_ctx->pid_d.I_period = 1.0 / CURRENT_LOOP_FREQUENT;
+   74   1          g_ctx->pid_d.Kc_gain = 1.0;
+   75   1      
+   76   1          g_ctx->pid_q.output_limit = PID_I_Limit;
+   77   1          g_ctx->pid_q.I_limit = PID_I_Limit;
+   78   1          g_ctx->pid_q.I_period = 1.0 / CURRENT_LOOP_FREQUENT;
+   79   1          g_ctx->pid_q.Kc_gain = 1.0;
+   80   1      
+   81   1          g_ctx->pid_speed.output_limit = PID_I_Limit;
+   82   1          g_ctx->pid_speed.I_limit = PID_I_Limit;
+   83   1          g_ctx->pid_speed.I_period = 1.0 / SPEED_LOOP_FREQUENT;
+   84   1          g_ctx->pid_speed.Kc_gain = 1.0;
+   85   1      
+   86   1          memset((void*)&g_ctx->speed_ramp, 0, sizeof(Speed_Ramp));
+   87   1          g_ctx->speed_ramp.accelerate_amount = SPEED_ACCERELATION;
+   88   1          g_ctx->speed_ramp.decelerate_amount = SPEED_DECERELATION;
+   89   1      }
+   90           
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =       796     ------
+  ecode size           =      1094     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------

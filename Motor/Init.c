@@ -48,8 +48,8 @@ void Parameter_Init(void)
 
     g_ctx->motor_speed.max_speed = SPEED_MAX;
     g_ctx->motor_speed.min_speed = SPEED_MIN;
-    g_ctx->motor_speed.acceleration_speed = SPEED_ACCELERATION;
-    g_ctx->motor_speed.deceleration_speed = SPEED_DECELERATION;
+    g_ctx->motor_speed.acceleration_speed = SPEED_ACCERELATION;
+    g_ctx->motor_speed.deceleration_speed = SPEED_DECERELATION;
 
     /*PID Parameter*/
     memset((void*)&g_ctx->pid_d, 0, sizeof(PID_Structure));
@@ -68,8 +68,23 @@ void Parameter_Init(void)
     g_ctx->pid_speed.I_gain = PID_S_KI;
     g_ctx->pid_speed.D_gain = PID_S_KD;
 
+    g_ctx->pid_d.output_limit = PID_I_Limit;
+    g_ctx->pid_d.I_limit = PID_I_Limit;
+    g_ctx->pid_d.I_period = 1.0 / CURRENT_LOOP_FREQUENT;
+    g_ctx->pid_d.Kc_gain = 1.0;
+
+    g_ctx->pid_q.output_limit = PID_I_Limit;
+    g_ctx->pid_q.I_limit = PID_I_Limit;
+    g_ctx->pid_q.I_period = 1.0 / CURRENT_LOOP_FREQUENT;
+    g_ctx->pid_q.Kc_gain = 1.0;
+
+    g_ctx->pid_speed.output_limit = PID_I_Limit;
+    g_ctx->pid_speed.I_limit = PID_I_Limit;
+    g_ctx->pid_speed.I_period = 1.0 / SPEED_LOOP_FREQUENT;
+    g_ctx->pid_speed.Kc_gain = 1.0;
+
     memset((void*)&g_ctx->speed_ramp, 0, sizeof(Speed_Ramp));
-    g_ctx->speed_ramp.accelerate_amount = SPEED_ACCELERATION;
-    g_ctx->speed_ramp.decelerate_amount = SPEED_DECELERATION;
+    g_ctx->speed_ramp.accelerate_amount = SPEED_ACCERELATION;
+    g_ctx->speed_ramp.decelerate_amount = SPEED_DECERELATION;
 }
  

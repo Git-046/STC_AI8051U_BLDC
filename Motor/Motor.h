@@ -1,6 +1,7 @@
 #include "def.h"
 
 #ifndef __Motor_H
+#define __Motor_H
 
 /*=======================电机硬件参数=====================*/
 #define	MOTOR_POLE_PAIRS			6			//电机极对数
@@ -55,7 +56,7 @@
 #define SPEED_BASE      5000        //转速基准(RPM)
 
 #define SPEED_ACCERELATION      50      //速度增量
-#define SPEED_DECERELATION     -50     //速度减量
+#define SPEED_DECERELATION		50     	//速度减量
 
 /*==================结构体定义==================*/
 typedef struct
@@ -130,40 +131,16 @@ typedef struct
 #define TLE5012B_READ_ANGLE_CMD					0x8021		//读取角度的指令
 #define TLE5021B_READ_SPEED_AND_LOOP_CMD		0x8032		//读取速度和旋转圈数的指令
 
-#define TLE5012B_TX_BUFFER_SIZE		8			//TLE5012B指令存储数组的大小（3个16位指令）
-#define TLE5012B_RX_BUFFER_SIZE		8			//存储TLE5012B数据的缓存数组（3个16位数据）
+#define TLE5012B_TX_BUFFER_SIZE		8			//TLE5012B指令存储数组的大小
+#define TLE5012B_RX_BUFFER_SIZE		8			//存储TLE5012B数据的缓存数组（3锟斤拷16位锟斤拷锟捷ｏ拷
 
-typedef struct
-{
-	s16 angle;	//角度分度值
-	s16 speed;	//速度值
-	s16 loop;	//圈数
-}TLE5012B_Data;		//从磁编码器获取到的数据
 
-/*=========================================函数声明=========================================*/
+/*=========================================磁编码器初始化=========================================*/
 void TLE5012B_Init(void);
-
-
-/*===============全局变量声明==============*/
-extern Motor_Data xdata motor_data;
-extern Motor_Speed xdata motor_speed;
-
-extern Phase_Current xdata phase_current;					//U、V、W三相电流(电流采样电阻)
-extern Alpha_Beta_Axis_Current xdata alpha_beta_current;	//α、β轴电流(Clark变化)
-extern Direct_Quadrature_Axis_Current xdata dq_current;		//D、Q轴电流(Park变换)
-
-extern Direct_Quadrature_Axis_Current xdata dq_current_ref;         //D、Q轴电流需求量
-extern Direct_Quadrature_Axis_Voltage xdata dq_voltage_ctl;         //D、Q轴电压控制指令(PID)
-extern Direct_Quadrature_Axis_Voltage xdata dq_voltage_ctl_limit;   //电压圆限幅后的电压控制指令
-extern Alpha_Beta_Axis_Voltage xdata alpha_beta_voltage_ctl;	    //α、β轴电压控制量(反Park变换)
-extern Phase_Voltage xdata phase_voltage_ctl;					    //U、V、W三相电压(反Clark变换)
 
 extern u16 xdata ADC_Result_Buffer[4];	//电流采样
 
-extern u8 xdata SPI_TX_Buffer[4];	//向磁编码器请求数据发送的控制指令(0x8021请求角度数据  0x8032请求角速度和圈数数据)
-extern u8 xdata SPI_RX_Buffer[6];	//从磁编码器获取到的数据
-extern u8 xdata Tx_cmd_arr[TLE5012B_TX_BUFFER_SIZE];	//所有需要使用到的指令
-extern TLE5012B_Data tle5012b_data;				//从磁编码器读取到的结构数据
+extern u8 xdata SPI_TX_Buffer[8];	//向磁编码器请求数据发送的控制指令(0x8021请求角度数据  0x8032请求角速度和圈数数据)
+extern u8 xdata SPI_RX_Buffer[4];	//存储从磁编码器接收到的数据
 
-#define __Motor_H
 #endif

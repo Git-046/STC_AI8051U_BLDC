@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  Foc                                                                21/05/26  16:23:46  PAGE 1   
+C251 COMPILER V5.60.0,  Foc                                                                22/05/26  11:19:12  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE Foc
@@ -11,84 +11,84 @@ stmt  level    source
     1          #include "Context.h"
     2          #include "AI8051U.h"
     3          #include "Foc.h"
-    4          #include "Motor.h"              //�������?
+    4          #include "Motor.h"
     5          #include "math.h"
     6          #include "Protect.h"
     7          #include "def.h"
     8          
-    9          void Current_Loop(void)
-   10          {
-   11   1          //1.
-   12   1          float ModulationRatio;  //���Ʊ�
-   13   1          
-   14   1              //2. ���в���
-   15   1              //2.1.���²�������
-   16   1              g_ctx->phase_current.current_u = ADC_Result_Buffer[0];
-   17   1              g_ctx->phase_current.current_v = ADC_Result_Buffer[1];
-   18   1              g_ctx->phase_current.current_w = ADC_Result_Buffer[2];
-   19   1              //2.2.�˲�
-   20   1              First_Order_LPF(&g_ctx->phase_current, 0.1);
-   21   1      //      First_Order_LPF_Current(g_ctx->phase_current, 0.1);     //��������¡��˲�?
-   22   1              
-   23   1              //3.Clarke�任
-   24   1              g_ctx->alpha_beta_current.current_alpha = g_ctx->phase_current.current_u;
-   25   1              g_ctx->alpha_beta_current.current_beta = (g_ctx->phase_current.current_u + 2 * g_ctx->phase_current.curr
-             -ent_w) / ONE_DIVIDE_THE_SQUARE_OF_THREE;
-   26   1              
-   27   1              //4.Park�任
-   28   1              g_ctx->dq_current.current_d = g_ctx->alpha_beta_current.current_alpha * cos(g_ctx->motor_data.electrical
-             -_angle) + g_ctx->alpha_beta_current.current_beta * sin(g_ctx->motor_data.electrical_angle);
-   29   1              g_ctx->dq_current.current_q = (-g_ctx->alpha_beta_current.current_alpha) * sin(g_ctx->motor_data.electri
-             -cal_angle) + g_ctx->alpha_beta_current.current_beta * cos(g_ctx->motor_data.electrical_angle);
-   30   1              
-   31   1              //5.������PID
+    9          
+   10          void Current_Loop(void)
+   11          {
+   12   1          //1.
+   13   1          float ModulationRatio;
+   14   1      
+   15   1          //2. current sampling
+   16   1          //2.1. read ADC
+   17   1          g_ctx->phase_current.current_u = ADC_Result_Buffer[0];
+   18   1          g_ctx->phase_current.current_v = ADC_Result_Buffer[1];
+   19   1          g_ctx->phase_current.current_w = ADC_Result_Buffer[2];
+   20   1          //2.2. low-pass filter
+   21   1          First_Order_LPF(&g_ctx->phase_current, 0.1);
+   22   1      
+   23   1          //3. Clarke transform (consistent with SVPWM inverse Clarke: Vu=Vbeta)
+   24   1          g_ctx->alpha_beta_current.current_alpha = (g_ctx->phase_current.current_v - g_ctx->phase_current.curr
+             -ent_w) * ONE_DIVIDE_THE_SQUARE_OF_THREE;
+   25   1          g_ctx->alpha_beta_current.current_beta  = g_ctx->phase_current.current_u;
+   26   1      
+   27   1          //4. Park transform
+   28   1          g_ctx->dq_current.current_d = g_ctx->alpha_beta_current.current_alpha * cos(g_ctx->motor_data.electri
+             -cal_angle) + g_ctx->alpha_beta_current.current_beta * sin(g_ctx->motor_data.electrical_angle);
+   29   1          g_ctx->dq_current.current_q = (-g_ctx->alpha_beta_current.current_alpha) * sin(g_ctx->motor_data.elec
+             -trical_angle) + g_ctx->alpha_beta_current.current_beta * cos(g_ctx->motor_data.electrical_angle);
+   30   1      
+   31   1          //5. current PID
    32   1          g_ctx->pid_d.error = g_ctx->dq_current_ref.current_d - g_ctx->dq_current.current_d;
-   33   1              PID(&g_ctx->pid_d);
+   33   1          PID(&g_ctx->pid_d);
    34   1          g_ctx->pid_q.error = g_ctx->dq_current_ref.current_q - g_ctx->dq_current.current_q;
    35   1          PID(&g_ctx->pid_q);
-   36   1          
-   37   1          //6.PID����Ŀ�����?
+   36   1      
+   37   1          //6. PID output -> target voltage
    38   1          g_ctx->dq_voltage_ctl.voltage_d = g_ctx->pid_d.output;
    39   1          g_ctx->dq_voltage_ctl.voltage_q = g_ctx->pid_q.output;
-   40   1          
-   41   1          /* �������� */
+   40   1      
+   41   1          /* current limit */
    42   1          if(CURRENT_LIMIT_EN == ENABLE)
    43   1          {
    44   2              Current_Limit(&g_ctx->dq_voltage_ctl.voltage_q);
    45   2          }
-   46   1          
-   47   1          //7.��λԲ���ƣ���ѹ����
+   46   1      
+   47   1          //7. voltage limit circle
    48   1          g_ctx->v_bus = ADC_Result_Buffer[3] * ADC_V_REF * V_BUS_VOLTAGE_DIVISION_RATIO / 4095 ;
    49   1          ModulationRatio = ONE_DIVIDE_THE_SQUARE_OF_THREE_PLUS_ZERO_POINT_NINE * g_ctx->v_bus / sqrt(SQUARE(g_
              -ctx->dq_voltage_ctl.voltage_d) + SQUARE(g_ctx->dq_voltage_ctl.voltage_q));
-   50   1          if(ModulationRatio < 1.0)   //���Ʊ�С��1����ѹ������
+   50   1          if(ModulationRatio < 1.0)
    51   1          {
-   52   2              /*��������*/
+   52   2              /* integrator freeze */
    53   2              g_ctx->pid_d.I_EN_FLAG = 0;
    54   2              g_ctx->pid_q.I_EN_FLAG = 0;
-C251 COMPILER V5.60.0,  Foc                                                                21/05/26  16:23:46  PAGE 2   
+C251 COMPILER V5.60.0,  Foc                                                                22/05/26  11:19:12  PAGE 2   
 
-   55   2              /*��ѹ����ָ���޷�*/
+   55   2              /* voltage limit */
    56   2              g_ctx->dq_voltage_ctl_limit.voltage_d = g_ctx->dq_voltage_ctl.voltage_d * ModulationRatio;
    57   2              g_ctx->dq_voltage_ctl_limit.voltage_q = g_ctx->dq_voltage_ctl.voltage_q * ModulationRatio;
    58   2          }
    59   1          else
    60   1          {
-   61   2              /*���ֽ���*/
+   61   2              /* integrator enable */
    62   2              g_ctx->pid_d.I_EN_FLAG = 1;
    63   2              g_ctx->pid_q.I_EN_FLAG = 1;
-   64   2              
+   64   2      
    65   2              g_ctx->dq_voltage_ctl_limit.voltage_d = g_ctx->dq_voltage_ctl.voltage_d;
    66   2              g_ctx->dq_voltage_ctl_limit.voltage_q = g_ctx->dq_voltage_ctl.voltage_q;
    67   2          }
-   68   1          
-   69   1          //8.��park�任
+   68   1      
+   69   1          //8. inverse Park
    70   1          g_ctx->alpha_beta_voltage_ctl.voltage_alpha = g_ctx->dq_voltage_ctl_limit.voltage_d * cos(g_ctx->moto
              -r_data.electrical_angle) - g_ctx->dq_voltage_ctl_limit.voltage_q * sin(g_ctx->motor_data.electrical_angle);
    71   1          g_ctx->alpha_beta_voltage_ctl.voltage_beta  = g_ctx->dq_voltage_ctl_limit.voltage_d * sin(g_ctx->moto
              -r_data.electrical_angle) + g_ctx->dq_voltage_ctl_limit.voltage_q * cos(g_ctx->motor_data.electrical_angle);
-   72   1          
-   73   1          //9.SVPWM���ռ�ձ�?
+   72   1      
+   73   1          //9. SVPWM -> PWM duty
    74   1          SVPWM(&g_ctx->alpha_beta_voltage_ctl, g_ctx->v_bus, 0.00005);
    75   1      }
    76          
@@ -99,58 +99,58 @@ stmt  level    source
    81   1          u8 xdata a, b, c;
    82   1          int16 xdata x, y, z;
    83   1          uint16 xdata timeA, timeB, timeC;
-   84   1          
-   85   1          //1.Clark���?
+   84   1      
+   85   1          //1. inverse Clarke (TI convention: Vu = Vbeta, gives uniform 60deg sectors)
    86   1          voltage_abc.voltage_u = alpha_beta_voltage->voltage_beta;
-   87   1          voltage_abc.voltage_v =SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha - 0.5 * alpha_beta_v
-             -oltage->voltage_beta;
+   87   1          voltage_abc.voltage_v = SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha - 0.5 * alpha_beta_
+             -voltage->voltage_beta;
    88   1          voltage_abc.voltage_w = -SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha - 0.5 * alpha_beta
              -_voltage->voltage_beta;
-   89   1          
-   90   1          //2.�����ѹʸ�����ڵ�����?
+   89   1      
+   90   1          //2. sector determination
    91   1          a = (voltage_abc.voltage_u > 0) ? 1 : 0;
    92   1          b = (voltage_abc.voltage_v > 0) ? 1 : 0;
    93   1          c = (voltage_abc.voltage_w > 0) ? 1 : 0;
    94   1          n = (c << 2) | (b << 1) | a;
-   95   1          
-   96   1          //3.�����м����?(�������Ļ�������ʱ��)
-   97   1          x = (int16)(SQUARE_ROOT_3 * alpha_beta_voltage->voltage_beta / v_bus * (T_pwm));
+   95   1      
+   96   1          //3. intermediate time variables
+   97   1          x = (int16)(SQUARE_ROOT_3 * alpha_beta_voltage->voltage_beta / v_bus * T_pwm);
    98   1          y = (int16)(SQUARE_ROOT_3 * (SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha + 0.5 * alpha_
              -beta_voltage->voltage_beta) / v_bus * T_pwm);
    99   1          z = (int16)(SQUARE_ROOT_3 * (-SQUARE_ROOT_3_DIVIDE2 * alpha_beta_voltage->voltage_alpha + 0.5 * alpha
              -_beta_voltage->voltage_beta) / v_bus * T_pwm);
-  100   1          
-  101   1          //
+  100   1      
+  101   1          //4. sector time calculation (TI convention)
   102   1          switch(n)
   103   1          {
-  104   2              case 3:
+  104   2              case 3:  // Vu>0, Vv>0, Vw<0
   105   2                      timeA = (uint16)((T_pwm + z - x) / 4);
   106   2                      timeB = (uint16)((T_pwm - z - x) / 4);
   107   2                      timeC = (uint16)((T_pwm - z + x) / 4);
   108   2                      break;
-  109   2              case 1:
+  109   2              case 1:  // Vu>0, Vv<0, Vw<0
   110   2                      timeA = (uint16)((T_pwm - z - y) / 4);
   111   2                      timeB = (uint16)((T_pwm + z - y) / 4);
   112   2                      timeC = (uint16)((T_pwm + z + y) / 4);
   113   2                      break;
-  114   2              case 5:
-C251 COMPILER V5.60.0,  Foc                                                                21/05/26  16:23:46  PAGE 3   
+  114   2              case 5:  // Vu>0, Vv<0, Vw>0
+C251 COMPILER V5.60.0,  Foc                                                                22/05/26  11:19:12  PAGE 3   
 
   115   2                      timeA = (uint16)((T_pwm - x + y) / 4);
   116   2                      timeB = (uint16)((T_pwm + x + y) / 4);
   117   2                      timeC = (uint16)((T_pwm + x - y) / 4);
   118   2                      break;
-  119   2              case 4:
+  119   2              case 4:  // Vu<0, Vv<0, Vw>0
   120   2                      timeA = (uint16)((T_pwm + x - z) / 4);
   121   2                      timeB = (uint16)((T_pwm - x - z) / 4);
   122   2                      timeC = (uint16)((T_pwm - x + z) / 4);
   123   2                      break;
-  124   2              case 6:
+  124   2              case 6:  // Vu<0, Vv>0, Vw>0
   125   2                      timeA = (uint16)((T_pwm + y + z) / 4);
   126   2                      timeB = (uint16)((T_pwm - y + z) / 4);
   127   2                      timeC = (uint16)((T_pwm - y - z) / 4);
   128   2                      break;
-  129   2              case 2:
+  129   2              case 2:  // Vu<0, Vv>0, Vw<0
   130   2                      timeA = (uint16)((T_pwm - y + x) / 4);
   131   2                      timeB = (uint16)((T_pwm + y + x) / 4);
   132   2                      timeC = (uint16)((T_pwm + y - x) / 4);
@@ -161,38 +161,38 @@ stmt  level    source
   137   2                      timeC = (uint16)T_pwm >> 2;
   138   2                      break;
   139   2          }
-  140   1          
-  141   1          PWMA_CCR1H = (u8)(timeA >> 8);
-  142   1          PWMA_CCR1L = (u8)(timeA & 0xFF);
-  143   1          PWMA_CCR2H = (u8)(timeB >> 8);
-  144   1          PWMA_CCR2L = (u8)(timeB & 0xFF);
-  145   1          PWMA_CCR3H = (u8)(timeC >> 8);
-  146   1          PWMA_CCR3L = (u8)(timeC & 0xFF);
-  147   1      }
-  148          
-  149          /*һ�׵�ͨ�˲��˲�����*/
+  140   1      
+  141   1          //5. set PWM compare registers
+  142   1          PWMA_CCR1H = (u8)(timeA >> 8);
+  143   1          PWMA_CCR1L = (u8)(timeA & 0xFF);
+  144   1          PWMA_CCR2H = (u8)(timeB >> 8);
+  145   1          PWMA_CCR2L = (u8)(timeB & 0xFF);
+  146   1          PWMA_CCR3H = (u8)(timeC >> 8);
+  147   1          PWMA_CCR3L = (u8)(timeC & 0xFF);
+  148   1      }
+  149          
   150          void First_Order_LPF(Phase_Current xdata *phase_current, float alpha)
   151          {
-  152   1              phase_current->current_u_filtered = alpha * phase_current->current_u + (1 - alpha) * phase_current->curr
-             -ent_u_filtered;
-  153   1              phase_current->current_v_filtered = alpha * phase_current->current_v + (1 - alpha) * phase_current->curr
-             -ent_v_filtered;
-  154   1              phase_current->current_w_filtered = alpha * phase_current->current_w + (1 - alpha) * phase_current->curr
-             -ent_w_filtered;
+  152   1          phase_current->current_u_filtered = alpha * phase_current->current_u + (1 - alpha) * phase_current->c
+             -urrent_u_filtered;
+  153   1          phase_current->current_v_filtered = alpha * phase_current->current_v + (1 - alpha) * phase_current->c
+             -urrent_v_filtered;
+  154   1          phase_current->current_w_filtered = alpha * phase_current->current_w + (1 - alpha) * phase_current->c
+             -urrent_w_filtered;
   155   1      }
   156          
   157          void PID(PID_Structure xdata *pid_structure)
   158          {
-  159   1              //��������
+  159   1          //proportional
   160   1          pid_structure->P_out = pid_structure->error * pid_structure->P_gain;
-  161   1          
-  162   1          //���ֻ���
+  161   1      
+  162   1          //integral
   163   1          if(pid_structure->I_EN_FLAG == 1)
   164   1          {
-  165   2              pid_structure->I_sum += pid_structure->error * pid_structure->I_period;  //�����ۼ�
+  165   2              pid_structure->I_sum += pid_structure->error * pid_structure->I_period;
   166   2              if(pid_structure->I_sum > pid_structure->I_limit)
   167   2              {
-  168   3                  pid_structure->I_sum = pid_structure->I_limit;    
+  168   3                  pid_structure->I_sum = pid_structure->I_limit;
   169   3              }
   170   2              else if(pid_structure->I_sum < -pid_structure->I_limit)
   171   2              {
@@ -200,13 +200,13 @@ stmt  level    source
   173   3              }
   174   2              pid_structure->I_out = pid_structure->I_sum * pid_structure->I_gain;
   175   2          }
-  176   1          //΢�ֻ���
+  176   1          //derivative
   177   1          pid_structure->D_out = (pid_structure->error - pid_structure->pre_error) * pid_structure->D_gain;
-C251 COMPILER V5.60.0,  Foc                                                                21/05/26  16:23:46  PAGE 4   
+C251 COMPILER V5.60.0,  Foc                                                                22/05/26  11:19:12  PAGE 4   
 
-  178   1          pid_structure->pre_error = pid_structure->error;        //������һ�����?
-  179   1          
-  180   1          //�����?
+  178   1          pid_structure->pre_error = pid_structure->error;
+  179   1      
+  180   1          //output
   181   1          pid_structure->output_ref = pid_structure->P_out + pid_structure->I_out +pid_structure->D_out;
   182   1          if(pid_structure->output_ref > pid_structure->output_limit)
   183   1          {
@@ -216,106 +216,91 @@ stmt  level    source
   187   1          {
   188   2              pid_structure->output = -pid_structure->output_limit;
   189   2          }
-  190   1          
-  191   1          //���ֿ�����
-  192   1          pid_structure->I_sum -= pid_structure->Kc_gain * (pid_structure->output_ref - pid_structure->output);
-  193   1      }
-  194          
-  195          /*---------------------------------------------
-  196              @ function  : �ٶ�б�º���
-  197              @ describe  : ���������ٶ�ָ��
-  198              @ param     : Motor_Speed �ṹ��ָ��
-  199              @ date      : 2026-2-1
-  200          -----------------------------------------------*/
-  201          void Motor_Speed_Ramp(Motor_Speed xdata *speed)
-  202          {
-  203   1          if(speed->motor_speed > 0)      //��ת
-  204   1          {
-  205   2              speed->set_speed = speed->motor_speed;
-  206   2              if(speed->target_speed > speed->motor_speed)   //����
-  207   2              {
-  208   3                  if(speed->target_speed - speed->motor_speed > speed->acceleration_speed)
-  209   3                  {
-  210   4                      speed->set_speed += speed->acceleration_speed;
-  211   4                  }
-  212   3                  else
-  213   3                  {
-  214   4                      speed->set_speed = speed->target_speed;
-  215   4                  }
-  216   3              }
-  217   2              else                                            //����
-  218   2              {
-  219   3                  if(speed->motor_speed - speed->target_speed > speed->deceleration_speed)
-  220   3                  {
-  221   4                      speed->set_speed -= speed->deceleration_speed;
-  222   4                  }
-  223   3                  else
-  224   3                  {
-  225   4                      speed->set_speed = speed->target_speed;
-  226   4                  }
-  227   3              }
-  228   2          }
-  229   1          else    //��ת
-  230   1          {
-  231   2              speed->set_speed = speed->motor_speed;
-  232   2              if(speed->target_speed < speed->motor_speed)   //����
-  233   2              {
-  234   3                  if(speed->target_speed - speed->motor_speed < -speed->acceleration_speed)
-  235   3                  {
-  236   4                      speed->set_speed -= speed->acceleration_speed;
-  237   4                  }
-  238   3                  else
-  239   3                  {
-  240   4                      speed->set_speed = speed->target_speed;
-  241   4                  }
-  242   3              }
-  243   2              else                                            //����
-C251 COMPILER V5.60.0,  Foc                                                                21/05/26  16:23:46  PAGE 5   
+  190   1          else
+  191   1          {
+  192   2              pid_structure->output = pid_structure->output_ref;
+  193   2          }
+  194   1      
+  195   1          //anti-windup (back-calculation)
+  196   1          pid_structure->I_sum -= pid_structure->Kc_gain * (pid_structure->output_ref - pid_structure->output);
+  197   1      }
+  198          
+  199          void Motor_Speed_Ramp(Motor_Speed xdata *speed)
+  200          {
+  201   1          if(speed->motor_speed > 0)
+  202   1          {
+  203   2              speed->set_speed = speed->motor_speed;
+  204   2              if(speed->target_speed > speed->motor_speed)
+  205   2              {
+  206   3                  if(speed->target_speed - speed->motor_speed > speed->acceleration_speed)
+  207   3                  {
+  208   4                      speed->set_speed += speed->acceleration_speed;
+  209   4                  }
+  210   3                  else
+  211   3                  {
+  212   4                      speed->set_speed = speed->target_speed;
+  213   4                  }
+  214   3              }
+  215   2              else
+  216   2              {
+  217   3                  if(speed->motor_speed - speed->target_speed > speed->deceleration_speed)
+  218   3                  {
+  219   4                      speed->set_speed -= speed->deceleration_speed;
+  220   4                  }
+  221   3                  else
+  222   3                  {
+  223   4                      speed->set_speed = speed->target_speed;
+  224   4                  }
+  225   3              }
+  226   2          }
+  227   1          else
+  228   1          {
+  229   2              speed->set_speed = speed->motor_speed;
+  230   2              if(speed->target_speed < speed->motor_speed)
+  231   2              {
+  232   3                  if(speed->target_speed - speed->motor_speed < -speed->acceleration_speed)
+  233   3                  {
+  234   4                      speed->set_speed -= speed->acceleration_speed;
+  235   4                  }
+  236   3                  else
+  237   3                  {
+  238   4                      speed->set_speed = speed->target_speed;
+  239   4                  }
+  240   3              }
+  241   2              else
+  242   2              {
+  243   3                  if(speed->motor_speed - speed->target_speed < -speed->deceleration_speed)
+C251 COMPILER V5.60.0,  Foc                                                                22/05/26  11:19:12  PAGE 5   
 
-  244   2              {
-  245   3                  if(speed->motor_speed - speed->target_speed < -speed->deceleration_speed)
-  246   3                  {
-  247   4                      speed->set_speed += speed->deceleration_speed;
-  248   4                  }
-  249   3                  else
-  250   3                  {
-  251   4                      speed->set_speed = speed->target_speed;
-  252   4                  }
-  253   3              }
-  254   2          }   
-  255   1      }
-  256          
-  257          /*---------------------------------------------
-  258              @ function  : �ٶȱ������º���
-  259              @ describe  : ���������ٶ�ָ��
-  260              @ param     : Motor_Speed �ṹ��ָ��
-  261              @ date      : 2026-2-6
-  262          -----------------------------------------------*/
-  263          void Speed_Update(Motor_Speed xdata *speed)
-  264          {
-  265   1          speed->motor_speed = g_ctx->motor_data.speed;
-  266   1          speed->target_speed = SPEED_MAX * speed->pwm_duty / PWM_DUTY_BASE;      //Ŀ��ת�� = ���
-             -��?�� * ռ�ձ� 
-  267   1      }
-  268          
-  269          /*---------------------------------------------
-  270              @ function   : Speed_Loop
-  271              @ describe   : �ٶȻ�
-  272              @ param      : None
-  273              @ date       : 2026-2-24
-  274          ----------------------------------------------*/
-  275          void Speed_Loop(void)
-  276          {
-  277   1          g_ctx->pid_speed.error = g_ctx->motor_speed.target_speed - g_ctx->motor_speed.motor_speed;
-  278   1          PID(&g_ctx->pid_speed);
-  279   1          g_ctx->dq_voltage_ctl.voltage_q = g_ctx->pid_speed.output;
-  280   1      }
+  244   3                  {
+  245   4                      speed->set_speed += speed->deceleration_speed;
+  246   4                  }
+  247   3                  else
+  248   3                  {
+  249   4                      speed->set_speed = speed->target_speed;
+  250   4                  }
+  251   3              }
+  252   2          }
+  253   1      }
+  254          
+  255          void Speed_Update(Motor_Speed xdata *speed)
+  256          {
+  257   1          speed->motor_speed = g_ctx->motor_data.speed;
+  258   1          speed->target_speed = SPEED_MAX * speed->pwm_duty / PWM_DUTY_BASE;
+  259   1      }
+  260          
+  261          void Speed_Loop(void)
+  262          {
+  263   1          g_ctx->pid_speed.error = g_ctx->motor_speed.target_speed - g_ctx->motor_speed.motor_speed;
+  264   1          PID(&g_ctx->pid_speed);
+  265   1          g_ctx->dq_current_ref.current_q = g_ctx->pid_speed.output;
+  266   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      4317     ------
+  ecode size           =      4328     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
