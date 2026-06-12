@@ -815,13 +815,6 @@ u8   PWM_Configuration(u8 PWM, PWMx_InitDefine *PWMx);
 
 // extern u8 xdata set_pwm_duty;
 
-//new function
-void PWM_Init(void);
-void PWM_Frequency_ARR_PSCR_Calculator(u32 set_freq, PWMx_InitDefine* PWMx_InitStructure);
-u8 PWM_Pin_Configuration(u8 PWMx, PWMx_InitDefine *PWMx_InitStructure);
-u8 PWM_Configuration_2(u8 PWMx, PWMx_InitDefine* PWM_Construction);
-char* strstr(const char* str1, const char* str2);	//C89标准下没有strstr函数
-
 void UpdatePwm(u8 PWM, PWMx_Duty *PWMx);
 void HSPWM_Configuration(u8 PWM, HSPWMx_InitDefine *PWMx, PWMx_Duty *DUTYx);
 void UpdateHSPwm(u8 PWM, PWMx_Duty *PWMx);

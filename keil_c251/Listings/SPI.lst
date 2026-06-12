@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  SPI                                                                21/05/26  11:01:05  PAGE 1   
+C251 COMPILER V5.60.0,  SPI                                                                12/06/26  11:03:18  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE SPI
@@ -14,230 +14,204 @@ stmt  level    source
     4          
     5          #include "SPI.h"
     6          
-    7          bit B_SPI_Busy; //·¢ËÍÃ¦±êÖ¾
-    8          bit SPI_RxTimerOut;
-    9          bit SPI_TimerOutEn;
-   10          u8      SPI_RxCnt;
-   11          u8  SPI_BUF_type SPI_RxBuffer[SPI_BUF_LENTH];
-   12          
-   13          
-   14          
-   15          void SPI_Init()
-   16          {
-   17   1              SPI_InitTypeDef SPI_InitStructure;
-   18   1              SPI_InitStructure.SPI_Pin_Select = 0x00;                                //½ÅÎ»Ñ¡Ôñ
-   19   1              
-   20   1              SPI_InitStructure.SPI_Interrupt_En = DISABLE;                   //½ûÓÃSPIÖÐ¶Ï
-   21   1              
-   22   1              SPI_InitStructure.SPI_SS_Hold_Time = 4;         //¸ßËÙÄ£Ê½Ê±SPIÍ¨ÐÅÖÐSS¿ØÖÆÐÅºÅµÄHOLDÊ±¼ä
-   23   1              SPI_InitStructure.SPI_SS_SetUp_Time = 4;        //¸ßËÙÄ£Ê½Ê±SPIÍ¨ÐÅÖÐSS¿ØÖÆÐÅºÅµÄSETUPÊ±¼ä
+    7          //========================================================================
+    8          // º¯Êý: void SPI_Configuration_2(SPI_InitTypeDef *SPIx)
+    9          // ÃèÊö: SPI³õÊ¼»¯³ÌÐò.
+   10          // ²ÎÊý: SPIx: ½á¹¹²ÎÊý,Çë²Î¿¼spi.hÀïµÄ¶¨Òå.
+   11          // ·µ»Ø: None.
+   12          // °æ±¾: V1.0, 2026-6-12
+   13          //========================================================================
+   14          bit B_SPI_Busy; //·¢ËÍÃ¦±êÖ¾
+   15          bit SPI_RxTimerOut;
+   16          bit SPI_TimerOutEn;
+   17          u8      SPI_RxCnt;
+   18          u8  SPI_BUF_type SPI_RxBuffer[SPI_BUF_LENTH];
+   19          
+   20          void SPI_Configuration_2(SPI_InitTypeDef *SPIx)
+   21          {
+   22   1              P_SW1 = P_SW1 & ~0x0C | SPIx->SPI_Pin_Select;   //SPI¹¦ÄÜ½ÅÑ¡ÔñÎ»
+   23   1              IE2  = IE2 & ~0x02 | SPIx->SPI_Interrupt_En;    //SPIÖÐ¶ÏÊ¹ÄÜ
    24   1              
-   25   1              SPI_InitStructure.SPI_MISO_MOSI_Exchange_En = DISABLE;  //½ûÓÃÒý½Å¹¦ÄÜ½»»»
-   26   1              SPI_InitStructure.SPI_High_Speed_En = ENABLE;                   //¸ßËÙSPIÊ¹ÄÜ
-   27   1              SPI_InitStructure.SPI_FIFO_En = ENABLE;                                 //¸ßËÙSPIµÄFIFO¹¦ÄÜÊ¹ÄÜ
-   28   1              SPI_InitStructure.SPI_SS_Deactive_Time = 4;                             //¸ßËÙÄ£Ê½Ê±SS¿ØÖÆÐÅºÅµÄDEACTIVEÊ±¼ä
-   29   1              
-   30   1              SPI_InitStructure.SPI_Clock_Div = 0;                                    //¸ßËÙSPIÊ±ÖÓ·ÖÆµÆ÷
-   31   1              
-   32   1              SPI_InitStructure.SPI_SSIG = DISABLE;                                   //ºöÂÔSSÒý½Å¹¦ÄÜ
-   33   1              SPI_InitStructure.SPI_Enable = ENABLE;                                  //Ê¹ÄÜSPI¹¦ÄÜ
-   34   1              SPI_InitStructure.SPI_MSB_LSB = 0;                                              //0 ÏÈ·¢ËÍ/½ÓÊÕÊý¾ÝµÄ¸ßÎ»(SPI_MSB), 1 ÏÈ·¢ËÍ/½ÓÊÕÊý¾ÝµÄµÍÎ»(SPI_
-             -LSB)
-   35   1              SPI_InitStructure.SPI_Master_Slave = SPI_Mode_Master;   //Éè¶¨Ö÷»úÄ£Ê½
-   36   1              SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;                              //ÉèÖÃÊ±ÖÓ¼«ÐÔ
-   37   1              SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;                    //ÉèÖÃÊ±ÖÓÏàÎ»
-   38   1              SPI_InitStructure.SPI_Speed = SPI_Speed_2;                              //ÉèÖÃSPIÊ±ÖÓ·ÖÆµ
-   39   1              
-   40   1              SPI_InitStructure.TimeOutEnable = DISABLE;              //SPI´Ó»ú³¬Ê±¹¦ÄÜ
-   41   1              SPI_InitStructure.TimeOutINTEnable = DISABLE;   //SPI´Ó»ú³¬Ê±ÖÐ¶Ï
-   42   1              SPI_InitStructure.TimeOutScale = 1;                             //SPI´Ó»ú¼ÆÊýÆ÷Ê±ÖÓÔ´Ñ¡Ôñ       
-   43   1              SPI_InitStructure.TimeOutTimer = 0x10;                  //SPI³¬Ê±³¤¶È¿ØÖÆ¼Ä´æÆ÷
-   44   1              
-   45   1              SPI_Configuration(&SPI_InitStructure);
-   46   1      }
-   47          
-   48          //========================================================================
-   49          // º¯Êý: void SPI_Configuration(SPI_InitTypeDef *SPIx)
-   50          // ÃèÊö: SPI³õÊ¼»¯³ÌÐò.
-   51          // ²ÎÊý: SPIx: ½á¹¹²ÎÊý,Çë²Î¿¼spi.hÀïµÄ¶¨Òå.
-   52          // ·µ»Ø: none.
-   53          // °æ±¾: V1.0, 2012-11-22
-   54          //========================================================================
-   55          void SPI_Configuration(SPI_InitTypeDef *SPIx)
-   56          {
-   57   1              P_SW1 = P_SW1 & ~0x0C | SPIx->SPI_Pin_Select;   //SPI¹¦ÄÜ½ÅÑ¡ÔñÎ»
-C251 COMPILER V5.60.0,  SPI                                                                21/05/26  11:01:05  PAGE 2   
-
-   58   1              IE2  = IE2 & ~0x02 | SPIx->SPI_Interrupt_En;    //SPIÖÐ¶ÏÊ¹ÄÜ
-   59   1              
-   60   1              HSSPI_CFG = HSSPI_CFG & ~0xF0 | SPIx->SPI_SS_Hold_Time;         //¸ßËÙÄ£Ê½Ê±SPIÍ¨ÐÅÖÐSS¿ØÖÆÐÅºÅµÄHOLDÊ±¼ä
-   61   1              HSSPI_CFG = HSSPI_CFG & ~0x0F | SPIx->SPI_SS_SetUp_Time;        //¸ßËÙÄ£Ê½Ê±SPIÍ¨ÐÅÖÐSS¿ØÖÆÐÅºÅµÄSETUPÊ±¼ä
-   62   1              
-   63   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x40 | SPIx->SPI_MISO_MOSI_Exchange_En;      //MISO¡¢MOSI¹¦ÄÜ½ÅÎ»½»»»Ê¹ÄÜÎ»
-   64   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x20 | SPIx->SPI_High_Speed_En;                      //¸ßËÙSPIÊ¹ÄÜÎ»
-   65   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x10 | SPIx->SPI_FIFO_En;                            //FIFO¹¦ÄÜÊ¹ÄÜÎ»
-   66   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x0F | SPIx->SPI_SS_Deactive_Time;           //¸ßËÙÄ£Ê½Ê±SS¿ØÖÆÐÅºÅµÄDEACTIVEÊ±¼ä
-   67   1              
-   68   1              HSSPI_PSCR = SPIx->SPI_Clock_Div;       //¸ßËÙSPIÊ±ÖÓ·ÖÆµÆ÷(¹¤×÷ÆµÂÊ = ¸ßËÙSPIÊäÈëÊ±ÖÓ / HSSPI_PSCR[7:0] + 1)
-   69   1              
-   70   1              SPCTL = SPCTL & ~0x80 | SPIx->SPI_SSIG;         //Æ¬Ñ¡Î»
-   71   1              SPCTL = SPCTL & ~0x40 | SPIx->SPI_Enable;       //SPI¹¦ÄÜÆô¶¯Ê¹ÄÜ
-   72   1              SPCTL = SPCTL & ~0x20 | SPIx->SPI_MSB_LSB;      //0 ÏÈ·¢ËÍ/½ÓÊÕÊý¾ÝµÄ¸ßÎ»(SPI_MSB), 1 ÏÈ·¢ËÍ/½ÓÊÕÊý¾ÝµÄµÍÎ»(S
+   25   1              HSSPI_CFG = HSSPI_CFG & ~0xF0 | SPIx->SPI_SS_Hold_Time;         //¸ßËÙÄ£Ê½Ê±SPIÍ¨ÐÅÖÐSS¿ØÖÆÐÅºÅµÄHOLDÊ±¼ä
+   26   1              HSSPI_CFG = HSSPI_CFG & ~0x0F | SPIx->SPI_SS_SetUp_Time;        //¸ßËÙÄ£Ê½Ê±SPIÍ¨ÐÅÖÐSS¿ØÖÆÐÅºÅµÄSETUPÊ±¼ä
+   27   1              
+   28   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x40 | SPIx->SPI_MISO_MOSI_Exchange_En;      //MISO¡¢MOSI¹¦ÄÜ½ÅÎ»½»»»Ê¹ÄÜÎ»
+   29   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x20 | SPIx->SPI_High_Speed_En;                      //¸ßËÙSPIÊ¹ÄÜÎ»
+   30   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x10 | SPIx->SPI_FIFO_En;                            //FIFO¹¦ÄÜÊ¹ÄÜÎ»
+   31   1              HSSPI_CFG2 = HSSPI_CFG2 & ~0x0F | SPIx->SPI_SS_Deactive_Time;           //¸ßËÙÄ£Ê½Ê±SS¿ØÖÆÐÅºÅµÄDEACTIVEÊ±¼ä
+   32   1              
+   33   1              HSSPI_PSCR = SPIx->SPI_Clock_Div;       //¸ßËÙSPIÊ±ÖÓ·ÖÆµÆ÷(¹¤×÷ÆµÂÊ = ¸ßËÙSPIÊäÈëÊ±ÖÓ / HSSPI_PSCR[7:0] + 1)
+   34   1              
+   35   1              SPCTL = SPCTL & ~0x80 | SPIx->SPI_SSIG;         //Æ¬Ñ¡Î»
+   36   1              SPCTL = SPCTL & ~0x40 | SPIx->SPI_Enable;       //SPI¹¦ÄÜÆô¶¯Ê¹ÄÜ
+   37   1              SPCTL = SPCTL & ~0x20 | SPIx->SPI_MSB_LSB;      //0 ÏÈ·¢ËÍ/½ÓÊÕÊý¾ÝµÄ¸ßÎ»(SPI_MSB), 1 ÏÈ·¢ËÍ/½ÓÊÕÊý¾ÝµÄµÍÎ»(S
              -PI_LSB)
-   73   1              SPCTL = SPCTL & ~0x10 | SPIx->SPI_Master_Slave; //Ö÷»ú/´Ó»úÑ¡ÔñÎ»
-   74   1              SPCTL = SPCTL & ~0x08 | SPIx->SPI_CPOL;         //SPIÊ±ÖÓ¼«ÐÔÑ¡Ôñ
-   75   1              SPCTL = SPCTL & ~0x04 | SPIx->SPI_CPHA;         //SPIÊ±ÖÓÏàÎ»Ñ¡Ôñ
-   76   1              SPCTL = SPCTL & ~0x03 | SPIx->SPI_Speed;        //SPIÊ±ÖÓÆµÂÊ·ÖÆµÑ¡Ôñ
-   77   1              
-   78   1              SPITOCR = SPITOCR & ~0x80 | SPIx->TimeOutEnable;        //´Ó»ú³¬Ê±Ê¹ÄÜ
-   79   1              SPITOCR = SPITOCR & ~0x40 | SPIx->TimeOutINTEnable;     //³¬Ê±ÖÐ¶ÏÊ¹ÄÜ
-   80   1              SPITOCR = SPITOCR & ~0x20 | SPIx->TimeOutScale; //³¬Ê±Ê±ÖÓÔ´Ñ¡Ôñ
-   81   1              
-   82   1              SPITOTL = (u8)SPIx->TimeOutTimer;               //³¬Ê±Ê±¼ä
-   83   1              SPITOTH = (u8)(SPIx->TimeOutTimer >> 8);
-   84   1              SPITOTE = (u8)(SPIx->TimeOutTimer >> 16);
-   85   1              
-   86   1              SPI_RxTimerOut = 0;
-   87   1          B_SPI_Busy = 0;
-   88   1          SPI_RxCnt = 0;
-   89   1              
-   90   1      //    if(SPIx->SPI_SSIG == ENABLE) SSIG = 1;     //conform Master or Slave by SPI_Mode(ignore SS)
-   91   1      //    else                         SSIG = 0;     //conform Master or Slave by SS pin.
-   92   1      //    SPI_Start(SPIx->SPI_Enable);
-   93   1      //    SPI_FirstBit_Set(SPIx->SPI_MSB_LSB);
-   94   1      //    SPI_Mode_Set(SPIx->SPI_Master_Slave);
-   95   1      //    SPI_CPOL_Set(SPIx->SPI_CPOL);
-   96   1      //    SPI_CPHA_Set(SPIx->SPI_CPHA);
-   97   1      //    SPI_Clock_Select(SPIx->SPI_Speed);
+   38   1              SPCTL = SPCTL & ~0x10 | SPIx->SPI_Master_Slave; //Ö÷»ú/´Ó»úÑ¡ÔñÎ»
+   39   1              SPCTL = SPCTL & ~0x08 | SPIx->SPI_CPOL;         //SPIÊ±ÖÓ¼«ÐÔÑ¡Ôñ
+   40   1              SPCTL = SPCTL & ~0x04 | SPIx->SPI_CPHA;         //SPIÊ±ÖÓÏàÎ»Ñ¡Ôñ
+   41   1              SPCTL = SPCTL & ~0x03 | SPIx->SPI_Speed;        //SPIÊ±ÖÓÆµÂÊ·ÖÆµÑ¡Ôñ
+   42   1              
+   43   1              SPITOCR = SPITOCR & ~0x80 | SPIx->TimeOutEnable;        //´Ó»ú³¬Ê±Ê¹ÄÜ
+   44   1              SPITOCR = SPITOCR & ~0x40 | SPIx->TimeOutINTEnable;     //³¬Ê±ÖÐ¶ÏÊ¹ÄÜ
+   45   1              SPITOCR = SPITOCR & ~0x20 | SPIx->TimeOutScale; //³¬Ê±Ê±ÖÓÔ´Ñ¡Ôñ
+   46   1              
+   47   1              SPITOTL = (u8)SPIx->TimeOutTimer;               //³¬Ê±Ê±¼ä
+   48   1              SPITOTH = (u8)(SPIx->TimeOutTimer >> 8);
+   49   1              SPITOTE = (u8)(SPIx->TimeOutTimer >> 16);
+   50   1              
+   51   1              SPI_RxTimerOut = 0;
+   52   1          B_SPI_Busy = 0;
+   53   1          SPI_RxCnt = 0;
+   54   1      }
+   55          
+   56          //========================================================================
+   57          // º¯Êý: void SPI_Configuration(SPI_InitTypeDef *SPIx)
+C251 COMPILER V5.60.0,  SPI                                                                12/06/26  11:03:18  PAGE 2   
+
+   58          // ÃèÊö: SPI³õÊ¼»¯³ÌÐò.
+   59          // ²ÎÊý: SPIx: ½á¹¹²ÎÊý,Çë²Î¿¼spi.hÀïµÄ¶¨Òå.
+   60          // ·µ»Ø: none.
+   61          // °æ±¾: V1.0, 2012-11-22
+   62          //========================================================================
+   63          void SPI_Configuration(SPI_InitTypeDef *SPIx)
+   64          {
+   65   1         if(SPIx->SPI_SSIG == ENABLE) SSIG = 1;     //conform Master or Slave by SPI_Mode(ignore SS)
+   66   1         else                         SSIG = 0;     //conform Master or Slave by SS pin.
+   67   1         SPI_Start(SPIx->SPI_Enable);
+   68   1         SPI_FirstBit_Set(SPIx->SPI_MSB_LSB);
+   69   1         SPI_Mode_Set(SPIx->SPI_Master_Slave);
+   70   1         SPI_CPOL_Set(SPIx->SPI_CPOL);
+   71   1         SPI_CPHA_Set(SPIx->SPI_CPHA);
+   72   1         SPI_Clock_Select(SPIx->SPI_Speed);
+   73   1      
+   74   1         if(SPIx->TimeOutScale == TO_SCALE_SYSCLK)   SPITOCR |= 0x20;  //³¬Ê±¼ÆÊýÊ±ÖÓÔ´£ºÏµÍ³Ê±ÖÓ
+   75   1         else
+   76   1         {
+   77   2             SET_TPS();          //ÉèÖÃÏµÍ³µÈ´ýÊ±¼äµ¥Ôª£¬ÓÃÓÚ¿ØÖÆEEPROM²Ù×÷¡¢SPI/I2C³¬Ê±Ê±¼äÒÔ¼°ÐÝÃß»½ÐÑµÈ´ýÊ±¼
+             -ä
+   78   2             SPITOCR &= ~0x20;   //³¬Ê±¼ÆÊýÊ±ÖÓÔ´£º1usÊ±ÖÓ(1MHzÊ±ÖÓ)
+   79   2         }
+   80   1      
+   81   1         if((SPIx->TimeOutTimer > 0) && (SPIx->TimeOutTimer <= 0xffffff))
+   82   1         {
+   83   2             SPITOTL = (u8)SPIx->TimeOutTimer;
+   84   2             SPITOTH = (u8)(SPIx->TimeOutTimer>>8);
+   85   2             SPITOTE = (u8)(SPIx->TimeOutTimer>>16); //Ð´ SPITOTE ºó£¬ÐÂµÄTMÖµ²Å»áÉúÐ§
+   86   2         }
+   87   1         
+   88   1         if((SPIx->SPI_Master_Slave == SPI_Mode_Slave) && (SPIx->TimeOutEnable == ENABLE))
+   89   1         {
+   90   2             SPI_TimerOutEn = 1;
+   91   2             SPITOCR |= 0x80;    //´Ó»ú½ÓÊÕ³¬Ê±¹¦ÄÜÊ¹ÄÜ
+   92   2         }
+   93   1         else
+   94   1         {
+   95   2             SPI_TimerOutEn = 0;
+   96   2             SPITOCR &= ~0x80;   //´Ó»ú½ÓÊÕ³¬Ê±¹¦ÄÜ½ûÖ¹
+   97   2         }
    98   1      
-   99   1      //    if(SPIx->TimeOutScale == TO_SCALE_SYSCLK)   SPITOCR |= 0x20;  //³¬Ê±¼ÆÊýÊ±ÖÓÔ´£ºÏµÍ³Ê±ÖÓ
-  100   1      //    else
-  101   1      //    {
-  102   1      //        SET_TPS();          //ÉèÖÃÏµÍ³µÈ´ýÊ±¼äµ¥Ôª£¬ÓÃÓÚ¿ØÖÆEEPROM²Ù×÷¡¢SPI/I2C³¬Ê±Ê±¼äÒÔ¼°ÐÝÃß»½ÐÑµÈ´ý
-             -Ê±¼ä
-  103   1      //        SPITOCR &= ~0x20;   //³¬Ê±¼ÆÊýÊ±ÖÓÔ´£º1usÊ±ÖÓ(1MHzÊ±ÖÓ)
-  104   1      //    }
-  105   1      
-  106   1      //    if((SPIx->TimeOutTimer > 0) && (SPIx->TimeOutTimer <= 0xffffff))
-  107   1      //    {
-  108   1      //        SPITOTL = (u8)SPIx->TimeOutTimer;
-  109   1      //        SPITOTH = (u8)(SPIx->TimeOutTimer>>8);
-  110   1      //        SPITOTE = (u8)(SPIx->TimeOutTimer>>16); //Ð´ SPITOTE ºó£¬ÐÂµÄTMÖµ²Å»áÉúÐ§
-  111   1      //    }
-  112   1      //    
-  113   1      //    if((SPIx->SPI_Master_Slave == SPI_Mode_Slave) && (SPIx->TimeOutEnable == ENABLE))
-  114   1      //    {
-  115   1      //        SPI_TimerOutEn = 1;
-  116   1      //        SPITOCR |= 0x80;    //´Ó»ú½ÓÊÕ³¬Ê±¹¦ÄÜÊ¹ÄÜ
-  117   1      //    }
-  118   1      //    else
-  119   1      //    {
-  120   1      //        SPI_TimerOutEn = 0;
-  121   1      //        SPITOCR &= ~0x80;   //´Ó»ú½ÓÊÕ³¬Ê±¹¦ÄÜ½ûÖ¹
-C251 COMPILER V5.60.0,  SPI                                                                21/05/26  11:01:05  PAGE 3   
+   99   1         if(SPIx->TimeOutINTEnable == ENABLE) SPITOCR |= 0x40;   //´Ó»ú½ÓÊÕ³¬Ê±ÖÐ¶ÏÊ¹ÄÜ
+  100   1         else                                 SPITOCR &= ~0x40;  //´Ó»ú½ÓÊÕ³¬Ê±ÖÐ¶Ï½ûÖ¹
+  101   1      }
+  102          
+  103          //========================================================================
+  104          // º¯Êý: void SPI_SetMode(u8 mode)
+  105          // ÃèÊö: SPIÉèÖÃÖ÷´ÓÄ£Ê½º¯Êý.
+  106          // ²ÎÊý: mode: Ö¸¶¨Ä£Ê½, È¡Öµ SPI_Mode_Master »ò SPI_Mode_Slave.
+  107          // ·µ»Ø: none.
+  108          // °æ±¾: V1.0, 2012-11-22
+  109          //========================================================================
+  110          void SPI_SetMode(u8 mode)
+  111          {
+  112   1          if(mode == SPI_Mode_Slave)
+  113   1          {
+  114   2              MSTR = 0;     //ÖØÐÂÉèÖÃÎª´Ó»ú´ý»ú
+  115   2              SSIG = 0;     //SSÒý½ÅÈ·¶¨Ö÷´Ó
+  116   2              if(SPI_TimerOutEn)
+  117   2              {
+  118   3                  SPI_TOIFClear();
+  119   3                  SPITOCR |= 0x80;    //´Ó»ú½ÓÊÕ³¬Ê±¹¦ÄÜÊ¹ÄÜ
+  120   3              }
+  121   2          }
+  122   1          else
+C251 COMPILER V5.60.0,  SPI                                                                12/06/26  11:03:18  PAGE 3   
 
-  122   1      //    }
-  123   1      
-  124   1      //    if(SPIx->TimeOutINTEnable == ENABLE) SPITOCR |= 0x40;   //´Ó»ú½ÓÊÕ³¬Ê±ÖÐ¶ÏÊ¹ÄÜ
-  125   1      //    else                                 SPITOCR &= ~0x40;  //´Ó»ú½ÓÊÕ³¬Ê±ÖÐ¶Ï½ûÖ¹
-  126   1      }
-  127          
-  128          //========================================================================
-  129          // º¯Êý: void SPI_SetMode(u8 mode)
-  130          // ÃèÊö: SPIÉèÖÃÖ÷´ÓÄ£Ê½º¯Êý.
-  131          // ²ÎÊý: mode: Ö¸¶¨Ä£Ê½, È¡Öµ SPI_Mode_Master »ò SPI_Mode_Slave.
-  132          // ·µ»Ø: none.
-  133          // °æ±¾: V1.0, 2012-11-22
-  134          //========================================================================
-  135          void SPI_SetMode(u8 mode)
-  136          {
-  137   1          if(mode == SPI_Mode_Slave)
-  138   1          {
-  139   2              MSTR = 0;     //ÖØÐÂÉèÖÃÎª´Ó»ú´ý»ú
-  140   2              SSIG = 0;     //SSÒý½ÅÈ·¶¨Ö÷´Ó
-  141   2              if(SPI_TimerOutEn)
-  142   2              {
-  143   3                  SPI_TOIFClear();
-  144   3                  SPITOCR |= 0x80;    //´Ó»ú½ÓÊÕ³¬Ê±¹¦ÄÜÊ¹ÄÜ
-  145   3              }
-  146   2          }
-  147   1          else
-  148   1          {
-  149   2              SPITOCR &= ~0x80;   //´Ó»ú½ÓÊÕ³¬Ê±¹¦ÄÜ½ûÖ¹
-  150   2              MSTR = 1;     //Ê¹ÄÜ SPI Ö÷»úÄ£Ê½
-  151   2              SSIG = 1;     //ºöÂÔSSÒý½Å¹¦ÄÜ
-  152   2          }
-  153   1      }
-  154          
-  155          //========================================================================
-  156          // º¯Êý: void SPI_WriteByte(u8 dat)
-  157          // ÃèÊö: SPI·¢ËÍÒ»¸ö×Ö½ÚÊý¾Ý.
-  158          // ²ÎÊý: dat: Òª·¢ËÍµÄÊý¾Ý.
-  159          // ·µ»Ø: none.
-  160          // °æ±¾: V1.0, 2020-09-14
-  161          //========================================================================
-  162          void SPI_WriteByte(u8 dat)  //SPI·¢ËÍÒ»¸ö×Ö½ÚÊý¾Ý
-  163          {
-  164   1          if(ESPI)
-  165   1          {
-  166   2              B_SPI_Busy = 1;
-  167   2              SPDAT = dat;
-  168   2              while(B_SPI_Busy);  //ÖÐ¶ÏÄ£Ê½
-  169   2          }
-  170   1          else
-  171   1          {
-  172   2              SPDAT = dat;
-  173   2              while(SPIF == 0);   //²éÑ¯Ä£Ê½
-  174   2              SPI_ClearFlag();    //Çå³ýSPIFºÍWCOL±êÖ¾
-  175   2          }
-  176   1      }
-  177          
-  178          //========================================================================
-  179          // º¯Êý: void SPI_ReadByte(u8 dat)
-  180          // ÃèÊö: SPI²éÑ¯Ä£Ê½¶ÁÈ¡Ò»¸ö×Ö½ÚÊý¾Ý.
-  181          // ²ÎÊý: none.
-  182          // ·µ»Ø: ¶ÁÈ¡µÄÊý¾Ý.
-  183          // °æ±¾: V1.0, 2020-09-14
-  184          //========================================================================
-  185          u8 SPI_ReadByte(void)
-  186          {
-  187   1          SPDAT = 0xff;
-C251 COMPILER V5.60.0,  SPI                                                                21/05/26  11:01:05  PAGE 4   
-
-  188   1          if(ESPI)
-  189   1          {
-  190   2              B_SPI_Busy = 1;
-  191   2              while(B_SPI_Busy);  //ÖÐ¶ÏÄ£Ê½
-  192   2          }
-  193   1          else
-  194   1          {
-  195   2              while(SPIF == 0);   //²éÑ¯Ä£Ê½
-  196   2              SPI_ClearFlag();    //Çå³ýSPIFºÍWCOL±êÖ¾
-  197   2          }
-  198   1          return (SPDAT);
-  199   1      }
-  200          
-  201          //SPIÖÐ¶Ï´¦Àíº¯Êý
-  202          void SPI_Interrupt(void) interrupt SPI_VECTOR
-  203          {
-  204   1              if(ESPI)
-  205   1              {
-  206   2                      B_SPI_Busy = 0;
-  207   2                      SPIF = 0;
-  208   2              }
-  209   1      }
+  123   1          {
+  124   2              SPITOCR &= ~0x80;   //´Ó»ú½ÓÊÕ³¬Ê±¹¦ÄÜ½ûÖ¹
+  125   2              MSTR = 1;     //Ê¹ÄÜ SPI Ö÷»úÄ£Ê½
+  126   2              SSIG = 1;     //ºöÂÔSSÒý½Å¹¦ÄÜ
+  127   2          }
+  128   1      }
+  129          
+  130          //========================================================================
+  131          // º¯Êý: void SPI_WriteByte(u8 dat)
+  132          // ÃèÊö: SPI·¢ËÍÒ»¸ö×Ö½ÚÊý¾Ý.
+  133          // ²ÎÊý: dat: Òª·¢ËÍµÄÊý¾Ý.
+  134          // ·µ»Ø: none.
+  135          // °æ±¾: V1.0, 2020-09-14
+  136          //========================================================================
+  137          void SPI_WriteByte(u8 dat)  //SPI·¢ËÍÒ»¸ö×Ö½ÚÊý¾Ý
+  138          {
+  139   1          if(ESPI)
+  140   1          {
+  141   2              B_SPI_Busy = 1;
+  142   2              SPDAT = dat;
+  143   2              while(B_SPI_Busy);  //ÖÐ¶ÏÄ£Ê½
+  144   2          }
+  145   1          else
+  146   1          {
+  147   2              SPDAT = dat;
+  148   2              while(SPIF == 0);   //²éÑ¯Ä£Ê½
+  149   2              SPI_ClearFlag();    //Çå³ýSPIFºÍWCOL±êÖ¾
+  150   2          }
+  151   1      }
+  152          
+  153          //========================================================================
+  154          // º¯Êý: void SPI_ReadByte(u8 dat)
+  155          // ÃèÊö: SPI²éÑ¯Ä£Ê½¶ÁÈ¡Ò»¸ö×Ö½ÚÊý¾Ý.
+  156          // ²ÎÊý: none.
+  157          // ·µ»Ø: ¶ÁÈ¡µÄÊý¾Ý.
+  158          // °æ±¾: V1.0, 2020-09-14
+  159          //========================================================================
+  160          u8 SPI_ReadByte(void)
+  161          {
+  162   1          SPDAT = 0xff;
+  163   1          if(ESPI)
+  164   1          {
+  165   2              B_SPI_Busy = 1;
+  166   2              while(B_SPI_Busy);  //ÖÐ¶ÏÄ£Ê½
+  167   2          }
+  168   1          else
+  169   1          {
+  170   2              while(SPIF == 0);   //²éÑ¯Ä£Ê½
+  171   2              SPI_ClearFlag();    //Çå³ýSPIFºÍWCOL±êÖ¾
+  172   2          }
+  173   1          return (SPDAT);
+  174   1      }
+  175          
+  176          //SPIÖÐ¶Ï´¦Àíº¯Êý
+  177          void SPI_Interrupt(void) interrupt SPI_VECTOR
+  178          {
+  179   1              if(ESPI)
+  180   1              {
+  181   2                      B_SPI_Busy = 0;
+  182   2                      SPIF = 0;
+  183   2              }
+  184   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =         4     ------
-  ecode size           =       572     ------
+C251 COMPILER V5.60.0,  SPI                                                                12/06/26  11:03:18  PAGE 4   
+
+  ecode size           =       724     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
   xdata size           =    ------     ------
   xdata-const size     =    ------     ------
-  edata size           =       129         23
+  edata size           =       129     ------
   bit size             =         3     ------
   ebit size            =    ------     ------
   bitaddressable size  =    ------     ------

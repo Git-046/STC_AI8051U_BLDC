@@ -248,9 +248,4 @@ void DMA_LCM_Inilize(DMA_LCM_InitTypeDef *DMA);
 void DMA_I2C_Inilize(DMA_I2C_InitTypeDef *DMA);
 void DMA_UART_Inilize(u8 UARTx, DMA_UART_InitTypeDef *DMA);
 
-void DMA_ADC_Init(void);
-void DMA_SPI_Init(void);
-
-extern u16 xdata ADC_Result_Buffer[4];
-
 #endif

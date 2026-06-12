@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  I2C                                                                21/05/26  11:01:04  PAGE 1   
+C251 COMPILER V5.60.0,  I2C                                                                12/06/26  11:03:17  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE I2C
@@ -66,7 +66,7 @@ stmt  level    source
    56          //========================================================================
    57          void Wait()
    58          {
-C251 COMPILER V5.60.0,  I2C                                                                21/05/26  11:01:04  PAGE 2   
+C251 COMPILER V5.60.0,  I2C                                                                12/06/26  11:03:17  PAGE 2   
 
    59   1              while (!(I2CMSST & 0x40));
    60   1              I2CMSST &= ~0x40;
@@ -134,7 +134,7 @@ stmt  level    source
   122          // ∞Ê±æ: V1.0, 2020-09-15
   123          //========================================================================
   124          void SendACK()
-C251 COMPILER V5.60.0,  I2C                                                                21/05/26  11:01:04  PAGE 3   
+C251 COMPILER V5.60.0,  I2C                                                                12/06/26  11:03:17  PAGE 3   
 
   125          {
   126   1              I2CMSST = 0x00;                         //…Ë÷√ACK–≈∫≈
@@ -202,7 +202,7 @@ stmt  level    source
   187   1              {
   188   2                      SendData(*p++);
   189   2                      RecvACK();
-C251 COMPILER V5.60.0,  I2C                                                                21/05/26  11:01:04  PAGE 4   
+C251 COMPILER V5.60.0,  I2C                                                                12/06/26  11:03:17  PAGE 4   
 
   190   2              }
   191   1              while(--number);

@@ -55,12 +55,12 @@
 #define ADC_SPEED_2X8T		7			//SYSclk/2/8
 #define ADC_SPEED_2X9T		8			//SYSclk/2/9
 #define ADC_SPEED_2X10T		9			//SYSclk/2/10
-#define ADC_SPEED_2X11T		10		//SYSclk/2/11
-#define ADC_SPEED_2X12T		11		//SYSclk/2/12
-#define ADC_SPEED_2X13T		12		//SYSclk/2/13
-#define ADC_SPEED_2X14T		13		//SYSclk/2/14
-#define ADC_SPEED_2X15T		14		//SYSclk/2/15
-#define ADC_SPEED_2X16T		15		//SYSclk/2/16
+#define ADC_SPEED_2X11T		10			//SYSclk/2/11
+#define ADC_SPEED_2X12T		11			//SYSclk/2/12
+#define ADC_SPEED_2X13T		12			//SYSclk/2/13
+#define ADC_SPEED_2X14T		13			//SYSclk/2/14
+#define ADC_SPEED_2X15T		14			//SYSclk/2/15
+#define ADC_SPEED_2X16T		15			//SYSclk/2/16
 
 #define ADC_LEFT_JUSTIFIED		0		//ADC Result left-justified
 #define ADC_RIGHT_JUSTIFIED		1		//ADC Result right-justified
@@ -83,7 +83,4 @@ u8		ADC_Inilize(ADC_InitTypeDef *ADCx);
 void	ADC_PowerControl(u8 pwr);
 u16		Get_ADCResult(u8 channel);	//channel = 0~15
 
-u8 ADC_Pin_Channel_Select(ADC_InitTypeDef* ADC_InitStructure);
-void ADC_Configuration(ADC_InitTypeDef* ADC_InitStructure);
-void ADC_Init(void);
 #endif

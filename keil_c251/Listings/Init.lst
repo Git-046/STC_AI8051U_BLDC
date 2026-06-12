@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  Init                                                               22/05/26  15:11:34  PAGE 1   
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE Init
@@ -24,94 +24,1595 @@ stmt  level    source
    14   1          SPI_Init();
    15   1              DMA_ADC_Init();
    16   1              DMA_SPI_Init();
-   17   1      }
-   18          
-   19          /*------------------------------------------------------------
-   20          @ function  :   void Parameter_Init(void)
-   21          @ describe  :   ²ÎÊý³õÊ¼»¯
-   22          @ parameter :   None
-   23          @ date      :   2026-3-1
-   24          -------------------------------------------------------------*/
-   25          void Parameter_Init(void)
-   26          {
-   27   1          g_ctx->restart_times = MOTOR_RESTART_TIMES;
-   28   1      
-   29   1          /*Motor Parameter*/
-   30   1          memset((void*)&g_ctx->motor_data, 0, sizeof(Motor_Data));
-   31   1          memset((void*)&g_ctx->motor_speed, 0, sizeof(Motor_Speed));
-   32   1      
-   33   1          memset((void*)&g_ctx->phase_current, 0, sizeof(Phase_Current));
-   34   1          memset((void*)&g_ctx->alpha_beta_current, 0, sizeof(Alpha_Beta_Axis_Current));
-   35   1          memset((void*)&g_ctx->dq_current, 0, sizeof(Direct_Quadrature_Axis_Current));
-   36   1      
-   37   1          memset((void*)&g_ctx->dq_current_ref, 0, sizeof(Direct_Quadrature_Axis_Current));
-   38   1          memset((void*)&g_ctx->dq_voltage_ctl, 0, sizeof(Direct_Quadrature_Axis_Voltage));
-   39   1          memset((void*)&g_ctx->dq_voltage_ctl_limit, 0, sizeof(Direct_Quadrature_Axis_Voltage));
-   40   1          memset((void*)&g_ctx->alpha_beta_voltage_ctl, 0, sizeof(Alpha_Beta_Axis_Voltage));
-   41   1          memset((void*)&g_ctx->phase_voltage_ctl, 0, sizeof(Phase_Voltage));
-   42   1      
-   43   1          memset((void*)ADC_Result_Buffer, 0, sizeof(u16)*4);
-   44   1      
-   45   1          memset((void*)SPI_TX_Buffer, 0, sizeof(u8)*8);
-   46   1          memset((void*)SPI_RX_Buffer, 0, sizeof(u8)*4);
-   47   1          memset((void*)g_ctx->tx_cmd_arr, 0, sizeof(u8)*TLE5012B_TX_BUFFER_SIZE);
-   48   1      
-   49   1          g_ctx->motor_speed.max_speed = SPEED_MAX;
-   50   1          g_ctx->motor_speed.min_speed = SPEED_MIN;
-   51   1          g_ctx->motor_speed.acceleration_speed = SPEED_ACCERELATION;
-   52   1          g_ctx->motor_speed.deceleration_speed = SPEED_DECERELATION;
+   17   1              Timer_Init();
+   18   1          UART_Init(UART2);
+   19   1          
+   20   1          //3. ³õÊ¼»¯²ÎÊý
+   21   1          Parameter_Init();
+   22   1      }
+   23          
+   24          /*------------------------------------------------------------
+   25          @ function  :   void Parameter_Init(void)
+   26          @ describe  :   ²ÎÊý³õÊ¼»¯
+   27          @ parameter :   None
+   28          @ date      :   2026-3-1
+   29          -------------------------------------------------------------*/
+   30          void Parameter_Init(void)
+   31          {
+   32   1          g_ctx->restart_times = MOTOR_RESTART_TIMES;
+   33   1      
+   34   1          /*Motor Parameter*/
+   35   1          memset((void*)&g_ctx->motor_data, 0, sizeof(Motor_Data));
+   36   1          memset((void*)&g_ctx->motor_speed, 0, sizeof(Motor_Speed));
+   37   1      
+   38   1          memset((void*)&g_ctx->phase_current, 0, sizeof(Phase_Current));
+   39   1          memset((void*)&g_ctx->alpha_beta_current, 0, sizeof(Alpha_Beta_Axis_Current));
+   40   1          memset((void*)&g_ctx->dq_current, 0, sizeof(Direct_Quadrature_Axis_Current));
+   41   1      
+   42   1          memset((void*)&g_ctx->dq_current_ref, 0, sizeof(Direct_Quadrature_Axis_Current));
+   43   1          memset((void*)&g_ctx->dq_voltage_ctl, 0, sizeof(Direct_Quadrature_Axis_Voltage));
+   44   1          memset((void*)&g_ctx->dq_voltage_ctl_limit, 0, sizeof(Direct_Quadrature_Axis_Voltage));
+   45   1          memset((void*)&g_ctx->alpha_beta_voltage_ctl, 0, sizeof(Alpha_Beta_Axis_Voltage));
+   46   1          memset((void*)&g_ctx->phase_voltage_ctl, 0, sizeof(Phase_Voltage));
+   47   1      
+   48   1          memset((void*)ADC_Result_Buffer, 0, sizeof(u16)*4);
+   49   1      
+   50   1          memset((void*)SPI_TX_Buffer, 0, sizeof(u8)*8);
+   51   1          memset((void*)SPI_RX_Buffer, 0, sizeof(u8)*4);
+   52   1          memset((void*)g_ctx->tx_cmd_arr, 0, sizeof(u8)*TLE5012B_TX_BUFFER_SIZE);
    53   1      
-   54   1          /*PID Parameter*/
-   55   1          memset((void*)&g_ctx->pid_d, 0, sizeof(PID_Structure));
-   56   1          memset((void*)&g_ctx->pid_q, 0, sizeof(PID_Structure));
-   57   1          memset((void*)&g_ctx->pid_speed, 0, sizeof(PID_Structure));
+   54   1          g_ctx->motor_speed.max_speed = SPEED_MAX;
+   55   1          g_ctx->motor_speed.min_speed = SPEED_MIN;
+   56   1          g_ctx->motor_speed.acceleration_speed = SPEED_ACCERELATION;
+   57   1          g_ctx->motor_speed.deceleration_speed = SPEED_DECERELATION;
    58   1      
-C251 COMPILER V5.60.0,  Init                                                               22/05/26  15:11:34  PAGE 2   
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 2   
 
-   59   1          g_ctx->pid_d.P_gain = PID_ID_KP;
-   60   1          g_ctx->pid_d.I_gain = PID_ID_KI;
-   61   1          g_ctx->pid_d.D_gain = PID_ID_KD;
-   62   1      
-   63   1          g_ctx->pid_q.P_gain = PID_IQ_KP;
-   64   1          g_ctx->pid_q.I_gain = PID_IQ_KI;
-   65   1          g_ctx->pid_q.D_gain = PID_IQ_KD;
-   66   1      
-   67   1          g_ctx->pid_speed.P_gain = PID_S_KP;
-   68   1          g_ctx->pid_speed.I_gain = PID_S_KI;
-   69   1          g_ctx->pid_speed.D_gain = PID_S_KD;
-   70   1      
-   71   1          g_ctx->pid_d.output_limit = PID_I_Limit;
-   72   1          g_ctx->pid_d.I_limit = PID_I_Limit;
-   73   1          g_ctx->pid_d.I_period = 1.0 / CURRENT_LOOP_FREQUENT;
-   74   1          g_ctx->pid_d.Kc_gain = 1.0;
+   59   1          /*PID Parameter*/
+   60   1          memset((void*)&g_ctx->pid_d, 0, sizeof(PID_Structure));
+   61   1          memset((void*)&g_ctx->pid_q, 0, sizeof(PID_Structure));
+   62   1          memset((void*)&g_ctx->pid_speed, 0, sizeof(PID_Structure));
+   63   1      
+   64   1          g_ctx->pid_d.P_gain = PID_ID_KP;
+   65   1          g_ctx->pid_d.I_gain = PID_ID_KI;
+   66   1          g_ctx->pid_d.D_gain = PID_ID_KD;
+   67   1      
+   68   1          g_ctx->pid_q.P_gain = PID_IQ_KP;
+   69   1          g_ctx->pid_q.I_gain = PID_IQ_KI;
+   70   1          g_ctx->pid_q.D_gain = PID_IQ_KD;
+   71   1      
+   72   1          g_ctx->pid_speed.P_gain = PID_S_KP;
+   73   1          g_ctx->pid_speed.I_gain = PID_S_KI;
+   74   1          g_ctx->pid_speed.D_gain = PID_S_KD;
    75   1      
-   76   1          g_ctx->pid_q.output_limit = PID_I_Limit;
-   77   1          g_ctx->pid_q.I_limit = PID_I_Limit;
-   78   1          g_ctx->pid_q.I_period = 1.0 / CURRENT_LOOP_FREQUENT;
-   79   1          g_ctx->pid_q.Kc_gain = 1.0;
+   76   1          g_ctx->pid_d.output_limit = PID_I_Limit;
+   77   1          g_ctx->pid_d.I_limit = PID_I_Limit;
+   78   1          g_ctx->pid_d.I_period = 1.0 / CURRENT_LOOP_FREQUENT;
+   79   1          g_ctx->pid_d.Kc_gain = 1.0;
    80   1      
-   81   1          g_ctx->pid_speed.output_limit = PID_I_Limit;
-   82   1          g_ctx->pid_speed.I_limit = PID_I_Limit;
-   83   1          g_ctx->pid_speed.I_period = 1.0 / SPEED_LOOP_FREQUENT;
-   84   1          g_ctx->pid_speed.Kc_gain = 1.0;
+   81   1          g_ctx->pid_q.output_limit = PID_I_Limit;
+   82   1          g_ctx->pid_q.I_limit = PID_I_Limit;
+   83   1          g_ctx->pid_q.I_period = 1.0 / CURRENT_LOOP_FREQUENT;
+   84   1          g_ctx->pid_q.Kc_gain = 1.0;
    85   1      
-   86   1          memset((void*)&g_ctx->speed_ramp, 0, sizeof(Speed_Ramp));
-   87   1          g_ctx->speed_ramp.accelerate_amount = SPEED_ACCERELATION;
-   88   1          g_ctx->speed_ramp.decelerate_amount = SPEED_DECERELATION;
-   89   1      }
-   90           
+   86   1          g_ctx->pid_speed.output_limit = PID_I_Limit;
+   87   1          g_ctx->pid_speed.I_limit = PID_I_Limit;
+   88   1          g_ctx->pid_speed.I_period = 1.0 / SPEED_LOOP_FREQUENT;
+   89   1          g_ctx->pid_speed.Kc_gain = 1.0;
+   90   1      
+   91   1          memset((void*)&g_ctx->speed_ramp, 0, sizeof(Speed_Ramp));
+   92   1          g_ctx->speed_ramp.accelerate_amount = SPEED_ACCERELATION;
+   93   1          g_ctx->speed_ramp.decelerate_amount = SPEED_DECERELATION;
+   94   1      }
+   95          
+   96          /*---------------------------------------------------------
+   97          @ function  :   void GPIO_Init()
+   98          @ describe  :   GPIO Initialization
+   99          @ parameter :   None
+  100          @ date      :   2026-6-11
+  101          ----------------------------------------------------------*/
+  102          void GPIO_Init()
+  103          {
+  104   1              //1.ÉèÖÃPWM²¨Êä³ö¶ÔÓ¦µÄIO¿Ú
+  105   1              GPIO_InitTypeDef GPIOx_InitStructure = {0};
+  106   1              
+  107   1              GPIOx_InitStructure.Mode = GPIO_OUT_PP;                 //ÍÆÍìÊä³ö
+  108   1              GPIOx_InitStructure.Port = GPIO_P2;                             //P2.x
+  109   1              GPIOx_InitStructure.Pin  = GPIO_Pin_4;                  //P2.4
+  110   1              GPIOx_InitStructure.Pull_Up_En = DISABLE;
+  111   1              GPIOx_InitStructure.Pull_Down_En = DISABLE;
+  112   1              GPIOx_InitStructure.Smit_Triggle_En = DISABLE;
+  113   1              GPIOx_InitStructure.Fast_Switch_Speed_En = ENABLE;
+  114   1              GPIOx_InitStructure.Strengthen_Current_En = ENABLE;
+  115   1              GPIOx_InitStructure.Digital_Input_En = DISABLE;
+  116   1              GPIOx_InitStructure.User_Control_En = DISABLE;
+  117   1              GPIO_Inilize_2(&GPIOx_InitStructure);
+  118   1              
+  119   1              GPIOx_InitStructure.Port = GPIO_P2;                             //P2.x
+  120   1              GPIOx_InitStructure.Pin  = GPIO_Pin_2;                  //P2.2
+  121   1              GPIO_Inilize_2(&GPIOx_InitStructure);
+  122   1              
+  123   1              GPIOx_InitStructure.Port = GPIO_P2;                             //P2.x
+  124   1              GPIOx_InitStructure.Pin  = GPIO_Pin_0;                  //P2.0
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 3   
+
+  125   1              GPIO_Inilize_2(&GPIOx_InitStructure);
+  126   1              
+  127   1              //2.ÉèÖÃADC²ÉÑù(µçÁ÷²ÉÑù)µÄIO¿Ú
+  128   1              GPIOx_InitStructure.Mode = GPIO_HighZ;                  //¸¡¿ÕÊäÈë
+  129   1      //      GPIOx_InitStructure.Port = GPIO_P2;                             //P2.x
+  130   1      //      GPIOx_InitStructure.Pin  = GPIO_Pin_0;                  //P2.0
+  131   1              GPIO_Inilize_2(&GPIOx_InitStructure);
+  132   1              
+  133   1              /* ... */
+  134   1              
+  135   1              //3.ÉèÖÃ´Å±àÂëÆ÷Í¨ÐÅ½Ó¿Ú
+  136   1              GPIOx_InitStructure.Mode = GPIO_OUT_PP;                 //ÍÆÍìÊä³ö
+  137   1              GPIOx_InitStructure.Port = GPIO_P1;                             //P1.x
+  138   1              GPIOx_InitStructure.Pin  = GPIO_Pin_5;                  //P1.5
+  139   1              GPIO_Inilize_2(&GPIOx_InitStructure);                   //MOSI
+  140   1              
+  141   1              GPIOx_InitStructure.Mode = GPIO_HighZ;                  //¸¡¿ÕÊäÈë
+  142   1              GPIOx_InitStructure.Port = GPIO_P1;                             //P1.x
+  143   1              GPIOx_InitStructure.Pin  = GPIO_Pin_6;                  //P1.6
+  144   1              GPIO_Inilize_2(&GPIOx_InitStructure);                   //MISO
+  145   1              
+  146   1              GPIOx_InitStructure.Mode = GPIO_OUT_PP;                 //ÍÆÍìÊä³ö
+  147   1              GPIOx_InitStructure.Port = GPIO_P1;                             //P1.x
+  148   1              GPIOx_InitStructure.Pin  = GPIO_Pin_7;                  //P1.7
+  149   1              GPIO_Inilize_2(&GPIOx_InitStructure);                   //CLK
+  150   1              
+  151   1      }
+  152          
+  153          /*---------------------------------------------------------
+  154          @ function  :   u8 GPIO_Inilize_2(GPIO_InitTypeDef *GPIOx)
+  155          @ describe  :   GPIO Initialization with more parameters
+  156          @ parameter :   GPIOx: ½á¹¹²ÎÊý,Çë²Î¿¼Í·ÎÄ¼þÀïµÄ¶¨Òå.
+  157          @ date      :   2026-6-11
+  158          ----------------------------------------------------------*/
+  159          u8 GPIO_Inilize_2(GPIO_InitTypeDef *GPIOx)
+  160          {
+  161   1          if(GPIOx->Port > GPIO_P7)        return FAIL;    //´íÎó
+  162   1          if(GPIOx->Mode > GPIO_OUT_PP)    return FAIL;    //´íÎó
+  163   1              
+  164   1          if(GPIOx->Port == GPIO_P0)
+  165   1          {
+  166   2              if(GPIOx->Mode == GPIO_PullUp)        P0M1 &= ~GPIOx->Pin,    P0M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+  167   2              if(GPIOx->Mode == GPIO_HighZ)         P0M1 |=  GPIOx->Pin,    P0M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+  168   2              if(GPIOx->Mode == GPIO_OUT_OD)        P0M1 |=  GPIOx->Pin,    P0M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+  169   2              if(GPIOx->Mode == GPIO_OUT_PP)        P0M1 &= ~GPIOx->Pin,    P0M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+  170   2                      
+  171   2                      P0PU = GPIOx->Pull_Up_En == ENABLE ? P0PU | GPIOx->Pin : P0PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
+  172   2                      P0PD = GPIOx->Pull_Down_En == ENABLE ? P0PD | GPIOx->Pin : P0PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
+  173   2                      P0NCS = GPIOx->Smit_Triggle_En == ENABLE ? P0NCS |GPIOx->Pin : P0NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
+  174   2                      P0SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P0SR | GPIOx->Pin : P0SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
+             -ËÙ¶È
+  175   2                      P0DR = GPIOx->Strengthen_Current_En == ENABLE ? P0DR | GPIOx->Pin : P0DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
+             -ÜÁ¦ÔöÇ¿
+  176   2                      P0IE = GPIOx->Digital_Input_En == ENABLE ? P0IE | GPIOx->Pin : P0IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
+  177   2                      P0BP = GPIOx->User_Control_En == ENABLE ? P0BP | GPIOx->Pin : P0BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
+  178   2          }
+  179   1          if(GPIOx->Port == GPIO_P1)
+  180   1          {
+  181   2              if(GPIOx->Mode == GPIO_PullUp)        P1M1 &= ~GPIOx->Pin,    P1M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+  182   2              if(GPIOx->Mode == GPIO_HighZ)         P1M1 |=  GPIOx->Pin,    P1M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+  183   2              if(GPIOx->Mode == GPIO_OUT_OD)        P1M1 |=  GPIOx->Pin,    P1M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+  184   2              if(GPIOx->Mode == GPIO_OUT_PP)        P1M1 &= ~GPIOx->Pin,    P1M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+  185   2                      
+  186   2                      P1PU = GPIOx->Pull_Up_En == ENABLE ? P1PU | GPIOx->Pin : P1PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 4   
+
+  187   2                      P1PD = GPIOx->Pull_Down_En == ENABLE ? P1PD | GPIOx->Pin : P1PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
+  188   2                      P1NCS = GPIOx->Smit_Triggle_En == ENABLE ? P1NCS |GPIOx->Pin : P1NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
+  189   2                      P1SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P1SR | GPIOx->Pin : P1SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
+             -ËÙ¶È
+  190   2                      P1DR = GPIOx->Strengthen_Current_En == ENABLE ? P1DR | GPIOx->Pin : P1DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
+             -ÜÁ¦ÔöÇ¿
+  191   2                      P1IE = GPIOx->Digital_Input_En == ENABLE ? P1IE | GPIOx->Pin : P1IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
+  192   2                      P1BP = GPIOx->User_Control_En == ENABLE ? P1BP | GPIOx->Pin : P1BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
+  193   2          }
+  194   1          if(GPIOx->Port == GPIO_P2)
+  195   1          {
+  196   2              if(GPIOx->Mode == GPIO_PullUp)        P2M1 &= ~GPIOx->Pin,    P2M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+  197   2              if(GPIOx->Mode == GPIO_HighZ)         P2M1 |=  GPIOx->Pin,    P2M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+  198   2              if(GPIOx->Mode == GPIO_OUT_OD)        P2M1 |=  GPIOx->Pin,    P2M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+  199   2              if(GPIOx->Mode == GPIO_OUT_PP)        P2M1 &= ~GPIOx->Pin,    P2M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+  200   2                      
+  201   2                      P2PU = GPIOx->Pull_Up_En == ENABLE ? P2PU | GPIOx->Pin : P2PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
+  202   2                      P2PD = GPIOx->Pull_Down_En == ENABLE ? P2PD | GPIOx->Pin : P2PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
+  203   2                      P2NCS = GPIOx->Smit_Triggle_En == ENABLE ? P2NCS |GPIOx->Pin : P2NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
+  204   2                      P2SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P2SR | GPIOx->Pin : P2SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
+             -ËÙ¶È
+  205   2                      P2DR = GPIOx->Strengthen_Current_En == ENABLE ? P2DR | GPIOx->Pin : P2DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
+             -ÜÁ¦ÔöÇ¿
+  206   2                      P2IE = GPIOx->Digital_Input_En == ENABLE ? P2IE | GPIOx->Pin : P2IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
+  207   2                      P2BP = GPIOx->User_Control_En == ENABLE ? P2BP | GPIOx->Pin : P2BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
+  208   2          }
+  209   1          if(GPIOx->Port == GPIO_P3)
+  210   1          {
+  211   2              if(GPIOx->Mode == GPIO_PullUp)        P3M1 &= ~GPIOx->Pin,    P3M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+  212   2              if(GPIOx->Mode == GPIO_HighZ)         P3M1 |=  GPIOx->Pin,    P3M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+  213   2              if(GPIOx->Mode == GPIO_OUT_OD)        P3M1 |=  GPIOx->Pin,    P3M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+  214   2              if(GPIOx->Mode == GPIO_OUT_PP)        P3M1 &= ~GPIOx->Pin,    P3M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+  215   2                      
+  216   2                      P3PU = GPIOx->Pull_Up_En == ENABLE ? P3PU | GPIOx->Pin : P3PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
+  217   2                      P3PD = GPIOx->Pull_Down_En == ENABLE ? P3PD | GPIOx->Pin : P3PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
+  218   2                      P3NCS = GPIOx->Smit_Triggle_En == ENABLE ? P3NCS |GPIOx->Pin : P3NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
+  219   2                      P3SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P3SR | GPIOx->Pin : P3SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
+             -ËÙ¶È
+  220   2                      P3DR = GPIOx->Strengthen_Current_En == ENABLE ? P3DR | GPIOx->Pin : P3DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
+             -ÜÁ¦ÔöÇ¿
+  221   2                      P3IE = GPIOx->Digital_Input_En == ENABLE ? P3IE | GPIOx->Pin : P3IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
+  222   2                      P3BP = GPIOx->User_Control_En == ENABLE ? P3BP | GPIOx->Pin : P3BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
+  223   2          }
+  224   1          if(GPIOx->Port == GPIO_P4)
+  225   1          {
+  226   2              if(GPIOx->Mode == GPIO_PullUp)        P4M1 &= ~GPIOx->Pin,    P4M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+  227   2              if(GPIOx->Mode == GPIO_HighZ)         P4M1 |=  GPIOx->Pin,    P4M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+  228   2              if(GPIOx->Mode == GPIO_OUT_OD)        P4M1 |=  GPIOx->Pin,    P4M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+  229   2              if(GPIOx->Mode == GPIO_OUT_PP)        P4M1 &= ~GPIOx->Pin,    P4M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+  230   2                      
+  231   2                      P4PU = GPIOx->Pull_Up_En == ENABLE ? P4PU | GPIOx->Pin : P4PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
+  232   2                      P4PD = GPIOx->Pull_Down_En == ENABLE ? P4PD | GPIOx->Pin : P4PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
+  233   2                      P4NCS = GPIOx->Smit_Triggle_En == ENABLE ? P4NCS |GPIOx->Pin : P4NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
+  234   2                      P4SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P4SR | GPIOx->Pin : P4SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
+             -ËÙ¶È
+  235   2                      P4DR = GPIOx->Strengthen_Current_En == ENABLE ? P4DR | GPIOx->Pin : P4DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
+             -ÜÁ¦ÔöÇ¿
+  236   2                      P4IE = GPIOx->Digital_Input_En == ENABLE ? P4IE | GPIOx->Pin : P4IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
+  237   2                      P4BP = GPIOx->User_Control_En == ENABLE ? P4BP | GPIOx->Pin : P4BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
+  238   2          }
+  239   1          if(GPIOx->Port == GPIO_P5)
+  240   1          {
+  241   2              if(GPIOx->Mode == GPIO_PullUp)        P5M1 &= ~GPIOx->Pin,    P5M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 5   
+
+             -Ïò¿Ú
+  242   2              if(GPIOx->Mode == GPIO_HighZ)         P5M1 |=  GPIOx->Pin,    P5M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+  243   2              if(GPIOx->Mode == GPIO_OUT_OD)        P5M1 |=  GPIOx->Pin,    P5M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+  244   2              if(GPIOx->Mode == GPIO_OUT_PP)        P5M1 &= ~GPIOx->Pin,    P5M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+  245   2                      
+  246   2                      P5PU = GPIOx->Pull_Up_En == ENABLE ? P5PU | GPIOx->Pin : P5PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
+  247   2                      P5PD = GPIOx->Pull_Down_En == ENABLE ? P5PD | GPIOx->Pin : P5PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
+  248   2                      P5NCS = GPIOx->Smit_Triggle_En == ENABLE ? P5NCS |GPIOx->Pin : P5NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
+  249   2                      P5SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P5SR | GPIOx->Pin : P5SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
+             -ËÙ¶È
+  250   2                      P5DR = GPIOx->Strengthen_Current_En == ENABLE ? P5DR | GPIOx->Pin : P5DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
+             -ÜÁ¦ÔöÇ¿
+  251   2                      P5IE = GPIOx->Digital_Input_En == ENABLE ? P5IE | GPIOx->Pin : P5IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
+  252   2                      P5BP = GPIOx->User_Control_En == ENABLE ? P5BP | GPIOx->Pin : P5BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
+  253   2          }
+  254   1          if(GPIOx->Port == GPIO_P6)
+  255   1          {
+  256   2              if(GPIOx->Mode == GPIO_PullUp)        P6M1 &= ~GPIOx->Pin,    P6M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+  257   2              if(GPIOx->Mode == GPIO_HighZ)         P6M1 |=  GPIOx->Pin,    P6M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+  258   2              if(GPIOx->Mode == GPIO_OUT_OD)        P6M1 |=  GPIOx->Pin,    P6M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+  259   2              if(GPIOx->Mode == GPIO_OUT_PP)        P6M1 &= ~GPIOx->Pin,    P6M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+  260   2                      
+  261   2                      P6PU = GPIOx->Pull_Up_En == ENABLE ? P6PU | GPIOx->Pin : P6PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
+  262   2                      P6PD = GPIOx->Pull_Down_En == ENABLE ? P6PD | GPIOx->Pin : P6PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
+  263   2                      P6NCS = GPIOx->Smit_Triggle_En == ENABLE ? P6NCS |GPIOx->Pin : P6NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
+  264   2                      P6SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P6SR | GPIOx->Pin : P6SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
+             -ËÙ¶È
+  265   2                      P6DR = GPIOx->Strengthen_Current_En == ENABLE ? P6DR | GPIOx->Pin : P6DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
+             -ÜÁ¦ÔöÇ¿
+  266   2                      P6IE = GPIOx->Digital_Input_En == ENABLE ? P6IE | GPIOx->Pin : P6IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
+  267   2                      P6BP = GPIOx->User_Control_En == ENABLE ? P6BP | GPIOx->Pin : P6BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
+  268   2          }
+  269   1          if(GPIOx->Port == GPIO_P7)
+  270   1          {
+  271   2              if(GPIOx->Mode == GPIO_PullUp)        P7M1 &= ~GPIOx->Pin,    P7M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+  272   2              if(GPIOx->Mode == GPIO_HighZ)         P7M1 |=  GPIOx->Pin,    P7M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+  273   2              if(GPIOx->Mode == GPIO_OUT_OD)        P7M1 |=  GPIOx->Pin,    P7M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+  274   2              if(GPIOx->Mode == GPIO_OUT_PP)        P7M1 &= ~GPIOx->Pin,    P7M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+  275   2                      
+  276   2                      P7PU = GPIOx->Pull_Up_En == ENABLE ? P7PU | GPIOx->Pin : P7PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
+  277   2                      P7PD = GPIOx->Pull_Down_En == ENABLE ? P7PD | GPIOx->Pin : P7PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
+  278   2                      P7NCS = GPIOx->Smit_Triggle_En == ENABLE ? P7NCS |GPIOx->Pin : P7NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
+  279   2                      P7SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P7SR | GPIOx->Pin : P7SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
+             -ËÙ¶È
+  280   2                      P7DR = GPIOx->Strengthen_Current_En == ENABLE ? P7DR | GPIOx->Pin : P7DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
+             -ÜÁ¦ÔöÇ¿
+  281   2                      P7IE = GPIOx->Digital_Input_En == ENABLE ? P7IE | GPIOx->Pin : P7IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
+  282   2                      P7BP = GPIOx->User_Control_En == ENABLE ? P7BP | GPIOx->Pin : P7BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
+  283   2          }
+  284   1          return SUCCESS;    //³É¹¦
+  285   1      }
+  286          
+  287          /*---------------------------------------------------------
+  288          @ function  :   void ADC_Init()
+  289          @ describe  :   ADC Initialization
+  290          @ parameter :   None
+  291          @ date      :   2026-6-11
+  292          ----------------------------------------------------------*/
+  293          void ADC_Init()
+  294          {
+  295   1              ADC_InitTypeDef ADC_InitStructure;
+  296   1              ADC_InitStructure.ADC_Speed             = ADC_SPEED_2X1T;               //ÉèÖÃADCÊ±ÖÓ SYSclk/2/1
+  297   1              ADC_InitStructure.ADC_Align_Mode        = ADC_RIGHT_JUSTIFIED;  //ÉèÖÃADC²ÉÑùÊý¾Ý¶ÔÆë·½Ê½
+  298   1              ADC_InitStructure.ADC_SMPduty           = 31;   //Ä£ÄâÐÅºÅ²ÉÑùÊ±¼ä¿ØÖÆ, 0~31£¨×¢Òâ£º SMPDUTY Ò»¶¨²»ÄÜÉèÖÃÐ¡ÓÚ 10£©
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 6   
+
+  299   1              ADC_InitStructure.ADC_CsSetup           = 1;    //Í¨µÀÑ¡ÔñÊ±¼ä¿ØÖÆ(0,1)
+  300   1              ADC_InitStructure.ADC_CsHold            = 3;    //ADC Í¨µÀÑ¡Ôñ±£³ÖÊ±¼ä¿ØÖÆ 0,1(Ä¬ÈÏ),2,3
+  301   1              strcpy(ADC_InitStructure.ADC_Channel_Pin, "P0.0");      //ADC Í¨µÀÒý½ÅÑ¡Ôñ£¨ÏàµçÁ÷£©
+  302   1              ADC_InitStructure.ADC_PWMA_Triggle_EN = ENABLE;     //A×éPWM²¨´¥·¢ADC²ÉÑùÊ¹ÄÜ
+  303   1              ADC_InitStructure.ADC_PWMB_Triggle_EN = DISABLE;    //B×éPWM²¨´¥·¢ADC²ÉÑùÊ¹ÄÜ
+  304   1              /*¸ù¾Ý½á¹¹ÌåÉèÖÃµÄ²ÎÊýÉèÖÃADC*/
+  305   1              ADC_Configuration(&ADC_InitStructure);
+  306   1          
+  307   1          strcpy(ADC_InitStructure.ADC_Channel_Pin, "P0.1");  //ADC Í¨µÀÒý½ÅÑ¡Ôñ£¨ÏàµçÁ÷£©
+  308   1          ADC_Configuration(&ADC_InitStructure);
+  309   1          strcpy(ADC_InitStructure.ADC_Channel_Pin, "P0.2");  //ADC Í¨µÀÒý½ÅÑ¡Ôñ£¨ÏàµçÁ÷£©
+  310   1          ADC_Configuration(&ADC_InitStructure);
+  311   1          
+  312   1          strcpy(ADC_InitStructure.ADC_Channel_Pin, "P0.3");  //ADC Í¨µÀÒý½ÅÑ¡Ôñ£¨Ä¸ÏßµçÑ¹£©
+  313   1          ADC_Configuration(&ADC_InitStructure);
+  314   1      }
+  315          
+  316          /*---------------------------------------------------------
+  317          @ function  :   void ADC_Configuration(ADC_InitTypeDef* ADC_InitStructure)
+  318          @ describe  :   ADC Configuration
+  319          @ parameter :   ADC_InitTypeDef* ADC_InitStructure: ADC³õÊ¼»¯½á¹¹ÌåÖ¸Õë£¬°üº¬ADCÅäÖÃ²ÎÊý
+  320          @ date      :   2026-6-11
+  321          ----------------------------------------------------------*/
+  322          void ADC_Configuration(ADC_InitTypeDef* ADC_InitStructure)
+  323          {
+  324   1              //1. ´ò¿ªADCµçÔ´
+  325   1              ADC_PowerControl(ENABLE);
+  326   1              delay_ms(2);    //ÑÓÊ±µÈ´ýADCµçÔ´ÎÈ¶¨
+  327   1              
+  328   1              //2. Ñ¡ÔñADC²É¼¯Òý½Å
+  329   1              ADC_CONTR = (ADC_CONTR & ~0x0F) | ADC_Pin_Channel_Select(ADC_InitStructure);
+  330   1              
+  331   1              //3. ÉèÖÃ´¥·¢ADC²ÉÑùµÄÐÅºÅÔ´
+  332   1              if(ADC_InitStructure->ADC_PWMA_Triggle_EN == ENABLE)
+  333   1              {
+  334   2                      PWMA_CR2 = (PWMA_CR2 & ~0x70) | 0x20;   //PWMA¸üÐÂÖÜÆÚÊÂ¼þÎªTRGO£¬ÓÃÓÚÖÜÆÚ´¥·¢ADC
+  335   2              }
+  336   1              else if(ADC_InitStructure->ADC_PWMB_Triggle_EN == ENABLE)
+  337   1              {
+  338   2                      PWMB_CR2 = (PWMB_CR2 & 0x70) | 0x20;    //PWMB¸üÐÂÖÜÆÚÊÂ¼þÎªTRGO£¬ÓÃÓÚÖÜÆÚ´¥·¢ADC
+  339   2              }
+  340   1              
+  341   1              //4. ÅäÖÃÊý¾Ý¶ÔÆë·½Ê½¡¢ADCÊ±ÖÓ¡¢ADCÊ±Ðò
+  342   1              ADC_Inilize(ADC_InitStructure);
+  343   1      }
+  344          
+  345          /*---------------------------------------------------------
+  346          @ function  :   u8 ADC_Pin_Channel_Select(ADC_InitTypeDef* ADC_InitStructure)
+  347          @ describe  :   ADCÒý½ÅÍ¨µÀÑ¡Ôñ
+  348          @ parameter :   ADC_InitTypeDef* ADC_InitStructure: ADC³õÊ¼»¯½á¹¹ÌåÖ¸Õë£¬°üº¬ADCÅäÖÃ²ÎÊý
+  349          @ date      :   2026-6-11
+  350          ----------------------------------------------------------*/
+  351          u8 ADC_Pin_Channel_Select(ADC_InitTypeDef* ADC_InitStructure)
+  352          {
+  353   1              u8 Px_ = (u8)atoi(ADC_InitStructure->ADC_Channel_Pin + 1);      //È¡Òý½Å¶Ë¿ÚºÅ
+  354   1              u8 P_x = (u8)atoi(ADC_InitStructure->ADC_Channel_Pin + 3);      //È¡Òý½ÅÎ»ºÅ
+  355   1              u8 pin_mask = 0;        //ÅäÖÃ¼Ä´æÆ÷µÄÑÚÂë
+  356   1              if(Px_ == 1)            //P1.x          //      ADC_CONTR[3:0]  ADCÍ¨µÀ         ADC_CONTR[3:0]  ADCÍ¨µÀ
+  357   1              {                                                               //              0000            P1.0                    1000            P0.0
+  358   2                      pin_mask = P_x;                         //              0001            P1.1                    1001            P0.1
+  359   2              }                                                               //              0010            P1.2                    1010            P0.2
+  360   1              else if(Px_ == 0)       //P0.x          //              0011            P1.3                    1011            P0.3
+  361   1              {                                                               //              0100            P1.4                    1100            P0.4
+  362   2                      pin_mask = P_x;                         //              0101            P1.5                    1101            P0.5
+  363   2                      pin_mask |= 0x08;                       //              0110            P1.6                    1110            P0.6
+  364   2              }                                                               //              0111            P1.7                    1111            P0.7
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 7   
+
+  365   1              return pin_mask;        //·µ»ØADCÑ¡ÔñµÄÍ¨µÀÒý½ÅËù¶ÔÓ¦µÄ¼Ä´æÆ÷ÑÚÂë ADC_CONTR[3:0]
+  366   1      }
+  367          
+  368          /*---------------------------------------------------------
+  369          @ function  :   void PWM_Init(void)
+  370          @ describe  :   PWM Initialization
+  371          @ parameter :   None
+  372          @ date      :   2026-6-11
+  373          ----------------------------------------------------------*/
+  374          void PWM_Init(void)
+  375          {
+  376   1              PWMx_InitDefine PWMx_InitStructure;
+  377   1              /* Êä³ö±È½ÏÄ£Ê½*/
+  378   1              //1.1 ÉèÖÃPWMn³ÉÔ±ÊôÐÔ
+  379   1              PWMx_InitStructure.PWM_In_Out_Mode = CCAS_OUTPUT;       //ÉèÖÃPWMÐÅºÅ·½Ïò(Êä³ö/ÊäÈë·½Ïò)(PWM_CCMR1[1:0])
+  380   1              PWMx_InitStructure.PWM_Output_Channel_Select = ENO1P;   //PWM1PÊä³öÊ¹ÄÜ(PWMx_ENO[7:0])
+  381   1              strcpy(PWMx_InitStructure.PWM_IO_Pin_Select, "P2.4");   //Ñ¡ÔñÒý½Å(PWMx_PS[7:0])
+  382   1              PWMx_InitStructure.PWM_OC_Mode = CCMRn_PWM_MODE2;               //¼ÆÊýÆ÷´óÓÚ±È½ÏÖµ£¬Êä³ö¸ßµçÆ½(PWMx_CCMR1[6:4])
+  383   1              PWMx_InitStructure.PWM_Duty = PWMx_InitStructure.PWM_Pscr / 1000 * 0;   //Õ¼¿Õ±È(PWMx_PSCRH¡¢PWMx_PSCRL) 0
+             -~Period ¶ÔÓ¦ 0~100%
+  384   1              PWMx_InitStructure.PWM_Capture_Edge_or_Valid_Level = 1; //¸ßµçÆ½ÓÐÐ§(PWMx_CCER1)
+  385   1              PWM_Configuration_2(PWM1, &PWMx_InitStructure);//¸ù¾Ý½á¹¹Ìå³ÉÔ±ÒªÇó£¬ÅäÖÃ¶ÔÓ¦µÄ¼Ä´æÆ÷
+  386   1      
+  387   1              PWMx_InitStructure.PWM_Output_Channel_Select = ENO2P;   //PWM2PÊä³öÊ¹ÄÜ
+  388   1              strcpy(PWMx_InitStructure.PWM_IO_Pin_Select, "P2.2");   //Ñ¡ÔñÒý½Å
+  389   1              PWM_Configuration_2(PWM2, &PWMx_InitStructure);
+  390   1              
+  391   1              PWMx_InitStructure.PWM_Output_Channel_Select = ENO3P;   //PWM3PÊä³öÊ¹ÄÜ
+  392   1              strcpy(PWMx_InitStructure.PWM_IO_Pin_Select, "P2.0");   //Ñ¡ÔñÒý½Å
+  393   1              PWM_Configuration_2(PWM3, &PWMx_InitStructure);
+  394   1              
+  395   1              //1.2 ÉèÖÃPWMA×éÊôÐÔ
+  396   1              PWMx_InitStructure.PWM_Fast_EN = DISABLE;                       //¿ìËÙÊä³ö±È½Ï(PWMx_CCMRx.2) ²»Ê¹ÄÜ
+  397   1              PWMx_InitStructure.PWM_OC_PreLoad_EN = ENABLE;          //Êä³ö±È½ÏÔ¤×°ÔØ(PWMx_CCMRx.3) Ê¹ÄÜ
+  398   1              PWMx_InitStructure.PWM_ARR_PreLoad_EN = ENABLE;         //¼ÆÊýÆ÷Ô¤×°ÔØ(PWMx_CR1[7]) Ê¹ÄÜ
+  399   1              PWMx_InitStructure.PWM_Align = PWM_ALIGN_CENTER_3;      //ÖÐÑë¶ÔÆëÄ£Ê½3(PWMx_CR1[6:5])£¬¼ÆÊýÆ÷ÏòÉÏ¡¢ÏòÏÂ±È½ÏÖ
+             -Ð¶Ï±êÖ¾Î»¾ùÖÃ1
+  400   1              PWMx_InitStructure.PWM_Couter_Dir = 0;                          //¼ÆÊý·½Ïò(ÖÐÑë¶ÔÆëÄ£Ê½²»Æð×÷ÓÃ)(PWMx_CR1[4])
+  401   1              
+  402   1              PWMx_InitStructure.PWM_Single_Pulse_Mode = DISABLE;     //µ¥Âö³åÄ£Ê½(PWMx_CR1[3]) ²»Ê¹ÄÜ
+  403   1              PWMx_InitStructure.PWM_Update_Source = 0;                       //¸üÐÂÇëÇóÔ´(PWMx_CR1[2])
+  404   1              PWMx_InitStructure.PWM_Update_Dis = DISABLE;            //¸üÐÂÊÂ¼þ½ûÖ¹Ê¹ÄÜÎ»(PWMx_CR1[1])
+  405   1              PWMx_InitStructure.PWM_DeadTime = 1;                            //Éè¶¨ËÀÇøÊ±¼ä 0~255 (PWMx_DTR)
+  406   1              PWM_Frequency_ARR_PSCR_Calculator(PWMA_CARRIER_FREQ, &PWMx_InitStructure);//×Ô¶¯¼ÆËã psc arr£¬ÅäÖÃPWM²¨Æ
+             -µÂÊ
+  407   1              PWMx_InitStructure.PWM_BrakeEnable              = DISABLE;      //PWMÉ²³µ¹¦ÄÜ(PWMx_BKR[4]) ²»Ê¹ÄÜ
+  408   1              PWMx_InitStructure.PWM_Couter_EN = ENABLE;                      //¼ÆÊýÆ÷(PWMx_CR1[0]) Ê¹ÄÜ
+  409   1              PWMx_InitStructure.PWM_MainOutEnable = ENABLE;          //Ö÷Êä³ö(PWMx_BKR[7]) Ê¹ÄÜ
+  410   1          
+  411   1          PWMx_InitStructure.PWM_Update_Interrupt_EN = ENABLE;//¸üÐÂÖÐ¶ÏÊ¹ÄÜ
+  412   1          PWMx_InitStructure.PWM_CC_Interrupt_EN = ENABLE;    //²¶»ñ/±È½ÏÖÐ¶ÏÊ¹ÄÜ
+  413   1          
+  414   1              PWM_Configuration_2(PWMA, &PWMx_InitStructure);
+  415   1              
+  416   1              /* ÊäÈë²¶»ñÄ£Ê½ */
+  417   1              //2.1 ÉèÖÃPWMn³ÉÔ±ÊôÐÔ
+  418   1              PWMx_InitStructure.PWM_In_Out_Mode = CCBS_IUTPUT_TI6FP6;            //ÉèÖÃPWMÐÅºÅµÄÑ¡ÔñºÍ·½Ïò(ÊäÈë²¶»ñ·½ÏòPWMx_
+             -CCMRn[1:0])
+  419   1              PWMx_InitStructure.PWM_Output_Channel_Select = PWM_OUT_DISABLE; //²»Ñ¡ÔñPWMÊä³öÍ¨µÀ(PWMx_ENO[7:0])
+  420   1              memset(PWMx_InitStructure.PWM_IO_Pin_Select, 0, sizeof(PWMx_InitStructure.PWM_IO_Pin_Select));//Çå¿ÕÑ¡Ôñ
+             -µÄÊä³öÒý½Å(PWMx_PS[7:0])
+  421   1              PWMx_InitStructure.PWM_Capture_Edge_or_Valid_Level = 0;                 //²¶»ñÉÏÉýÑØ(PWMx_CCER1)
+  422   1              PWM_Configuration_2(PWM6, &PWMx_InitStructure);
+  423   1          
+  424   1          PWMx_InitStructure.PWM_In_Out_Mode = CCBS_IUTPUT_TI7FP7;        //ÉèÖÃPWMÐÅºÅµÄÑ¡ÔñºÍ·½Ïò(ÊäÈë²¶»ñ·½ÏòPW
+             -Mx_CCMRn[1:0])
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 8   
+
+  425   1          PWMx_InitStructure.PWM_Capture_Edge_or_Valid_Level = 1;                     //²¶»ñÏÂ½µÑØ(PWMx_CCER1)
+  426   1          PWM_Configuration_2(PWM7, &PWMx_InitStructure);
+  427   1          
+  428   1          //2.2 ÉèÖÃPWMB×éÊôÐÔ
+  429   1          PWMx_InitStructure.PWM_Fast_EN = DISABLE;                   //¿ìËÙÊä³ö±È½Ï(PWMx_CCMRx.2) ²»Ê¹ÄÜ
+  430   1              PWMx_InitStructure.PWM_OC_PreLoad_EN = ENABLE;          //Êä³ö±È½ÏÔ¤×°ÔØ(PWMx_CCMRx.3) Ê¹ÄÜ
+  431   1              PWMx_InitStructure.PWM_ARR_PreLoad_EN = ENABLE;         //¼ÆÊýÆ÷Ô¤×°ÔØ(PWMx_CR1[7]) Ê¹ÄÜ
+  432   1              PWMx_InitStructure.PWM_Align = PWM_ALIGN_EDGE;      //±ßÑØ¶ÔÆëÄ£Ê½(PWMx_CR1[6:5])£¬¼ÆÊýÆ÷ÏòÉÏ¡¢ÏòÏÂ±È½ÏÖÐ
+             -¶Ï±êÖ¾Î»¾ùÖÃ1
+  433   1              PWMx_InitStructure.PWM_Couter_Dir = 0;                          //¼ÆÊý·½Ïò(0 ÏòÉÏ¼ÆÊý    1 ÏòÏÂ¼ÆÊýÄ£Ê½)(PWMx_CR1[4])
+  434   1              
+  435   1              PWMx_InitStructure.PWM_Single_Pulse_Mode = DISABLE;     //µ¥Âö³åÄ£Ê½(PWMx_CR1[3]) ²»Ê¹ÄÜ
+  436   1              PWMx_InitStructure.PWM_Update_Source = 0;                       //¸üÐÂÇëÇóÔ´(PWMx_CR1[2])
+  437   1              PWMx_InitStructure.PWM_Update_Dis = DISABLE;            //¸üÐÂÊÂ¼þ½ûÖ¹Ê¹ÄÜÎ»(PWMx_CR1[1])
+  438   1              PWMx_InitStructure.PWM_DeadTime = 1;                            //Éè¶¨ËÀÇøÊ±¼ä 0~255 (PWMx_DTR)
+  439   1              PWM_Frequency_ARR_PSCR_Calculator(PWMA_CARRIER_FREQ, &PWMx_InitStructure);//×Ô¶¯¼ÆËã psc arr£¬ÅäÖÃPWM²¨Æ
+             -µÂÊ
+  440   1              PWMx_InitStructure.PWM_BrakeEnable              = DISABLE;      //PWMÉ²³µ¹¦ÄÜ(PWMx_BKR[4]) ²»Ê¹ÄÜ
+  441   1              PWMx_InitStructure.PWM_Couter_EN = ENABLE;                      //¼ÆÊýÆ÷(PWMx_CR1[0]) Ê¹ÄÜ
+  442   1              PWMx_InitStructure.PWM_MainOutEnable = ENABLE;          //Ö÷Êä³ö(PWMx_BKR[7]) Ê¹ÄÜ
+  443   1          
+  444   1          PWMx_InitStructure.PWM_Update_Interrupt_EN = ENABLE;//¸üÐÂÖÐ¶ÏÊ¹ÄÜ
+  445   1          PWMx_InitStructure.PWM_CC_Interrupt_EN = ENABLE;    //²¶»ñ/±È½ÏÖÐ¶ÏÊ¹ÄÜ
+  446   1          
+  447   1              PWM_Configuration_2(PWMB, &PWMx_InitStructure);
+  448   1      }
+  449          
+  450          /*---------------------------------------------------------
+  451          @ function  :   void PWM_Frequency_ARR_PSCR_Calculator(u32 set_freq, PWMx_InitDefine* PWMx_InitStructure)
+  452          @ describe  :   ¸ù¾ÝÉè¶¨µÄPWMÆµÂÊ×Ô¶¯¼ÆËãARRºÍPSCRµÄÖµ£¬²¢ÅäÖÃµ½PWM³õÊ¼»¯½á¹¹ÌåÖÐ
+  453          @ parameter :   set_freq: Éè¶¨µÄPWMÆµÂÊ
+  454                          PWMx_InitStructure: PWM³õÊ¼»¯½á¹¹ÌåÖ¸Õë£¬°üº¬PWMÅäÖÃ²ÎÊý
+  455          @ date      :   2026-6-11
+  456          ----------------------------------------------------------*/
+  457          void PWM_Frequency_ARR_PSCR_Calculator(u32 set_freq, PWMx_InitDefine* PWMx_InitStructure)
+  458          {
+  459   1              /* ÖÐÑë¶ÔÆëÄ£Ê½µÄPWMÆµÂÊ£ºsystem_clock/((PSCR+1)*(ARR*2)) */
+  460   1              /* ±ßÔµ¶ÔÆëÄ£Ê½µÄPWMÆµÂÊ£ºsystem_clock/((psc+1)*(arr+1)) */
+  461   1              u32 period_cycles, frequency, pwm_clock_source;
+  462   1              u16 arr, psc;
+  463   1          
+  464   1              pwm_clock_source = PWMA_SOURCE_FREQ;
+  465   1              frequency = set_freq;
+  466   1              if(frequency > pwm_clock_source || frequency <= 0)
+  467   1              {
+  468   2                      return;
+  469   2              }
+  470   1              period_cycles = pwm_clock_source / frequency;   //period_cycles = (psc+1)*(arr*2)
+  471   1                                                                                                      //period_cycles = (psc+1)*(arr+1)
+  472   1              if(PWMx_InitStructure->PWM_Align == PWM_ALIGN_EDGE)     //±ßÔµ¶ÔÆëÄ£Ê½
+  473   1              {
+  474   2                      if(period_cycles <= 65536ul)
+  475   2                      {
+  476   3                              psc = 0;
+  477   3                              arr = period_cycles - 1;
+  478   3                      }
+  479   2                      else
+  480   2                      {
+  481   3                              psc = (period_cycles - 1) / 65536u;
+  482   3                              arr = (period_cycles + psc) / (psc + 1) - 1;
+  483   3                      }
+  484   2              }
+  485   1              else    //ÖÐÑë¶ÔÆëÄ£Ê½
+  486   1              {
+  487   2                      if(period_cycles <= 65536ul * 2)
+  488   2              {
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 9   
+
+  489   3                  psc = 0;
+  490   3                  arr = period_cycles / 2 - 1;
+  491   3              }
+  492   2              else
+  493   2              {
+  494   3                  psc = period_cycles / (65536ul * 2);
+  495   3                  arr = period_cycles / ((psc + 1) * 2) - 1;
+  496   3              }
+  497   2              }
+  498   1              
+  499   1              PWMx_InitStructure->PWM_Pscr = psc;
+  500   1              PWMx_InitStructure->PWM_Arr = arr;
+  501   1      }
+  502          
+  503          /*---------------------------------------------------------
+  504          @ function  :   u8 PWM_Pin_Configuration(u8 PWMx, PWMx_InitDefine *PWMx_InitStructure)
+  505          @ describe  :   ¸ù¾ÝÑ¡ÔñµÄPWMÍ¨µÀºÍÒý½Å£¬ÅäÖÃ¶ÔÓ¦µÄ¼Ä´æÆ÷ÒÔÊ¹ÄÜPWMÊä³ö
+  506          @ parameter :   PWMx: PWMÍ¨µÀºÅ£¬È¡Öµ·¶Î§1~8
+  507                          PWMx_InitStructure: PWM³õÊ¼»¯½á¹¹ÌåÖ¸Õë£¬°üº¬PWMÅäÖÃ²ÎÊý
+  508          @ date      :   2026-6-11
+  509          ----------------------------------------------------------*/
+  510          u8 PWM_Pin_Configuration(u8 PWMx, PWMx_InitDefine *PWMx_InitStructure)
+  511          {
+  512   1              u8 Px_ = (u8)atoi(PWMx_InitStructure->PWM_IO_Pin_Select + 1);   //È¡Òý½Å¶Ë¿ÚºÅ
+  513   1              u8 P_x = (u8)atoi(PWMx_InitStructure->PWM_IO_Pin_Select + 3);   //È¡Òý½ÅÎ»ºÅ
+  514   1              
+  515   1              if(PWMx_InitStructure->PWM_IO_Pin_Select == NULL)
+  516   1                      return 0;
+  517   1              
+  518   1              /*¸ù¾ÝÒý½Å´¦Àí¶ÔÓ¦µÄ¼Ä´æÆ÷*/
+  519   1              if(PWMx <= 4 && Px_ <= 2)
+  520   1              {
+  521   2                      if(P_x == 0 || P_x == 1)
+  522   2                      {
+  523   3                              if(Px_ == 1)
+  524   3                              {
+  525   4                                      PWMA_PS &= ~0x03;       //00
+  526   4                              }
+  527   3                              else if(Px_ == 0)
+  528   3                              {
+  529   4                                      PWMA_PS &= ~0x02;       //01
+  530   4                                      PWMA_PS |= 0x01;
+  531   4                              }
+  532   3                              else if(Px_ == 2)
+  533   3                              {
+  534   4                                      PWMA_PS |= 0x02;        //10
+  535   4                                      PWMA_PS &= ~0x01;
+  536   4                              }
+  537   3                      }
+  538   2                      else if(P_x == 2 || P_x == 3)
+  539   2                      {
+  540   3                              if(Px_ == 1)
+  541   3                              {
+  542   4                                      PWMA_PS &= ~0x0C;       //00
+  543   4                              }
+  544   3                              else if(Px_ == 0)
+  545   3                              {
+  546   4                                      PWMA_PS &= ~0x08;       //01
+  547   4                                      PWMA_PS |= 0x04;
+  548   4                              }
+  549   3                              else if(Px_ == 2)
+  550   3                              {
+  551   4                                      PWMA_PS |= 0x08;        //10
+  552   4                                      PWMA_PS &= ~0x04;
+  553   4                              }
+  554   3                      }
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 10  
+
+  555   2                      else if(P_x == 4 || P_x == 5)
+  556   2                      {
+  557   3                              if(Px_ == 1)
+  558   3                              {
+  559   4                                      PWMA_PS &= ~0x30;       //00
+  560   4                              }
+  561   3                              else if(Px_ == 0)
+  562   3                              {
+  563   4                                      PWMA_PS &= ~0x20;       //01
+  564   4                                      PWMA_PS |= 0x10;
+  565   4                              }
+  566   3                              else if(Px_ == 2)
+  567   3                              {
+  568   4                                      PWMA_PS |= 0x20;        //10
+  569   4                                      PWMA_PS &= ~0x10;
+  570   4                              }
+  571   3                              
+  572   3                      }
+  573   2                      else if(P_x == 6 || P_x == 7)
+  574   2                      {
+  575   3                              if(Px_ == 1)
+  576   3                              {
+  577   4                                      PWMA_PS &= ~0xC0;       //00
+  578   4                              }
+  579   3                              else if(Px_ == 0)
+  580   3                              {
+  581   4                                      PWMA_PS &= ~0x80;       //01
+  582   4                                      PWMA_PS |= 0x40;
+  583   4                              }
+  584   3                              else if(Px_ == 2)
+  585   3                              {
+  586   4                                      PWMA_PS |= 0x80;        //10
+  587   4                                      PWMA_PS &= ~0x40;
+  588   4                              }       
+  589   3                      }
+  590   2              }
+  591   1              else if(PWMx >= 5 && PWMx <= 8)
+  592   1              {
+  593   2                      /* PWMA_5¡¢ PWMA_6 */
+  594   2                      if(Px_ == 3 && P_x == 3)        //P3.3
+  595   2                      {
+  596   3                              PWMA_PS2 &= ~0x03;      //00
+  597   3                      }
+  598   2                      else if(Px_ == 4 && P_x == 4)   //P4.4
+  599   2                      {
+  600   3                              PWMA_PS2 &= ~0x01;
+  601   3                              PWMA_PS2 |= 0x02;       //01
+  602   3                      }
+  603   2                      else if(Px_ == 5 && P_x == 6)   //P5.6
+  604   2                      {
+  605   3                              PWMA_PS2 |= 0x02;
+  606   3                              PWMA_PS2 &= ~0x01;      //10
+  607   3                      }
+  608   2                      else if(Px_ == 3 && P_x == 4)   //P3.4
+  609   2                      {
+  610   3                              PWMA_PS2 &= ~0x0C;      //00
+  611   3                      }
+  612   2                      else if(Px_ == 4 && P_x == 7)   //P4.7
+  613   2                      {
+  614   3                              PWMA_PS2 &= ~0x08;
+  615   3                              PWMA_PS2 |= 0x04;       //01
+  616   3                      }
+  617   2                      else if(Px_ == 5 && P_x == 7)   //P5.7
+  618   2                      {
+  619   3                              PWMA_PS2 |= 0x08;
+  620   3                              PWMA_PS2 &= ~0x04;      //10
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 11  
+
+  621   3                      }
+  622   2                      
+  623   2                      /* PWMB */
+  624   2                      //PWM5
+  625   2                      else if(Px_ == 0 && P_x == 1)   //P0.1
+  626   2                      {
+  627   3                              PWMB_PS &= ~0x03;       //00
+  628   3                      }
+  629   2                      else if(Px_ == 1 && P_x == 1)   //P1.1
+  630   2                      {
+  631   3                              PWMB_PS &= ~0x01;
+  632   3                              PWMB_PS |= 0x02;        //01
+  633   3                      }
+  634   2                      else if(Px_ == 2 && P_x == 1)   //P2.1
+  635   2                      {
+  636   3                              PWMB_PS &= ~0x01;
+  637   3                              PWMB_PS |= 0x02;        //10
+  638   3                      }
+  639   2                      else if(Px_ == 5 && P_x == 0)   //P5.0
+  640   2                      {
+  641   3                              PWMB_PS |= 0x03;        //11
+  642   3                      }
+  643   2                      //PWM6
+  644   2                      else if(Px_ == 0 && P_x == 5)   //P0.5
+  645   2                      {
+  646   3                              PWMB_PS &= ~0x0C;       //00
+  647   3                      }
+  648   2                      else if(Px_ == 1 && P_x == 5)   //P1.5
+  649   2                      {
+  650   3                              PWMB_PS &= ~0x08;
+  651   3                              PWMB_PS |= 0x04;        //01
+  652   3                      }
+  653   2                      else if(Px_ == 2 && P_x == 5)   //P2.5
+  654   2                      {
+  655   3                              PWMB_PS &= ~0x04;
+  656   3                              PWMB_PS |= 0x08;        //10
+  657   3                      }
+  658   2                      else if(Px_ == 5 && P_x == 2)   //P5.2
+  659   2                      {
+  660   3                              PWMB_PS |= 0x0C;        //11
+  661   3                      }
+  662   2                      
+  663   2                      //PWM7
+  664   2                      else if(Px_ == 0 && P_x == 1)   //P0.1
+  665   2                      {
+  666   3                              PWMB_PS &= ~0x30;       //00
+  667   3                      }
+  668   2                      else if(Px_ == 1 && P_x == 1)   //P1.1
+  669   2                      {
+  670   3                              PWMB_PS &= ~0x20;
+  671   3                              PWMB_PS |= 0x10;        //01
+  672   3                      }
+  673   2                      else if(Px_ == 2 && P_x == 1)   //P2.1
+  674   2                      {
+  675   3                              PWMB_PS &= ~0x10;
+  676   3                              PWMB_PS |= 0x20;        //10
+  677   3                      }
+  678   2                      else if(Px_ == 5 && P_x == 0)   //P5.0
+  679   2                      {
+  680   3                              PWMB_PS |= 0x30;        //11
+  681   3                      }
+  682   2                      //PWM8
+  683   2                      else if(Px_ == 0 && P_x == 7)   //P0.7
+  684   2                      {
+  685   3                              PWMB_PS &= ~0xC0;       //00
+  686   3                      }
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 12  
+
+  687   2                      else if(Px_ == 1 && P_x == 7)   //P1.7
+  688   2                      {
+  689   3                              PWMB_PS &= ~0x80;
+  690   3                              PWMB_PS |= 0x40;        //01
+  691   3                      }
+  692   2                      else if(Px_ == 2 && P_x == 7)   //P2.7
+  693   2                      {
+  694   3                              PWMB_PS &= ~0x40;
+  695   3                              PWMB_PS |= 0x80;        //10
+  696   3                      }
+  697   2                      else if(Px_ == 5 && P_x == 3)   //P5.3
+  698   2                      {
+  699   3                              PWMB_PS |= 0xC0;        //11
+  700   3                      }
+  701   2              }
+  702   1              else
+  703   1                      return FAIL;
+  704   1              return SUCCESS;
+  705   1      }
+  706          
+  707          /*---------------------------------------------------------
+  708          @ function  :   u8 PWM_Configuration_2(u8 PWMx, PWMx_InitDefine *PWMx_InitStructure)
+  709          @ describe  :   ¸ù¾ÝÉè¶¨µÄPWMÅäÖÃ²ÎÊý£¬ÅäÖÃ¶ÔÓ¦µÄPWMÍ¨µÀ
+  710          @ parameter :   PWMx: PWMÍ¨µÀºÅ£¬È¡Öµ·¶Î§1~8    PWM×é±ð£¬PWMA£¬PWMB
+  711                          PWMx_InitStructure: PWM³õÊ¼»¯½á¹¹ÌåÖ¸Õë£¬°üº¬PWMÅäÖÃ²ÎÊý
+  712          @ date      :   2026-6-11
+  713          ----------------------------------------------------------*/
+  714          u8 PWM_Configuration_2(u8 PWMx, PWMx_InitDefine *PWMx_InitStructure)
+  715          {
+  716   1          /* PWMÍ¨µÀÉèÖÃ */
+  717   1              if(PWMx == PWM1)
+  718   1              {
+  719   2                      PWMA_CC1E_Disable();            //ÏÈ¹Ø±ÕÖ÷Í¨µÀµÄ ÊäÈë²¶»ñ/±È½ÏÊä³ö
+  720   2                      PWMA_CC1NE_Disable();           //ÏÈ¹Ø±Õ»¥²¹Í¨µÀµÄ ±È½ÏÊä³ö
+  721   2                      /* CCnS½öÔÚÍ¨µÀ¹Ø±ÕÊ±²ÅÊÇ¿ÉÐ´µÄ */
+  722   2                      
+  723   2                      //1.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊä³öÍ¨µÀÄ£Ê½
+  724   2                      if(PWMx_InitStructure->PWM_In_Out_Mode == 0x00)   //ÅÐ¶ÏÊÇÊä³ö»¹ÊÇÊäÈëÄ£Ê½
+  725   2                      {
+  726   3                              PWMA_CC1S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);           //ÉèÖÃ Êä³ö/ (ÊäÈë)²¶»ñ·½Ïò
+  727   3                              PWMA_OC1ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //ÉèÖÃ±È½Ï/²¶»ñÄ£Ê½
+  728   3                              
+  729   3                              /*1.1 Ö÷Í¨µÀ*/
+  730   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO1P)
+  731   3                              {
+  732   4                                      PWMA_CC1E_Enable();             //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+  733   4                                      PWMA_ENO |= ENO1P;              //Ê¹ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+  734   4                              }
+  735   3                              else
+  736   3                              {
+  737   4                                      PWMA_CC1E_Disable();    //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+  738   4                                      PWMA_ENO &= ~ENO1P;             //Ê§ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+  739   4                              }
+  740   3                              /*»¥²¹Í¨µÀ*/
+  741   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO1N)
+  742   3                              {
+  743   4                                      PWMA_CC1NE_Enable();            //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+  744   4                                      PWMA_ENO |= ENO1N;
+  745   4                              }
+  746   3                              else
+  747   3                              {
+  748   4                                      PWMA_CC1NE_Disable();           //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+  749   4                                      PWMA_ENO &= ~ENO1N;
+  750   4                              }
+  751   3                              
+  752   3                              /*1.2 ¸ù¾Ý½á¹¹ÌåÖÐPWM_Pin_SelectÑ¡ÔñµÄ½ÅÎ»×Ô¶¯ÅäÖÃ¼Ä´æÆ÷ */
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 13  
+
+  753   3                              if(PWM_Pin_Configuration(PWMx, PWMx_InitStructure) == FALSE)
+  754   3                              {
+  755   4                                      printf("PWM_Pin_Configuration failed!\n");
+  756   4                                      return FAIL;
+  757   4                              }
+  758   3                              /*1.3 ÉèÖÃÊä³ö±È½Ï*/
+  759   3                              PWMA_OC1ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //Êä³ö±È½ÏÄ£Ê½
+  760   3                              
+  761   3                              /*1.4 ÉèÖÃÕ¼¿Õ±È³õÊ¼Öµ*/
+  762   3                              PWMA_Duty1(PWMx_InitStructure->PWM_Duty);
+  763   3                              return SUCCESS;
+  764   3                      }
+  765   2              
+  766   2                      //2.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊäÈë²¶»ñÄ£Ê½
+  767   2                      else if(PWMx_InitStructure->PWM_In_Out_Mode != 0x00)
+  768   2                      {
+  769   3                              PWMA_CC1S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);
+  770   3                              PWMA_CC1E_Enable();                             //Ê¹ÄÜÊäÈë²¶»ñ
+  771   3                              if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 0)
+  772   3                  {
+  773   4                                      PWMA_CC1P_CaptureRise();        //²¶»ñÉÏÉýÑØ
+  774   4                  }
+  775   3                              else if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 1)
+  776   3                  {
+  777   4                                      PWMA_CC1P_CaptureFall();        //²¶»ñÏÂ½µÑØ
+  778   4                  }
+  779   3                              return SUCCESS;
+  780   3                      }
+  781   2                      else
+  782   2                              return FAIL;
+  783   2              
+  784   2              //3.ÖÐ¶ÏÏà¹Ø
+  785   2              if(PWMx_InitStructure->PWM_CC_Interrupt_EN)
+  786   2                  PWMA_CC1IE_Enable();
+  787   2              else
+  788   2                  PWMA_CC1IE_Disable();
+  789   2              }
+  790   1          
+  791   1          else if(PWMx == PWM2)
+  792   1              {
+  793   2                      PWMA_CC2E_Disable();            //ÏÈ¹Ø±ÕÖ÷Í¨µÀµÄ ÊäÈë²¶»ñ/±È½ÏÊä³ö
+  794   2                      PWMA_CC2NE_Disable();           //ÏÈ¹Ø±Õ»¥²¹Í¨µÀµÄ ±È½ÏÊä³ö
+  795   2                      /* CCnS½öÔÚÍ¨µÀ¹Ø±ÕÊ±²ÅÊÇ¿ÉÐ´µÄ */
+  796   2                      
+  797   2                      //1.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊä³öÍ¨µÀÄ£Ê½
+  798   2                      if(PWMx_InitStructure->PWM_In_Out_Mode == 0x00)   //ÅÐ¶ÏÊÇÊä³ö»¹ÊÇÊäÈëÄ£Ê½
+  799   2                      {
+  800   3                              PWMA_CC2S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);           //ÉèÖÃ Êä³ö/ (ÊäÈë)²¶»ñ·½Ïò
+  801   3                              PWMA_OC1ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //ÉèÖÃ±È½Ï/²¶»ñÄ£Ê½
+  802   3                              
+  803   3                              /*1.1 Ö÷Í¨µÀ*/
+  804   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO2P)
+  805   3                              {
+  806   4                                      PWMA_CC2E_Enable();             //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+  807   4                                      PWMA_ENO |= ENO2P;              //Ê¹ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+  808   4                              }
+  809   3                              else
+  810   3                              {
+  811   4                                      PWMA_CC2E_Disable();    //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+  812   4                                      PWMA_ENO &= ~ENO2P;             //Ê§ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+  813   4                              }
+  814   3                              /*»¥²¹Í¨µÀ*/
+  815   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO2N)
+  816   3                              {
+  817   4                                      PWMA_CC2NE_Enable();            //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+  818   4                                      PWMA_ENO |= ENO2N;
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 14  
+
+  819   4                              }
+  820   3                              else
+  821   3                              {
+  822   4                                      PWMA_CC2NE_Disable();           //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+  823   4                                      PWMA_ENO &= ~ENO2N;
+  824   4                              }
+  825   3                              
+  826   3                              /*1.2 ¸ù¾Ý½á¹¹ÌåÖÐPWM_Pin_SelectÑ¡ÔñµÄ½ÅÎ»×Ô¶¯ÅäÖÃ¼Ä´æÆ÷ */
+  827   3                              if(PWM_Pin_Configuration(PWMx, PWMx_InitStructure) == FALSE)
+  828   3                              {
+  829   4                                      printf("PWM_Pin_Configuration failed!\n");
+  830   4                                      return FAIL;
+  831   4                              }
+  832   3                              /*1.3 ÉèÖÃÊä³ö±È½Ï*/
+  833   3                              PWMA_OC2ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //Êä³ö±È½ÏÄ£Ê½
+  834   3      //                      PWMA_OC1_ReloadEnable(PWMx_InitStructure->PWM_OC_PreLoad_EN);   //Êä³ö±È½ÏÔ¤×°ÔØÊ¹ÄÜÎ»
+  835   3                              
+  836   3                              /*1.4 ÉèÖÃÕ¼¿Õ±È³õÊ¼Öµ*/
+  837   3                              PWMA_Duty2(PWMx_InitStructure->PWM_Duty);
+  838   3                              return SUCCESS;
+  839   3                      }
+  840   2              
+  841   2                      //2.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊäÈë²¶»ñÄ£Ê½
+  842   2                      else if(PWMx_InitStructure->PWM_In_Out_Mode != 0x00)
+  843   2                      {
+  844   3                              PWMA_CC2S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);
+  845   3                              PWMA_CC2E_Enable();                             //Ê¹ÄÜÊäÈë²¶»ñ
+  846   3                              if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 0)
+  847   3                  {
+  848   4                                      PWMA_CC2P_CaptureRise();        //²¶»ñÉÏÉýÑØ
+  849   4                  }
+  850   3                              else if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 1)
+  851   3                  {
+  852   4                                      PWMA_CC2P_CaptureFall();        //²¶»ñÏÂ½µÑØ
+  853   4                  }
+  854   3                              return SUCCESS;
+  855   3                      }
+  856   2                      else
+  857   2                              return FAIL;
+  858   2              
+  859   2              //3.ÖÐ¶ÏÏà¹Ø
+  860   2              if(PWMx_InitStructure->PWM_CC_Interrupt_EN)
+  861   2                  PWMA_CC2IE_Enable();
+  862   2              else
+  863   2                  PWMA_CC2IE_Disable();
+  864   2              }
+  865   1          
+  866   1          else if(PWMx == PWM3)
+  867   1              {
+  868   2                      PWMA_CC3E_Disable();            //ÏÈ¹Ø±ÕÖ÷Í¨µÀµÄ ÊäÈë²¶»ñ/±È½ÏÊä³ö
+  869   2                      PWMA_CC3NE_Disable();           //ÏÈ¹Ø±Õ»¥²¹Í¨µÀµÄ ±È½ÏÊä³ö
+  870   2                      /* CCnS½öÔÚÍ¨µÀ¹Ø±ÕÊ±²ÅÊÇ¿ÉÐ´µÄ */
+  871   2                      
+  872   2                      //1.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊä³öÍ¨µÀÄ£Ê½
+  873   2                      if(PWMx_InitStructure->PWM_In_Out_Mode == 0x00)   //ÅÐ¶ÏÊÇÊä³ö»¹ÊÇÊäÈëÄ£Ê½
+  874   2                      {
+  875   3                              PWMA_CC3S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);           //ÉèÖÃ Êä³ö/ (ÊäÈë)²¶»ñ·½Ïò
+  876   3                              PWMA_OC3ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //ÉèÖÃ±È½Ï/²¶»ñÄ£Ê½
+  877   3                              
+  878   3                              /*1.1 Ö÷Í¨µÀ*/
+  879   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO3P)
+  880   3                              {
+  881   4                                      PWMA_CC3E_Enable();             //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+  882   4                                      PWMA_ENO |= ENO3P;              //Ê¹ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+  883   4                              }
+  884   3                              else
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 15  
+
+  885   3                              {
+  886   4                                      PWMA_CC3E_Disable();    //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+  887   4                                      PWMA_ENO &= ~ENO3P;             //Ê§ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+  888   4                              }
+  889   3                              /*»¥²¹Í¨µÀ*/
+  890   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO3N)
+  891   3                              {
+  892   4                                      PWMA_CC3NE_Enable();            //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+  893   4                                      PWMA_ENO |= ENO3N;
+  894   4                              }
+  895   3                              else
+  896   3                              {
+  897   4                                      PWMA_CC3NE_Disable();           //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+  898   4                                      PWMA_ENO &= ~ENO3N;
+  899   4                              }
+  900   3                              
+  901   3                              /*1.2 ¸ù¾Ý½á¹¹ÌåÖÐPWM_Pin_SelectÑ¡ÔñµÄ½ÅÎ»×Ô¶¯ÅäÖÃ¼Ä´æÆ÷ */
+  902   3                              if(PWM_Pin_Configuration(PWMx, PWMx_InitStructure) == FALSE)
+  903   3                              {
+  904   4                                      printf("PWM_Pin_Configuration failed!\n");
+  905   4                                      return FAIL;
+  906   4                              }
+  907   3                              /*1.3 ÉèÖÃÊä³ö±È½Ï*/
+  908   3                              PWMA_OC3ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //Êä³ö±È½ÏÄ£Ê½
+  909   3                              
+  910   3                              /*1.4 ÉèÖÃÕ¼¿Õ±È³õÊ¼Öµ*/
+  911   3                              PWMA_Duty3(PWMx_InitStructure->PWM_Duty);
+  912   3                              return SUCCESS;
+  913   3                      }
+  914   2              
+  915   2                      //2.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊäÈë²¶»ñÄ£Ê½
+  916   2                      else if(PWMx_InitStructure->PWM_In_Out_Mode != 0x00)
+  917   2                      {
+  918   3                              PWMA_CC3S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);
+  919   3                              PWMA_CC3E_Enable();                             //Ê¹ÄÜÊäÈë²¶»ñ
+  920   3                              if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 0)
+  921   3                  {
+  922   4                                      PWMA_CC3P_CaptureRise();        //²¶»ñÉÏÉýÑØ
+  923   4                  }
+  924   3                              else if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 1)
+  925   3                  {
+  926   4                                      PWMA_CC3P_CaptureFall();        //²¶»ñÏÂ½µÑØ
+  927   4                  }
+  928   3                              return SUCCESS;
+  929   3                      }
+  930   2                      else
+  931   2                              return FAIL;
+  932   2              
+  933   2              //3.ÖÐ¶ÏÏà¹Ø
+  934   2              if(PWMx_InitStructure->PWM_CC_Interrupt_EN)
+  935   2                  PWMA_CC3IE_Enable();
+  936   2              else
+  937   2                  PWMA_CC3IE_Disable();
+  938   2              }
+  939   1          else if(PWMx == PWM4)
+  940   1              {
+  941   2                      PWMA_CC4E_Disable();            //ÏÈ¹Ø±ÕÖ÷Í¨µÀµÄ ÊäÈë²¶»ñ/±È½ÏÊä³ö
+  942   2                      PWMA_CC4NE_Disable();           //ÏÈ¹Ø±Õ»¥²¹Í¨µÀµÄ ±È½ÏÊä³ö
+  943   2                      /* CCnS½öÔÚÍ¨µÀ¹Ø±ÕÊ±²ÅÊÇ¿ÉÐ´µÄ */
+  944   2                      
+  945   2                      //1.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊä³öÍ¨µÀÄ£Ê½
+  946   2                      if(PWMx_InitStructure->PWM_In_Out_Mode == 0x00)   //ÅÐ¶ÏÊÇÊä³ö»¹ÊÇÊäÈëÄ£Ê½
+  947   2                      {
+  948   3                              PWMA_CC4S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);           //ÉèÖÃ Êä³ö/ (ÊäÈë)²¶»ñ·½Ïò
+  949   3                              PWMA_OC4ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //ÉèÖÃ±È½Ï/²¶»ñÄ£Ê½
+  950   3                              
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 16  
+
+  951   3                              /*1.1 Ö÷Í¨µÀ*/
+  952   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO4P)
+  953   3                              {
+  954   4                                      PWMA_CC4E_Enable();             //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+  955   4                                      PWMA_ENO |= ENO4P;              //Ê¹ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+  956   4                              }
+  957   3                              else
+  958   3                              {
+  959   4                                      PWMA_CC4E_Disable();    //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+  960   4                                      PWMA_ENO &= ~ENO4P;             //Ê§ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+  961   4                              }
+  962   3                              /*»¥²¹Í¨µÀ*/
+  963   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO4N)
+  964   3                              {
+  965   4                                      PWMA_CC4NE_Enable();            //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+  966   4                                      PWMA_ENO |= ENO4N;
+  967   4                              }
+  968   3                              else
+  969   3                              {
+  970   4                                      PWMA_CC4NE_Disable();           //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+  971   4                                      PWMA_ENO &= ~ENO4N;
+  972   4                              }
+  973   3                              
+  974   3                              /*1.2 ¸ù¾Ý½á¹¹ÌåÖÐPWM_Pin_SelectÑ¡ÔñµÄ½ÅÎ»×Ô¶¯ÅäÖÃ¼Ä´æÆ÷ */
+  975   3                              if(PWM_Pin_Configuration(PWMx, PWMx_InitStructure) == FALSE)
+  976   3                              {
+  977   4                                      printf("PWM_Pin_Configuration failed!\n");
+  978   4                                      return FAIL;
+  979   4                              }
+  980   3                              /*1.3 ÉèÖÃÊä³ö±È½Ï*/
+  981   3                              PWMA_OC1ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //Êä³ö±È½ÏÄ£Ê½
+  982   3                              
+  983   3                              /*1.4 ÉèÖÃÕ¼¿Õ±È³õÊ¼Öµ*/
+  984   3                              PWMA_Duty4(PWMx_InitStructure->PWM_Duty);
+  985   3      
+  986   3                              return SUCCESS;
+  987   3                      }
+  988   2              
+  989   2                      //2.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊäÈë²¶»ñÄ£Ê½
+  990   2                      else if(PWMx_InitStructure->PWM_In_Out_Mode != 0x00)
+  991   2                      {
+  992   3                              PWMA_CC4S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);
+  993   3                              PWMA_CC4E_Enable();                             //Ê¹ÄÜÊäÈë²¶»ñ
+  994   3                              if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 0)
+  995   3                  {
+  996   4                                      PWMA_CC4P_CaptureRise();        //²¶»ñÉÏÉýÑØ
+  997   4                  }
+  998   3                              else if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 1)
+  999   3                  {
+ 1000   4                                      PWMA_CC4P_CaptureFall();        //²¶»ñÏÂ½µÑØ
+ 1001   4                  }
+ 1002   3                              return SUCCESS;
+ 1003   3                      }
+ 1004   2                      else
+ 1005   2                              return FAIL;
+ 1006   2              
+ 1007   2              //3.ÖÐ¶ÏÏà¹Ø
+ 1008   2              if(PWMx_InitStructure->PWM_CC_Interrupt_EN)
+ 1009   2                  PWMA_CC4IE_Enable();
+ 1010   2              else
+ 1011   2                  PWMA_CC4IE_Disable();
+ 1012   2              }
+ 1013   1          
+ 1014   1          else if(PWMx == PWM5)
+ 1015   1              {
+ 1016   2                      PWMB_CC5E_Disable();            //ÏÈ¹Ø±ÕÖ÷Í¨µÀµÄ ÊäÈë²¶»ñ/±È½ÏÊä³ö
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 17  
+
+ 1017   2                      /* CCnS½öÔÚÍ¨µÀ¹Ø±ÕÊ±²ÅÊÇ¿ÉÐ´µÄ */
+ 1018   2                      
+ 1019   2                      //1.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊä³öÍ¨µÀÄ£Ê½
+ 1020   2                      if(PWMx_InitStructure->PWM_In_Out_Mode == 0x00)   //ÅÐ¶ÏÊÇÊä³ö»¹ÊÇÊäÈëÄ£Ê½
+ 1021   2                      {
+ 1022   3                              PWMB_CC5S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);           //ÉèÖÃ Êä³ö/ (ÊäÈë)²¶»ñ·½Ïò
+ 1023   3                              PWMB_OC5ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //ÉèÖÃ±È½Ï/²¶»ñÄ£Ê½
+ 1024   3                              
+ 1025   3                              /*1.1 Ö÷Í¨µÀ*/
+ 1026   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO5P)
+ 1027   3                              {
+ 1028   4                                      PWMB_CC5E_Enable();             //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1029   4                                      PWMB_ENO |= ENO5P;              //Ê¹ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+ 1030   4                              }
+ 1031   3                              else
+ 1032   3                              {
+ 1033   4                                      PWMB_CC5E_Disable();    //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1034   4                                      PWMB_ENO &= ~ENO5P;             //Ê§ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+ 1035   4                              }
+ 1036   3                              
+ 1037   3                              /*1.2 ¸ù¾Ý½á¹¹ÌåÖÐPWM_Pin_SelectÑ¡ÔñµÄ½ÅÎ»×Ô¶¯ÅäÖÃ¼Ä´æÆ÷ */
+ 1038   3                              if(PWM_Pin_Configuration(PWMx, PWMx_InitStructure) == FALSE)
+ 1039   3                              {
+ 1040   4                                      printf("PWM_Pin_Configuration failed!\n");
+ 1041   4                                      return FAIL;
+ 1042   4                              }
+ 1043   3                              /*1.3 ÉèÖÃÊä³ö±È½Ï*/
+ 1044   3                              PWMB_OC5ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //Êä³ö±È½ÏÄ£Ê½
+ 1045   3                              
+ 1046   3                              /*1.4 ÉèÖÃÕ¼¿Õ±È³õÊ¼Öµ*/
+ 1047   3                              PWMB_Duty5(PWMx_InitStructure->PWM_Duty);
+ 1048   3                              return SUCCESS;
+ 1049   3                      }
+ 1050   2              
+ 1051   2                      //2.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊäÈë²¶»ñÄ£Ê½
+ 1052   2                      else if(PWMx_InitStructure->PWM_In_Out_Mode != 0x00)
+ 1053   2                      {
+ 1054   3                              PWMB_CC5S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);
+ 1055   3                              PWMB_CC5E_Enable();                             //Ê¹ÄÜÊäÈë²¶»ñ
+ 1056   3                              if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 0)
+ 1057   3                  {
+ 1058   4                                      PWMB_CC5P_CaptureRise();        //²¶»ñÉÏÉýÑØ
+ 1059   4                  }
+ 1060   3                              else if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 1)
+ 1061   3                  {
+ 1062   4                                      PWMB_CC5P_CaptureFall();        //²¶»ñÏÂ½µÑØ
+ 1063   4                  }
+ 1064   3                              return SUCCESS;
+ 1065   3                      }
+ 1066   2                      else
+ 1067   2                              return FAIL;
+ 1068   2              
+ 1069   2               //3.ÖÐ¶ÏÏà¹Ø
+ 1070   2              if(PWMx_InitStructure->PWM_CC_Interrupt_EN)
+ 1071   2                  PWMB_CC5IE_Enable();
+ 1072   2              else
+ 1073   2                  PWMB_CC5IE_Disable();
+ 1074   2              }
+ 1075   1          
+ 1076   1          else if(PWMx == PWM6)
+ 1077   1              {
+ 1078   2                      PWMB_CC6E_Disable();            //ÏÈ¹Ø±ÕÖ÷Í¨µÀµÄ ÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1079   2                      /* CCnS½öÔÚÍ¨µÀ¹Ø±ÕÊ±²ÅÊÇ¿ÉÐ´µÄ */
+ 1080   2                      
+ 1081   2                      //1.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊä³öÍ¨µÀÄ£Ê½
+ 1082   2                      if(PWMx_InitStructure->PWM_In_Out_Mode == 0x00)   //ÅÐ¶ÏÊÇÊä³ö»¹ÊÇÊäÈëÄ£Ê½
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 18  
+
+ 1083   2                      {
+ 1084   3                              PWMB_CC6S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);           //ÉèÖÃ Êä³ö/ (ÊäÈë)²¶»ñ·½Ïò
+ 1085   3                              PWMB_OC6ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //ÉèÖÃ±È½Ï/²¶»ñÄ£Ê½
+ 1086   3                              
+ 1087   3                              /*1.1 Ö÷Í¨µÀ*/
+ 1088   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO6P)
+ 1089   3                              {
+ 1090   4                                      PWMB_CC6E_Enable();             //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1091   4                                      PWMB_ENO |= ENO6P;              //Ê¹ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+ 1092   4                              }
+ 1093   3                              else
+ 1094   3                              {
+ 1095   4                                      PWMB_CC6E_Disable();    //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1096   4                                      PWMB_ENO &= ~ENO6P;             //Ê§ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+ 1097   4                              }
+ 1098   3                              
+ 1099   3                              /*1.2 ¸ù¾Ý½á¹¹ÌåÖÐPWM_Pin_SelectÑ¡ÔñµÄ½ÅÎ»×Ô¶¯ÅäÖÃ¼Ä´æÆ÷ */
+ 1100   3                              if(PWM_Pin_Configuration(PWMx, PWMx_InitStructure) == FALSE)
+ 1101   3                              {
+ 1102   4                                      printf("PWM_Pin_Configuration failed!\n");
+ 1103   4                                      return FAIL;
+ 1104   4                              }
+ 1105   3                              /*1.3 ÉèÖÃÊä³ö±È½Ï*/
+ 1106   3                              PWMB_OC6ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //Êä³ö±È½ÏÄ£Ê½
+ 1107   3                              
+ 1108   3                              /*1.4 ÉèÖÃÕ¼¿Õ±È³õÊ¼Öµ*/
+ 1109   3                              PWMB_Duty6(PWMx_InitStructure->PWM_Duty);
+ 1110   3                              return SUCCESS;
+ 1111   3                      }
+ 1112   2              
+ 1113   2                      //2.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊäÈë²¶»ñÄ£Ê½
+ 1114   2                      else if(PWMx_InitStructure->PWM_In_Out_Mode != 0x00)
+ 1115   2                      {
+ 1116   3                              PWMB_CC5S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);
+ 1117   3                              PWMB_CC5E_Enable();                             //Ê¹ÄÜÊäÈë²¶»ñ
+ 1118   3                              if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 0)
+ 1119   3                  {
+ 1120   4                                      PWMB_CC5P_CaptureRise();        //²¶»ñÉÏÉýÑØ
+ 1121   4                  }
+ 1122   3                              else if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 1)
+ 1123   3                  {
+ 1124   4                                      PWMB_CC5P_CaptureFall();        //²¶»ñÏÂ½µÑØ
+ 1125   4                  }
+ 1126   3                              return SUCCESS;
+ 1127   3                      }
+ 1128   2                      else
+ 1129   2                              return FAIL;
+ 1130   2              
+ 1131   2               //3.ÖÐ¶ÏÏà¹Ø
+ 1132   2              if(PWMx_InitStructure->PWM_CC_Interrupt_EN)
+ 1133   2                  PWMB_CC6IE_Enable();
+ 1134   2              else
+ 1135   2                  PWMB_CC6IE_Disable();
+ 1136   2              }
+ 1137   1              
+ 1138   1          else if(PWMx == PWM7)
+ 1139   1              {
+ 1140   2                      PWMB_CC7E_Disable();            //ÏÈ¹Ø±ÕÖ÷Í¨µÀµÄ ÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1141   2                      /* CCnS½öÔÚÍ¨µÀ¹Ø±ÕÊ±²ÅÊÇ¿ÉÐ´µÄ */
+ 1142   2                      
+ 1143   2                      //1.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊä³öÍ¨µÀÄ£Ê½
+ 1144   2                      if(PWMx_InitStructure->PWM_In_Out_Mode == 0x00)   //ÅÐ¶ÏÊÇÊä³ö»¹ÊÇÊäÈëÄ£Ê½
+ 1145   2                      {
+ 1146   3                              PWMB_CC7S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);           //ÉèÖÃ Êä³ö/ (ÊäÈë)²¶»ñ·½Ïò
+ 1147   3                              PWMB_OC7ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //ÉèÖÃ±È½Ï/²¶»ñÄ£Ê½
+ 1148   3                              
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 19  
+
+ 1149   3                              /*1.1 Ö÷Í¨µÀ*/
+ 1150   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO7P)
+ 1151   3                              {
+ 1152   4                                      PWMB_CC7E_Enable();             //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1153   4                                      PWMB_ENO |= ENO7P;              //Ê¹ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+ 1154   4                              }
+ 1155   3                              else
+ 1156   3                              {
+ 1157   4                                      PWMB_CC7E_Disable();    //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1158   4                                      PWMB_ENO &= ~ENO7P;             //Ê§ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+ 1159   4                              }
+ 1160   3                              
+ 1161   3                              /*1.2 ¸ù¾Ý½á¹¹ÌåÖÐPWM_Pin_SelectÑ¡ÔñµÄ½ÅÎ»×Ô¶¯ÅäÖÃ¼Ä´æÆ÷ */
+ 1162   3                              if(PWM_Pin_Configuration(PWMx, PWMx_InitStructure) == FALSE)
+ 1163   3                              {
+ 1164   4                                      printf("PWM_Pin_Configuration failed!\n");
+ 1165   4                                      return FAIL;
+ 1166   4                              }
+ 1167   3                              /*1.3 ÉèÖÃÊä³ö±È½Ï*/
+ 1168   3                              PWMB_OC7ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //Êä³ö±È½ÏÄ£Ê½
+ 1169   3                              
+ 1170   3                              /*1.4 ÉèÖÃÕ¼¿Õ±È³õÊ¼Öµ*/
+ 1171   3                              PWMB_Duty7(PWMx_InitStructure->PWM_Duty);
+ 1172   3                              return SUCCESS;
+ 1173   3                      }
+ 1174   2              
+ 1175   2                      //2.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊäÈë²¶»ñÄ£Ê½
+ 1176   2                      else if(PWMx_InitStructure->PWM_In_Out_Mode != 0x00)
+ 1177   2                      {
+ 1178   3                              PWMB_CC7S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);
+ 1179   3                              PWMB_CC7E_Enable();                             //Ê¹ÄÜÊäÈë²¶»ñ
+ 1180   3                              if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 0)
+ 1181   3                  {
+ 1182   4                                      PWMB_CC7P_CaptureRise();        //²¶»ñÉÏÉýÑØ
+ 1183   4                  }
+ 1184   3                              else if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 1)
+ 1185   3                  {
+ 1186   4                                      PWMB_CC7P_CaptureFall();        //²¶»ñÏÂ½µÑØ
+ 1187   4                  }
+ 1188   3                              return SUCCESS;
+ 1189   3                      }
+ 1190   2                      else
+ 1191   2                              return FAIL;
+ 1192   2              
+ 1193   2              //3.ÖÐ¶ÏÏà¹Ø
+ 1194   2              if(PWMx_InitStructure->PWM_CC_Interrupt_EN)
+ 1195   2                  PWMB_CC7IE_Enable();
+ 1196   2              else
+ 1197   2                  PWMB_CC7IE_Disable();
+ 1198   2              }
+ 1199   1          
+ 1200   1          else if(PWMx == PWM8)
+ 1201   1              {
+ 1202   2                      PWMB_CC8E_Disable();            //ÏÈ¹Ø±ÕÖ÷Í¨µÀµÄ ÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1203   2                      /* CCnS½öÔÚÍ¨µÀ¹Ø±ÕÊ±²ÅÊÇ¿ÉÐ´µÄ */
+ 1204   2                      
+ 1205   2                      //1.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊä³öÍ¨µÀÄ£Ê½
+ 1206   2                      if(PWMx_InitStructure->PWM_In_Out_Mode == 0x00)   //ÅÐ¶ÏÊÇÊä³ö»¹ÊÇÊäÈëÄ£Ê½
+ 1207   2                      {
+ 1208   3                              PWMB_CC8S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);           //ÉèÖÃ Êä³ö/ (ÊäÈë)²¶»ñ·½Ïò
+ 1209   3                              PWMB_OC8ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //ÉèÖÃ±È½Ï/²¶»ñÄ£Ê½
+ 1210   3                              
+ 1211   3                              /*1.1 Ö÷Í¨µÀ*/
+ 1212   3                              if(PWMx_InitStructure->PWM_Output_Channel_Select | ENO8P)
+ 1213   3                              {
+ 1214   4                                      PWMB_CC8E_Enable();             //¿ªÆôÊäÈë²¶»ñ/±È½ÏÊä³ö
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 20  
+
+ 1215   4                                      PWMB_ENO |= ENO8P;              //Ê¹ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+ 1216   4                              }
+ 1217   3                              else
+ 1218   3                              {
+ 1219   4                                      PWMB_CC8E_Disable();    //¹Ø±ÕÊäÈë²¶»ñ/±È½ÏÊä³ö
+ 1220   4                                      PWMB_ENO &= ~ENO8P;             //Ê§ÄÜ¶ÔÓ¦µÄPWMÊä³öÍ¨µÀ
+ 1221   4                              }
+ 1222   3                              
+ 1223   3                              /*1.2 ¸ù¾Ý½á¹¹ÌåÖÐPWM_Pin_SelectÑ¡ÔñµÄ½ÅÎ»×Ô¶¯ÅäÖÃ¼Ä´æÆ÷ */
+ 1224   3                              if(PWM_Pin_Configuration(PWMx, PWMx_InitStructure) == FALSE)
+ 1225   3                              {
+ 1226   4                                      printf("PWM_Pin_Configuration failed!\n");
+ 1227   4                                      return FAIL;
+ 1228   4                              }
+ 1229   3                              /*1.3 ÉèÖÃÊä³ö±È½Ï*/
+ 1230   3                              PWMB_OC8ModeSet(PWMx_InitStructure->PWM_OC_Mode);                               //Êä³ö±È½ÏÄ£Ê½
+ 1231   3                              
+ 1232   3                              /*1.4 ÉèÖÃÕ¼¿Õ±È³õÊ¼Öµ*/
+ 1233   3                              PWMB_Duty8(PWMx_InitStructure->PWM_Duty);
+ 1234   3                              return SUCCESS;
+ 1235   3                      }
+ 1236   2              
+ 1237   2                      //2.Èç¹ûPWMÍ¨µÀÑ¡ÔñÎªÊäÈë²¶»ñÄ£Ê½
+ 1238   2                      else if(PWMx_InitStructure->PWM_In_Out_Mode != 0x00)
+ 1239   2                      {
+ 1240   3                              PWMB_CC8S_Direction(PWMx_InitStructure->PWM_In_Out_Mode);
+ 1241   3                              PWMB_CC8E_Enable();                             //Ê¹ÄÜÊäÈë²¶»ñ
+ 1242   3                              if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 0)
+ 1243   3                  {
+ 1244   4                                      PWMB_CC8P_CaptureRise();        //²¶»ñÉÏÉýÑØ
+ 1245   4                  }
+ 1246   3                              else if(PWMx_InitStructure->PWM_Capture_Edge_or_Valid_Level == 1)
+ 1247   3                  {
+ 1248   4                                      PWMB_CC8P_CaptureFall();        //²¶»ñÏÂ½µÑØ
+ 1249   4                  }
+ 1250   3                              return SUCCESS;
+ 1251   3                      }
+ 1252   2      
+ 1253   2                      else
+ 1254   2                              return FAIL;
+ 1255   2              
+ 1256   2               //3.ÖÐ¶ÏÏà¹Ø
+ 1257   2              if(PWMx_InitStructure->PWM_CC_Interrupt_EN)
+ 1258   2                  PWMB_CC8IE_Enable();
+ 1259   2              else
+ 1260   2                  PWMB_CC8IE_Disable();
+ 1261   2              }
+ 1262   1          
+ 1263   1          /* PWM×éÉèÖÃ */
+ 1264   1              else if(PWMx == PWMA)
+ 1265   1              {
+ 1266   2                      //1.¿ØÖÆ¼Ä´æÆ÷ PMWx_CR1
+ 1267   2                      PWMA_CR1 = (PWMA_CR1 & ~0x80) | PWMx_InitStructure->PWM_ARR_PreLoad_EN; //ÉèÖÃARRÔ¤×°ÔØÊ¹ÄÜÎ»
+ 1268   2                      PWMA_CR1 = (PWMA_CR1 & ~0x60) | PWMx_InitStructure->PWM_Align;                  //ÉèÖÃPWM¶ÔÆëÄ£Ê½
+ 1269   2                      PWMA_CR1 = (PWMA_CR1 & ~0x10) | PWMx_InitStructure->PWM_Couter_Dir;             //ÉèÖÃPWM¼ÆÊýÆ÷¼ÆÊý·½Ïò
+ 1270   2                      PWMA_CR1 = (PWMA_CR1 & ~0x08) | PWMx_InitStructure->PWM_Single_Pulse_Mode;//ÉèÖÃµ¥Âö³åÊ¹ÄÜÎ»
+ 1271   2                      PWMA_CR1 = (PWMA_CR1 & ~0x04) | PWMx_InitStructure->PWM_Update_Source;  //ÉèÖÃ¸üÐÂÇëÇóÔ´
+ 1272   2                      PWMA_CR1 = (PWMA_CR1 & ~0x02) | PWMx_InitStructure->PWM_Update_Dis;             //ÉèÖÃ¸üÐÂ½ûÖ¹Ê¹ÄÜÎ»
+ 1273   2                      PWMA_CR1 = (PWMA_CR1 & ~0x01) | PWMx_InitStructure->PWM_Couter_EN;              //ÉèÖÃ¼ÆÊýÆ÷Ê¹ÄÜÎ»
+ 1274   2                      
+ 1275   2                      PWMA_CCPCAPreloaded(PWMx_InitStructure->PWM_CCP_PreLoad_EN);    //²¶»ñ/±È½ÏÔ¤×°ÔØ¿ØÖÆÎ»(¸ÃÎ»Ö»¶Ô¾ßÓÐ»¥²¹Êä
+             -³öµÄÍ¨µÀÆð×÷ÓÃ)
+ 1276   2                      PWMA_BrakeEnable(PWMx_InitStructure->PWM_BrakeEnable);                  //¿ªÆô/½ûÖ¹É²³µÊäÈë
+ 1277   2                      PWMA_DeadTime(PWMx_InitStructure->PWM_DeadTime);                                //ËÀÇø·¢ÉúÆ÷ÉèÖÃ
+ 1278   2                      PWMA_AutoReload(PWMx_InitStructure->PWM_Arr);                                   //ÖÜÆÚÉèÖÃ
+ 1279   2              
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 21  
+
+ 1280   2              if(PWMx_InitStructure->PWM_Update_Interrupt_EN)
+ 1281   2                  PWMA_UIEA_Enable();
+ 1282   2              else
+ 1283   2                  PWMA_UIEA_Disable();
+ 1284   2      
+ 1285   2                      PWMA_BrakeOutputEnable(PWMx_InitStructure->PWM_MainOutEnable);  //Ö÷Êä³öÊ¹ÄÜ
+ 1286   2                      return  SUCCESS;
+ 1287   2              }
+ 1288   1          else if(PWMx == PWMB)
+ 1289   1              {
+ 1290   2                      //1.¿ØÖÆ¼Ä´æÆ÷ PMWx_CR1
+ 1291   2                      PWMB_CR1 = (PWMA_CR1 & ~0x80) | PWMx_InitStructure->PWM_ARR_PreLoad_EN; //ÉèÖÃARRÔ¤×°ÔØÊ¹ÄÜÎ»
+ 1292   2                      PWMB_CR1 = (PWMA_CR1 & ~0x60) | PWMx_InitStructure->PWM_Align;                  //ÉèÖÃPWM¶ÔÆëÄ£Ê½
+ 1293   2                      PWMB_CR1 = (PWMA_CR1 & ~0x10) | PWMx_InitStructure->PWM_Couter_Dir;             //ÉèÖÃPWM¼ÆÊýÆ÷¼ÆÊý·½Ïò
+ 1294   2                      PWMB_CR1 = (PWMA_CR1 & ~0x08) | PWMx_InitStructure->PWM_Single_Pulse_Mode;//ÉèÖÃµ¥Âö³åÊ¹ÄÜÎ»
+ 1295   2                      PWMB_CR1 = (PWMA_CR1 & ~0x04) | PWMx_InitStructure->PWM_Update_Source;  //ÉèÖÃ¸üÐÂÇëÇóÔ´
+ 1296   2                      PWMB_CR1 = (PWMA_CR1 & ~0x02) | PWMx_InitStructure->PWM_Update_Dis;             //ÉèÖÃ¸üÐÂ½ûÖ¹Ê¹ÄÜÎ»
+ 1297   2                      PWMB_CR1 = (PWMA_CR1 & ~0x01) | PWMx_InitStructure->PWM_Couter_EN;              //ÉèÖÃ¼ÆÊýÆ÷Ê¹ÄÜÎ»
+ 1298   2                      
+ 1299   2                      PWMB_CCPCBPreloaded(PWMx_InitStructure->PWM_CCP_PreLoad_EN);    //²¶»ñ/±È½ÏÔ¤×°ÔØ¿ØÖÆÎ»(¸ÃÎ»Ö»¶Ô¾ßÓÐ»¥²¹Êä
+             -³öµÄÍ¨µÀÆð×÷ÓÃ)
+ 1300   2                      PWMB_BrakeEnable(PWMx_InitStructure->PWM_BrakeEnable);                  //¿ªÆô/½ûÖ¹É²³µÊäÈë
+ 1301   2                      PWMB_DeadTime(PWMx_InitStructure->PWM_DeadTime);                                //ËÀÇø·¢ÉúÆ÷ÉèÖÃ
+ 1302   2                      PWMB_AutoReload(PWMx_InitStructure->PWM_Arr);                                   //ÖÜÆÚÉèÖÃ
+ 1303   2              if(PWMx_InitStructure->PWM_Update_Interrupt_EN)
+ 1304   2                  PWMB_UIEA_Enable();
+ 1305   2              else
+ 1306   2                  PWMB_UIEA_Disable();
+ 1307   2              
+ 1308   2                      PWMB_BrakeOutputEnable(PWMx_InitStructure->PWM_MainOutEnable);  //Ö÷Êä³öÊ¹ÄÜ
+ 1309   2                      return  SUCCESS;
+ 1310   2              }
+ 1311   1              else
+ 1312   1                      return FAIL;
+ 1313   1      }
+ 1314          
+ 1315          /*---------------------------------------------------------
+ 1316          @ function  :   char* strstr(const char* str1, const char* str2) 
+ 1317          @ describe  :   ÔÚ×Ö·û´®str1ÖÐ²éÕÒ×Ó´®str2µÄÎ»ÖÃ
+ 1318          @ parameter :   str1: Ö÷×Ö·û´®    str2: Òª²éÕÒµÄ×Ó´®
+ 1319          @ date      :   2026-6-11
+ 1320          ----------------------------------------------------------*/
+ 1321          char* strstr(const char* str1, const char* str2) 
+ 1322          {
+ 1323   1              const char* p1;
+ 1324   1              const char* p1_adv;
+ 1325   1              const char* p2;
+ 1326   1              
+ 1327   1          if (*str2 == '\0') 
+ 1328   1                      return (char*)str1;
+ 1329   1        
+ 1330   1          p1 = str1;
+ 1331   1              
+ 1332   1          while (*p1) 
+ 1333   1              {
+ 1334   2              p1_adv = p1;
+ 1335   2              p2 = str2;
+ 1336   2              while (*p1_adv && *p2 && *p1_adv == *p2) 
+ 1337   2                      {
+ 1338   3                  p1_adv++;
+ 1339   3                  p2++;
+ 1340   3              }
+ 1341   2              
+ 1342   2              if (*p2 == '\0')
+ 1343   2                              return (char*)p1;
+ 1344   2              p1++;
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 22  
+
+ 1345   2          } 
+ 1346   1          return NULL;
+ 1347   1      }
+ 1348          
+ 1349          /*---------------------------------------------------------
+ 1350          @ function  :   void SPI_Init(void) 
+ 1351          @ describe  :   SPI Initialization
+ 1352          @ parameter :   None
+ 1353          @ date      :   2026-6-11
+ 1354          ----------------------------------------------------------*/
+ 1355          void SPI_Init(void)
+ 1356          {
+ 1357   1              SPI_InitTypeDef SPI_InitStructure;
+ 1358   1              SPI_InitStructure.SPI_Pin_Select = 0x00;                                //½ÅÎ»Ñ¡Ôñ
+ 1359   1              
+ 1360   1              SPI_InitStructure.SPI_Interrupt_En = DISABLE;                   //½ûÓÃSPIÖÐ¶Ï
+ 1361   1              
+ 1362   1              SPI_InitStructure.SPI_SS_Hold_Time = 4;         //¸ßËÙÄ£Ê½Ê±SPIÍ¨ÐÅÖÐSS¿ØÖÆÐÅºÅµÄHOLDÊ±¼ä
+ 1363   1              SPI_InitStructure.SPI_SS_SetUp_Time = 4;        //¸ßËÙÄ£Ê½Ê±SPIÍ¨ÐÅÖÐSS¿ØÖÆÐÅºÅµÄSETUPÊ±¼ä
+ 1364   1              
+ 1365   1              SPI_InitStructure.SPI_MISO_MOSI_Exchange_En = DISABLE;  //½ûÓÃÒý½Å¹¦ÄÜ½»»»
+ 1366   1              SPI_InitStructure.SPI_High_Speed_En = ENABLE;                   //¸ßËÙSPIÊ¹ÄÜ
+ 1367   1              SPI_InitStructure.SPI_FIFO_En = ENABLE;                                 //¸ßËÙSPIµÄFIFO¹¦ÄÜÊ¹ÄÜ
+ 1368   1              SPI_InitStructure.SPI_SS_Deactive_Time = 4;                             //¸ßËÙÄ£Ê½Ê±SS¿ØÖÆÐÅºÅµÄDEACTIVEÊ±¼ä
+ 1369   1              
+ 1370   1              SPI_InitStructure.SPI_Clock_Div = 0;                                    //¸ßËÙSPIÊ±ÖÓ·ÖÆµÆ÷
+ 1371   1              
+ 1372   1              SPI_InitStructure.SPI_SSIG = DISABLE;                                   //ºöÂÔSSÒý½Å¹¦ÄÜ
+ 1373   1              SPI_InitStructure.SPI_Enable = ENABLE;                                  //Ê¹ÄÜSPI¹¦ÄÜ
+ 1374   1              SPI_InitStructure.SPI_MSB_LSB = 0;                                              //0 ÏÈ·¢ËÍ/½ÓÊÕÊý¾ÝµÄ¸ßÎ»(SPI_MSB), 1 ÏÈ·¢ËÍ/½ÓÊÕÊý¾ÝµÄµÍÎ»(SPI_
+             -LSB)
+ 1375   1              SPI_InitStructure.SPI_Master_Slave = SPI_Mode_Master;   //Éè¶¨Ö÷»úÄ£Ê½
+ 1376   1              SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;                              //ÉèÖÃÊ±ÖÓ¼«ÐÔ
+ 1377   1              SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;                    //ÉèÖÃÊ±ÖÓÏàÎ»
+ 1378   1              SPI_InitStructure.SPI_Speed = SPI_Speed_2;                              //ÉèÖÃSPIÊ±ÖÓ·ÖÆµ
+ 1379   1              
+ 1380   1              SPI_InitStructure.TimeOutEnable = DISABLE;              //SPI´Ó»ú³¬Ê±¹¦ÄÜ
+ 1381   1              SPI_InitStructure.TimeOutINTEnable = DISABLE;   //SPI´Ó»ú³¬Ê±ÖÐ¶Ï
+ 1382   1              SPI_InitStructure.TimeOutScale = 1;                             //SPI´Ó»ú¼ÆÊýÆ÷Ê±ÖÓÔ´Ñ¡Ôñ       
+ 1383   1              SPI_InitStructure.TimeOutTimer = 0x10;                  //SPI³¬Ê±³¤¶È¿ØÖÆ¼Ä´æÆ÷
+ 1384   1              
+ 1385   1              SPI_Configuration_2(&SPI_InitStructure);
+ 1386   1      }
+ 1387          
+ 1388          /*---------------------------------------------------------
+ 1389          @ function  :   void DMA_ADC_Init(void) 
+ 1390          @ describe  :   DMA_ADC Initialization
+ 1391          @ parameter :   None
+ 1392          @ date      :   2026-6-12
+ 1393          ----------------------------------------------------------*/
+ 1394          u16 xdata ADC_Result_Buffer[4];         //ADC×ª»»½á¹û
+ 1395          
+ 1396          void DMA_ADC_Init(void)
+ 1397          {
+ 1398   1              DMA_ADC_InitTypeDef xdata DMA_ADC_InitStructure;
+ 1399   1              DMA_ADC_InitStructure.DMA_Enable = ENABLE;
+ 1400   1              DMA_ADC_InitStructure.DMA_Channel = ADC_DMA_CHANNEL_0 | ADC_DMA_CHANNEL_1 | ADC_DMA_CHANNEL_2 | ADC_DMA_
+             -CHANNEL_2;//ADC0¡¢ADC1¡¢ADC2¡¢ADC3
+ 1401   1              DMA_ADC_InitStructure.DMA_Buffer_Address = (u16)&ADC_Result_Buffer[0];  //Éè¶¨DMA´æ·ÅADCÊý¾ÝµÄµØÖ·
+ 1402   1              DMA_ADC_InitStructure.DMA_Times = ADC_4_Times;  //Ã¿¸öÍ¨µÀ×ª»»´ÎÊý(×Ô¶¯²ÉÑù¶à´Î²¢È¡¾ùÖµ)
+ 1403   1              DMA_ADC_InitStructure.DMA_Scan_Times = 0xFFFF;  //ÎÞÏÞÑ­»·²ÉÑù
+ 1404   1              DMA_ADC_Inilize(&DMA_ADC_InitStructure);                //µ÷ÓÃ³õÊ¼»¯º¯Êý
+ 1405   1      }
+ 1406          
+ 1407          /*---------------------------------------------------------
+ 1408          @ function  :   void DMA_SPI_Init(void) 
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 23  
+
+ 1409          @ describe  :   DMA_SPI Initialization
+ 1410          @ parameter :   None
+ 1411          @ date      :   2026-6-12
+ 1412          ----------------------------------------------------------*/
+ 1413          void DMA_SPI_Init(void)
+ 1414          {
+ 1415   1              DMA_SPI_InitTypeDef xdata DMA_SPI_InitStructure;
+ 1416   1              DMA_SPI_InitStructure.SPI_DMA_Interrupt_En = ENABLE;            //Ê¹ÄÜSPI_DMAÖÐ¶Ï
+ 1417   1              DMA_SPI_InitStructure.SPI_DMA_TX_En = ENABLE;                           //Ê¹ÄÜSPI_DMA·¢ËÍÊý¾Ý
+ 1418   1              DMA_SPI_InitStructure.SPI_DMA_RX_En = ENABLE;                           //Ê¹ÄÜSPI_DMA½ÓÊÕÊý¾Ý
+ 1419   1              DMA_SPI_InitStructure.SPI_DMA_Interrupt_Priority = 0x01;        //ÉèÖÃSPI_DMAÖÐ¶ÏÓÅÏÈ¼¶
+ 1420   1              DMA_SPI_InitStructure.SPI_DMA_BusData_Priority = 0x01;          //ÉèÖÃSPI_DMA×ÜÏßÊý¾ÝÓÅÏÈ¼¶
+ 1421   1              
+ 1422   1              DMA_SPI_InitStructure.SPI_DMA_Enable = ENABLE;                          //Ê¹ÄÜDMA_SPI¹¦ÄÜ
+ 1423   1              DMA_SPI_InitStructure.SPI_DMA_Master_Mode_Triggle = ENABLE;     //Ê¹ÄÜÖ÷»úÄ£Ê½´¥·¢¿ØÖÆ
+ 1424   1              DMA_SPI_InitStructure.SPI_DMA_Slave_Mode_Triggle = DISABLE;     //Ê§ÄÜ´Ó»úÄ£Ê½´¥·¢¿ØÖÆ
+ 1425   1              DMA_SPI_InitStructure.SPI_DMA_FIFO_Clear_En = ENABLE;           //Ê¹ÄÜSPI_DMA²Ù×÷Ç°ÏÈÇå¿ÕFIFO
+ 1426   1              
+ 1427   1              DMA_SPI_InitStructure.SPI_DMA_Length = 0xFFFF;                                          //ÉèÖÃSPI_DMA´«Êä×Ü×Ö½ÚÊý(DMA_SPI_AMTÎªFFFFHÊ±ÎÞÏÞÑ­
+             -»·)
+ 1428   1              DMA_SPI_InitStructure.SPI_DMA_Tx_Buffer = (u8)&SPI_TX_Buffer[1];        //SPI·¢ËÍµØÖ·¼Ä´æÆ÷µÍ8Î»
+ 1429   1              DMA_SPI_InitStructure.SPI_DMA_Tx_Buffer |= (u8)&SPI_TX_Buffer[0];       //SPI·¢ËÍµØÖ·¼Ä´æÆ÷¸ß8Î»
+ 1430   1              DMA_SPI_InitStructure.SPI_DMA_Rx_Buffer = (u8)&SPI_RX_Buffer[1];        //SPI·¢ËÍµØÖ·¼Ä´æÆ÷µÍ8Î»
+ 1431   1              DMA_SPI_InitStructure.SPI_DMA_Rx_Buffer |= (u8)&SPI_RX_Buffer[0];       //SPI·¢ËÍµØÖ·¼Ä´æÆ÷¸ß8Î»
+ 1432   1              
+ 1433   1              DMA_SPI_InitStructure.SPI_DMA_AUTO_SS = ENABLE;                         //SPI_DMA´«Êä¹ý³ÌÖÐ×Ô¶¯¿ØÖÆSSÒý½Å
+ 1434   1              DMA_SPI_InitStructure.SPI_DMA_SS_Sel = 0x00;                            //ÉèÖÃSSÆ¬Ñ¡Òý½Å
+ 1435   1              DMA_SPI_InitStructure.SPI_DMA_Transport_Time_Gap = 0;           //ÉèÖÃSPI_DMA´«Êä¼ä¸ôÊ±¼ä(Ä¬ÈÏÎª3, 0 ×î¿ì)
+ 1436   1              
+ 1437   1              DMA_SPI_Inilize(&DMA_SPI_InitStructure);
+ 1438   1      }
+ 1439          
+ 1440          /*---------------------------------------------------------
+ 1441          @ function  :   void Timer_Init(void)
+ 1442          @ describe  :   Timer Initialization
+ 1443          @ parameter :   None
+ 1444          @ date      :   2026-6-12
+ 1445          ----------------------------------------------------------*/
+ 1446          void Timer_Init(void)
+ 1447          {
+ 1448   1          /*
+ 1449   1          u8    TIM_Mode;       //¹¤×÷Ä£Ê½,      TIM_16BitAutoReload,TIM_16Bit,TIM_8BitAutoReload,TIM_16BitAuto
+             -ReloadNoMask
+ 1450   1          u8    TIM_ClkMode;    //Ä£Ê½Ñ¡Ôñ       TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
+ 1451   1          u8    TIM_ClkSource;  //Ê±ÖÓÔ´         TIM_SOURCE_SYSCLK,TIM_SOURCE_HIRC,TIM_SOURCE_X32K,TIM_SOURCE_L
+             -IRC
+ 1452   1          u8    TIM_ClkOut;     //¶¨Ê±Æ÷Ê±ÖÓÊä³ö, ENABLE,DISABLE
+ 1453   1          u16   TIM_Value;      //×°ÔØ³õÖµ
+ 1454   1          u8    TIM_PS;         //8Î»Ô¤·ÖÆµÆ÷
+ 1455   1          u8    TIM_Run;        //ÊÇ·ñÔËÐÐ        ENABLE,DISABLE
+ 1456   1          */
+ 1457   1          //ÅäÖÃÒ»¸ö1ms¶¨Ê±
+ 1458   1          TIM_InitTypeDef xdata TIM_Structure;
+ 1459   1          TIM_Structure.TIM_Mode = TIM_16BitAutoReload;   //¹¤×÷Ä£Ê½
+ 1460   1          TIM_Structure.TIM_ClkMode = TIM_CLOCK_1T;       //¶¨Ê±Æ÷Ê±ÖÓÔ´·ÖÆµ
+ 1461   1          TIM_Structure.TIM_ClkSource = TIM_SOURCE_HIRC;  //¶¨Ê±Æ÷Ê±ÖÓÔ´
+ 1462   1          TIM_Structure.TIM_PS = 40;                      //Ô¤·ÖÆµ
+ 1463   1          TIM_Structure.TIM_Value = 65535 - 1000;         //Ô¤×°ÔØ³õÖµ   40MHz / 1 / 40 / 1000 = 1000 Hz
+ 1464   1          TIM_Structure.TIM_ClkOut = ENABLE;
+ 1465   1          TIM_Structure.TIM_Run = ENABLE;
+ 1466   1          Timer_Inilize(Timer11, &TIM_Structure);
+ 1467   1          
+ 1468   1          
+ 1469   1          //ÅäÖÃÒ»¸ö1us¶¨Ê±
+ 1470   1          TIM_Structure.TIM_ClkMode = TIM_CLOCK_1T;       //¶¨Ê±Æ÷Ê±ÖÓÔ´·ÖÆµ
+ 1471   1          TIM_Structure.TIM_PS = 1;                       //Ô¤·ÖÆµ
+C251 COMPILER V5.60.0,  Init                                                               12/06/26  11:09:40  PAGE 24  
+
+ 1472   1          TIM_Structure.TIM_Value = 65535 - 40;           //Ô¤×°ÔØ³õÖµ   40MHz / 1 / 1 / 40 = 1000000 Hz
+ 1473   1          TIM_Structure.TIM_ClkOut = ENABLE;
+ 1474   1          TIM_Structure.TIM_Run = DISABLE;
+ 1475   1          Timer_Inilize(Timer3, &TIM_Structure);
+ 1476   1          
+ 1477   1          //ÅäÖÃÒ»¸ö1s¶¨Ê±
+ 1478   1          TIM_Structure.TIM_ClkMode = TIM_CLOCK_12T;       //¶¨Ê±Æ÷Ê±ÖÓÔ´·ÖÆµ
+ 1479   1          TIM_Structure.TIM_PS = 100;                      //Ô¤·ÖÆµ
+ 1480   1          TIM_Structure.TIM_Value = 65535 - 33333;         //Ô¤×°ÔØ³õÖµ   40MHz / 12 / 100 / 33333 = 1 Hz
+ 1481   1          TIM_Structure.TIM_ClkOut = ENABLE;
+ 1482   1          TIM_Structure.TIM_Run = DISABLE;
+ 1483   1          Timer_Inilize(Timer4, &TIM_Structure);
+ 1484   1      }
+ 1485          
+ 1486          /*---------------------------------------------------------
+ 1487          @ function  :   void UART_Init(u8 UARTx)
+ 1488          @ describe  :   UART Initialization
+ 1489          @ parameter :   UARTx: UART1,UART2,UART3,UART4
+ 1490          @ date      :   2026-6-11
+ 1491          ----------------------------------------------------------*/
+ 1492          void UART_Init(u8 UARTx)
+ 1493          {
+ 1494   1          COMx_InitDefine COMx_InitStruct;
+ 1495   1          COMx_InitStruct.UART_Mode = UART_8bit_BRTx;
+ 1496   1          COMx_InitStruct.UART_BRT_Use = BRT_Timer2;
+ 1497   1          COMx_InitStruct.UART_BaudRate = 115200;
+ 1498   1          COMx_InitStruct.UART_RxEnable = ENABLE;
+ 1499   1          COMx_InitStruct.BaudRateDouble = DISABLE;
+ 1500   1          COMx_InitStruct.ParityMode = PARITY_NONE;
+ 1501   1          COMx_InitStruct.TimeOutEnable = DISABLE;
+ 1502   1          COMx_InitStruct.TimeOutINTEnable = DISABLE;
+ 1503   1          COMx_InitStruct.TimeOutScale = TO_SCALE_SYSCLK;
+ 1504   1          COMx_InitStruct.TimeOutTimer = 1000; //µ¥Î»Îªms
+ 1505   1          
+ 1506   1          UART_Configuration(UARTx, &COMx_InitStruct);
+ 1507   1      }
+ 1508          
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      1094     ------
+  ecode size           =     10718     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =    ------     ------
+  xdata size           =         8         35
   xdata-const size     =    ------     ------
-  edata size           =    ------     ------
+  edata size           =    ------        100
   bit size             =    ------     ------
   ebit size            =    ------     ------
   bitaddressable size  =    ------     ------
@@ -119,7 +1620,7 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =    ------     ------
+  hconst size          =        76     ------
 End of Module Information.
 
 

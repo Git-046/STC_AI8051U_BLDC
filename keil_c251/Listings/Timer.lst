@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 1   
+C251 COMPILER V5.60.0,  Timer                                                              12/06/26  11:18:08  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE Timer
@@ -18,289 +18,246 @@ stmt  level    source
     8          Delay_Ticks s_delay_ticks;
     9          Delay_Ticks ms_delay_ticks;
    10          
-   11          //========================================================================
-   12          // º¯Êý: u8    Timer_Inilize(u8 TIM, TIM_InitTypeDef *TIMx)
-   13          // ÃèÊö: ¶¨Ê±Æ÷³õÊ¼»¯³ÌÐò.
-   14          // ²ÎÊý: TIMx: ½á¹¹²ÎÊý,Çë²Î¿¼timer.hÀïµÄ¶¨Òå.
-   15          // ·µ»Ø: ³É¹¦·µ»Ø SUCCESS, ´íÎó·µ»Ø FAIL.
-   16          // °æ±¾: V1.0, 2012-10-22
-   17          //========================================================================
-   18          u8 Timer_Inilize(u8 TIM, TIM_InitTypeDef xdata *TIMx)
-   19          {
-   20   1          if(TIM == Timer0)
-   21   1          {
-   22   2              Timer0_Stop();        //Í£Ö¹¼ÆÊý
-   23   2              if(TIMx->TIM_Mode > TIM_16BitAutoReloadNoMask)    return FAIL;    //´íÎó
-   24   2              TMOD = (TMOD & ~0x03) | TIMx->TIM_Mode;     //¹¤×÷Ä£Ê½,0: 16Î»×Ô¶¯ÖØ×°, 1: 16Î»¶¨Ê±/¼ÆÊý, 2: 8Î»×
-             -Ô¶¯ÖØ×°, 3: ²»¿ÉÆÁ±Î16Î»×Ô¶¯ÖØ×°
-   25   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
-   26   2              Timer0_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
-   27   2              Timer0_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
-   28   2              T0_Load(TIMx->TIM_Value);
-   29   2              TM0PS = TIMx->TIM_PS;
-   30   2              Timer0_Run(TIMx->TIM_Run);
-   31   2              return    SUCCESS;        //³É¹¦
-   32   2          }
-   33   1      
-   34   1          if(TIM == Timer1)
-   35   1          {
-   36   2              Timer1_Stop();        //Í£Ö¹¼ÆÊý
-   37   2              if(TIMx->TIM_Mode > TIM_16BitAutoReloadNoMask)    return FAIL;    //´íÎó
-   38   2              TMOD = (TMOD & ~0x30) | (TIMx->TIM_Mode << 4);    //¹¤×÷Ä£Ê½,0: 16Î»×Ô¶¯ÖØ×°, 1: 16Î»¶¨Ê±/¼ÆÊý, 2
-             -: 8Î»×Ô¶¯ÖØ×°, 3: Í£Ö¹¹¤×÷
-   39   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
-   40   2              Timer1_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
-   41   2              Timer1_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
-   42   2              T1_Load(TIMx->TIM_Value);
-   43   2              TM1PS = TIMx->TIM_PS;
-   44   2              Timer1_Run(TIMx->TIM_Run);
-   45   2              return    SUCCESS;        //³É¹¦
-   46   2          }
-   47   1      
-   48   1          if(TIM == Timer2)        //Timer2,¹Ì¶¨Îª16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÎÞÓÅÏÈ¼¶
-   49   1          {
-   50   2              Timer2_Stop();    //Í£Ö¹¼ÆÊý
-   51   2              Timer2_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
-   52   2              T2_Load(TIMx->TIM_Value);
-   53   2              Timer2_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
-   54   2      
-   55   2              TM2PS = TIMx->TIM_PS;
-   56   2              Timer2_Run(TIMx->TIM_Run);
-C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 2   
+   11          /*------------------------------------------------------
+   12          @ function  :   void Timer_Delay_us(u16 us)
+   13          @ describe  :   ¶¨Ê±Æ÷TIM3ÑÓÊ±º¯Êý(²éÑ¯·¨)
+   14          @ parameter :   u16 us ÑÓÊ±Ê±¼ä(1~1000us)
+   15          @ date      :   2026-3-4
+   16          -------------------------------------------------------*/
+   17          void Timer_Delay_us(u16 us)
+   18          {
+   19   1          u32 start, current, elapsed;
+   20   1          // ²ÎÊý·¶Î§¼ì²é
+   21   1          if (us == 0 || us > 1000) 
+   22   1          {
+   23   2              us = 1;  // Ä¬ÈÏ×îÐ¡1us
+   24   2          }
+   25   1          
+   26   1          start = (u16)T3H << 8 + T3L;  // ¶ÁÈ¡µ±Ç°¼ÆÊýÖµ
+   27   1          
+   28   1          // ²éÑ¯·½Ê½µÈ´ý
+   29   1          while (1)
+   30   1          {
+   31   2              current = (u16)T3H << 8 + T3L;
+   32   2              
+   33   2              // ´¦Àí¼ÆÊýÆ÷Òç³ö
+   34   2              if (current >= start) 
+   35   2              {
+   36   3                  elapsed = current - start;
+   37   3              } 
+   38   2              else 
+   39   2              {
+   40   3                  elapsed = (0xFFFF - start) + current + 1;
+   41   3              }
+   42   2              
+   43   2              if (elapsed >= us) 
+   44   2              {
+   45   3                  break;
+   46   3              }
+   47   2          }
+   48   1      }
+   49          
+   50          /*------------------------------------------------------
+   51          @ function  :   u8 Timer_Delay_s(u16 s)
+   52          @ describe  :   ¶¨Ê±Æ÷TIM3ÑÓÊ±º¯Êý(ÖÐ¶Ï·¨)
+   53          @ parameter :   u16 s ÑÓÊ±Ê±¼ä(0~1000s)
+   54          @ date      :   2026-3-5
+   55          -------------------------------------------------------*/
+   56          u8 Timer_Delay_s(u16 s)
+   57          {
+   58   1          //1.²ÎÊý·¶Î§¼ì²é
+C251 COMPILER V5.60.0,  Timer                                                              12/06/26  11:18:08  PAGE 2   
 
-   57   2              return    SUCCESS;        //³É¹¦
-   58   2          }
-   59   1      
-   60   1          if(TIM == Timer3)        //Timer3,¹Ì¶¨Îª16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÎÞÓÅÏÈ¼¶
+   59   1          if (s == 0) return 0;
+   60   1          else if(s > 1000)
    61   1          {
-   62   2              Timer3_Stop();    //Í£Ö¹¼ÆÊý
-   63   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
-   64   2              Timer3_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
-   65   2              Timer3_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
-   66   2      
-   67   2              T3_Load(TIMx->TIM_Value);
-   68   2              TM3PS = TIMx->TIM_PS;
-   69   2              Timer3_Run(TIMx->TIM_Run);
-   70   2              return    SUCCESS;        //³É¹¦
-   71   2          }
-   72   1      
-   73   1          if(TIM == Timer4)        //Timer4,¹Ì¶¨Îª16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÎÞÓÅÏÈ¼¶
-   74   1          {
-   75   2              Timer4_Stop();    //Í£Ö¹¼ÆÊý
-   76   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
-   77   2              Timer4_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
-   78   2              Timer4_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
-   79   2      
-   80   2              T4_Load(TIMx->TIM_Value);
-   81   2              TM4PS = TIMx->TIM_PS;
-   82   2              Timer4_Run(TIMx->TIM_Run);
-   83   2              return    SUCCESS;        //³É¹¦
-   84   2          }
-   85   1      
-   86   1          if(TIM == Timer11)        //Timer11,¹Ì¶¨Îª16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÎÞÓÅÏÈ¼¶
-   87   1          {
-   88   2              Timer11_Stop();    //Í£Ö¹¼ÆÊý
-   89   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
-   90   2              Timer11_Mode_Select(TIMx->TIM_ClkMode);     //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
-   91   2              Timer11_CLK_Output(TIMx->TIM_ClkOut);       //Êä³öÊ±ÖÓÊ¹ÄÜ
-   92   2      
-   93   2              T11_Load(TIMx->TIM_Value);
-   94   2              T11PS = TIMx->TIM_PS;
-   95   2              
-   96   2              if(TIMx->TIM_ClkSource > TIM_SOURCE_LIRC)
-   97   2              {
-   98   3                  return FAIL;
-   99   3              }
-  100   2              else
-  101   2              {
-  102   3                  if(TIMx->TIM_ClkSource == TIM_SOURCE_X32K)
-  103   3                  {
-  104   4                      X32KCR = 0x80 + 0x40;   //Æô¶¯Íâ²¿32K¾§Õñ, µÍÔöÒæ+0x00, ¸ßÔöÒæ+0x40.
-  105   4                      while (!(X32KCR & 1));  //µÈ´ýÊ±ÖÓÎÈ¶¨
-  106   4                  }
-  107   3                  Timer11_CLK_Select(TIMx->TIM_ClkSource);
-  108   3              }
-  109   2      
-  110   2              Timer11_Run(TIMx->TIM_Run);
-  111   2              return    SUCCESS;        //³É¹¦
-  112   2          }
-  113   1          return FAIL;    //´íÎó
-  114   1      }
-  115          
-  116          void Timer_Init()
-  117          {
-  118   1          /*
-  119   1          u8    TIM_Mode;       //¹¤×÷Ä£Ê½,      TIM_16BitAutoReload,TIM_16Bit,TIM_8BitAutoReload,TIM_16BitAuto
-             -ReloadNoMask
-  120   1          u8    TIM_ClkMode;    //Ä£Ê½Ñ¡Ôñ       TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
-  121   1          u8    TIM_ClkSource;  //Ê±ÖÓÔ´         TIM_SOURCE_SYSCLK,TIM_SOURCE_HIRC,TIM_SOURCE_X32K,TIM_SOURCE_L
-C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 3   
+   62   2              s = 1000;  // Ä¬ÈÏ×î´ó1000s
+   63   2          }
+   64   1          
+   65   1          //2.Æô¶¯¶¨Ê±Æ÷
+   66   1          if(s_delay_ticks.start == 0)
+   67   1          {
+   68   2              s_delay_ticks.count = 0;    //¼ÆÊýÇåÁã
+   69   2              s_delay_ticks.end = 0;      //½áÊø±êÖ¾Î»ÇåÁã
+   70   2              s_delay_ticks.start = 1;    //¿ªÊ¼¼ÆÊý
+   71   2              Timer3_Run(1); //Æô¶¯¶¨Ê±Æ÷
+   72   2          }
+   73   1          
+   74   1          if(s_delay_ticks.count >= s)
+   75   1          {
+   76   2              s_delay_ticks.end = 1;      //µ½´ïÑÓÊ±Ê±¼ä
+   77   2              s_delay_ticks.start = 0;   //¿ªÊ¼±êÖ¾Î»ÇåÁã
+   78   2              Timer3_Stop();  //Í£Ö¹¶¨Ê±Æ÷
+   79   2          }
+   80   1          else
+   81   1          {
+   82   2              s_delay_ticks.end = 0;      //Î´µ½´ïÑÓÊ±Ê±¼ä
+   83   2          }
+   84   1          
+   85   1          //3.·µ»Ø¶¨Ê±Æ÷Íê³É×´Ì¬
+   86   1          return s_delay_ticks.end;   //·µ»ØÑÓÊ±×´Ì¬
+   87   1      }
+   88          
+   89          /*------------------------------------------------------
+   90          @ function  :   u8 Timer_Delay_ms(u16 ms)
+   91          @ describe  :   ¶¨Ê±Æ÷TIM4ÑÓÊ±º¯Êý(ÖÐ¶Ï·¨)
+   92          @ parameter :   u16 ms ÑÓÊ±Ê±¼ä(0~1000ms)
+   93          @ date      :   2026-3-5
+   94          -------------------------------------------------------*/
+   95          u8 Timer_Delay_ms(u16 ms)
+   96          {
+   97   1          //1.²ÎÊý·¶Î§¼ì²é
+   98   1          if (ms == 0) return 0;
+   99   1          else if(ms > 1000)
+  100   1          {
+  101   2              ms = 1000;  // Ä¬ÈÏ×î´ó1000ms
+  102   2          }
+  103   1          
+  104   1          //2.Æô¶¯¶¨Ê±Æ÷
+  105   1          if(ms_delay_ticks.start == 0)
+  106   1          {
+  107   2              ms_delay_ticks.count = 0;    //¼ÆÊýÇåÁã
+  108   2              ms_delay_ticks.end = 0;      //½áÊø±êÖ¾Î»ÇåÁã
+  109   2              ms_delay_ticks.start = 1;    //¿ªÊ¼¼ÆÊý
+  110   2              Timer3_Run(1);  //Æô¶¯¶¨Ê±Æ÷
+  111   2          }
+  112   1          
+  113   1          if(ms_delay_ticks.count >= ms)
+  114   1          {
+  115   2              ms_delay_ticks.end = 1;     //ÑÓÊ±½áÊø±êÖ¾Î»
+  116   2              ms_delay_ticks.start = 0;   //¿ªÊ¼±êÖ¾Î»ÇåÁã
+  117   2              Timer3_Stop();  //Í£Ö¹¶¨Ê±Æ÷
+  118   2          }
+  119   1          else
+  120   1          {
+  121   2              ms_delay_ticks.end = 0;
+  122   2          }
+  123   1          
+  124   1          //3.·µ»Ø¶¨Ê±Æ÷Íê³É×´Ì¬
+C251 COMPILER V5.60.0,  Timer                                                              12/06/26  11:18:08  PAGE 3   
 
-             -IRC
-  122   1          u8    TIM_ClkOut;     //¶¨Ê±Æ÷Ê±ÖÓÊä³ö, ENABLE,DISABLE
-  123   1          u16   TIM_Value;      //×°ÔØ³õÖµ
-  124   1          u8    TIM_PS;         //8Î»Ô¤·ÖÆµÆ÷
-  125   1          u8    TIM_Run;        //ÊÇ·ñÔËÐÐ        ENABLE,DISABLE
-  126   1          */
-  127   1          //ÅäÖÃÒ»¸ö1ms¶¨Ê±
-  128   1          TIM_InitTypeDef xdata TIM_Structure;
-  129   1          TIM_Structure.TIM_Mode = TIM_16BitAutoReload;   //¹¤×÷Ä£Ê½
-  130   1          TIM_Structure.TIM_ClkMode = TIM_CLOCK_1T;       //¶¨Ê±Æ÷Ê±ÖÓÔ´·ÖÆµ
-  131   1          TIM_Structure.TIM_ClkSource = TIM_SOURCE_HIRC;  //¶¨Ê±Æ÷Ê±ÖÓÔ´
-  132   1          TIM_Structure.TIM_PS = 40;                      //Ô¤·ÖÆµ
-  133   1          TIM_Structure.TIM_Value = 65535 - 1000;         //Ô¤×°ÔØ³õÖµ   40MHz / 1 / 40 / 1000 = 1000 Hz
-  134   1          TIM_Structure.TIM_ClkOut = ENABLE;
-  135   1          TIM_Structure.TIM_Run = ENABLE;
-  136   1          Timer_Inilize(Timer11, &TIM_Structure);
-  137   1          
-  138   1          
-  139   1          //ÅäÖÃÒ»¸ö1us¶¨Ê±
-  140   1          TIM_Structure.TIM_ClkMode = TIM_CLOCK_1T;       //¶¨Ê±Æ÷Ê±ÖÓÔ´·ÖÆµ
-  141   1          TIM_Structure.TIM_PS = 1;                       //Ô¤·ÖÆµ
-  142   1          TIM_Structure.TIM_Value = 65535 - 40;           //Ô¤×°ÔØ³õÖµ   40MHz / 1 / 1 / 40 = 1000000 Hz
-  143   1          TIM_Structure.TIM_ClkOut = ENABLE;
-  144   1          TIM_Structure.TIM_Run = DISABLE;
-  145   1          Timer_Inilize(Timer3, &TIM_Structure);
-  146   1          
-  147   1          //ÅäÖÃÒ»¸ö1s¶¨Ê±
-  148   1          TIM_Structure.TIM_ClkMode = TIM_CLOCK_12T;       //¶¨Ê±Æ÷Ê±ÖÓÔ´·ÖÆµ
-  149   1          TIM_Structure.TIM_PS = 100;                      //Ô¤·ÖÆµ
-  150   1          TIM_Structure.TIM_Value = 65535 - 33333;         //Ô¤×°ÔØ³õÖµ   40MHz / 12 / 100 / 33333 = 1 Hz
-  151   1          TIM_Structure.TIM_ClkOut = ENABLE;
-  152   1          TIM_Structure.TIM_Run = DISABLE;
-  153   1          Timer_Inilize(Timer4, &TIM_Structure);
-  154   1      }
-  155          
-  156          /*------------------------------------------------------
-  157          @ function  :   oid Timer_Delay_us(u16 us)
-  158          @ describe  :   ¶¨Ê±Æ÷TIM3ÑÓÊ±º¯Êý(²éÑ¯·¨)
-  159          @ parameter :   u16 us ÑÓÊ±Ê±¼ä(1~1000us)
-  160          @ date      :   2026-3-4
-  161          -------------------------------------------------------*/
-  162          void Timer_Delay_us(u16 us)
-  163          {
-  164   1          u32 start, current, elapsed;
-  165   1          // ²ÎÊý·¶Î§¼ì²é
-  166   1          if (us == 0 || us > 1000) 
-  167   1          {
-  168   2              us = 1;  // Ä¬ÈÏ×îÐ¡1us
-  169   2          }
-  170   1          
-  171   1          start = (u16)T3H << 8 + T3L;  // ¶ÁÈ¡µ±Ç°¼ÆÊýÖµ
-  172   1          
-  173   1          // ²éÑ¯·½Ê½µÈ´ý
-  174   1          while (1)
-  175   1          {
-  176   2              current = (u16)T3H << 8 + T3L;
-  177   2              
-  178   2              // ´¦Àí¼ÆÊýÆ÷Òç³ö
-  179   2              if (current >= start) 
-  180   2              {
-  181   3                  elapsed = current - start;
-  182   3              } 
-  183   2              else 
-  184   2              {
-  185   3                  elapsed = (0xFFFF - start) + current + 1;
-  186   3              }
-C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 4   
+  125   1          return ms_delay_ticks.end;
+  126   1      }
+  127          
+  128          //========================================================================
+  129          // º¯Êý: u8    Timer_Inilize(u8 TIM, TIM_InitTypeDef *TIMx)
+  130          // ÃèÊö: ¶¨Ê±Æ÷³õÊ¼»¯³ÌÐò.
+  131          // ²ÎÊý: TIMx: ½á¹¹²ÎÊý,Çë²Î¿¼timer.hÀïµÄ¶¨Òå.
+  132          // ·µ»Ø: ³É¹¦·µ»Ø SUCCESS, ´íÎó·µ»Ø FAIL.
+  133          // °æ±¾: V1.0, 2012-10-22
+  134          //========================================================================
+  135          u8 Timer_Inilize(u8 TIM, TIM_InitTypeDef xdata *TIMx)
+  136          {
+  137   1          if(TIM == Timer0)
+  138   1          {
+  139   2              Timer0_Stop();        //Í£Ö¹¼ÆÊý
+  140   2              if(TIMx->TIM_Mode > TIM_16BitAutoReloadNoMask)    return FAIL;    //´íÎó
+  141   2              TMOD = (TMOD & ~0x03) | TIMx->TIM_Mode;     //¹¤×÷Ä£Ê½,0: 16Î»×Ô¶¯ÖØ×°, 1: 16Î»¶¨Ê±/¼ÆÊý, 2: 8Î»×
+             -Ô¶¯ÖØ×°, 3: ²»¿ÉÆÁ±Î16Î»×Ô¶¯ÖØ×°
+  142   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
+  143   2              Timer0_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
+  144   2              Timer0_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
+  145   2              T0_Load(TIMx->TIM_Value);
+  146   2              TM0PS = TIMx->TIM_PS;
+  147   2              Timer0_Run(TIMx->TIM_Run);
+  148   2              return    SUCCESS;        //³É¹¦
+  149   2          }
+  150   1      
+  151   1          if(TIM == Timer1)
+  152   1          {
+  153   2              Timer1_Stop();        //Í£Ö¹¼ÆÊý
+  154   2              if(TIMx->TIM_Mode > TIM_16BitAutoReloadNoMask)    return FAIL;    //´íÎó
+  155   2              TMOD = (TMOD & ~0x30) | (TIMx->TIM_Mode << 4);    //¹¤×÷Ä£Ê½,0: 16Î»×Ô¶¯ÖØ×°, 1: 16Î»¶¨Ê±/¼ÆÊý, 2
+             -: 8Î»×Ô¶¯ÖØ×°, 3: Í£Ö¹¹¤×÷
+  156   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
+  157   2              Timer1_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
+  158   2              Timer1_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
+  159   2              T1_Load(TIMx->TIM_Value);
+  160   2              TM1PS = TIMx->TIM_PS;
+  161   2              Timer1_Run(TIMx->TIM_Run);
+  162   2              return    SUCCESS;        //³É¹¦
+  163   2          }
+  164   1      
+  165   1          if(TIM == Timer2)        //Timer2,¹Ì¶¨Îª16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÎÞÓÅÏÈ¼¶
+  166   1          {
+  167   2              Timer2_Stop();    //Í£Ö¹¼ÆÊý
+  168   2              Timer2_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
+  169   2              T2_Load(TIMx->TIM_Value);
+  170   2              Timer2_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
+  171   2      
+  172   2              TM2PS = TIMx->TIM_PS;
+  173   2              Timer2_Run(TIMx->TIM_Run);
+  174   2              return    SUCCESS;        //³É¹¦
+  175   2          }
+  176   1      
+  177   1          if(TIM == Timer3)        //Timer3,¹Ì¶¨Îª16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÎÞÓÅÏÈ¼¶
+  178   1          {
+  179   2              Timer3_Stop();    //Í£Ö¹¼ÆÊý
+  180   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
+  181   2              Timer3_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
+  182   2              Timer3_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
+  183   2      
+  184   2              T3_Load(TIMx->TIM_Value);
+  185   2              TM3PS = TIMx->TIM_PS;
+  186   2              Timer3_Run(TIMx->TIM_Run);
+  187   2              return    SUCCESS;        //³É¹¦
+  188   2          }
+C251 COMPILER V5.60.0,  Timer                                                              12/06/26  11:18:08  PAGE 4   
 
-  187   2              
-  188   2              if (elapsed >= us) 
-  189   2              {
-  190   3                  break;
-  191   3              }
-  192   2          }
-  193   1      }
-  194          
-  195          /*------------------------------------------------------
-  196          @ function  :   u8 Timer_Delay_s(u16 s)
-  197          @ describe  :   ¶¨Ê±Æ÷TIM3ÑÓÊ±º¯Êý(ÖÐ¶Ï·¨)
-  198          @ parameter :   u16 s ÑÓÊ±Ê±¼ä(0~1000s)
-  199          @ date      :   2026-3-5
-  200          -------------------------------------------------------*/
-  201          u8 Timer_Delay_s(u16 s)
-  202          {
-  203   1          //1.²ÎÊý·¶Î§¼ì²é
-  204   1          if (s == 0) return 0;
-  205   1          else if(s > 1000)
-  206   1          {
-  207   2              s = 1000;  // Ä¬ÈÏ×îÐ¡1us
-  208   2          }
-  209   1          
-  210   1          //2.Æô¶¯¶¨Ê±Æ÷
-  211   1          if(s_delay_ticks.start == 0)
-  212   1          {
-  213   2              s_delay_ticks.count = 0;    //¼ÆÊýÇåÁã
-  214   2              s_delay_ticks.end = 0;      //½áÊø±êÖ¾Î»ÇåÁã
-  215   2              s_delay_ticks.start = 1;    //¿ªÊ¼¼ÆÊý
-  216   2              Timer3_Run(1); //Æô¶¯¶¨Ê±Æ÷
-  217   2          }
-  218   1          
-  219   1          if(s_delay_ticks.count >= s)
-  220   1          {
-  221   2              s_delay_ticks.end = 1;      //µ½´ïÑÓÊ±Ê±¼ä
-  222   2              s_delay_ticks.start = 0;   //¿ªÊ¼±êÖ¾Î»ÇåÁã
-  223   2              Timer3_Stop();  //Í£Ö¹¶¨Ê±Æ÷
-  224   2          }
-  225   1          else
-  226   1          {
-  227   2              s_delay_ticks.end = 0;      //Î´µ½´ïÑÓÊ±Ê±¼ä
-  228   2          }
-  229   1          
-  230   1          //3.·µ»Ø¶¨Ê±Æ÷Íê³É×´Ì¬
-  231   1          return s_delay_ticks.end;   //·µ»ØÑÓÊ±×´Ì¬
-  232   1      }
-  233          
-  234          /*------------------------------------------------------
-  235          @ function  :   u8 Timer_Delay_ms(u16 ms)
-  236          @ describe  :   ¶¨Ê±Æ÷TIM4ÑÓÊ±º¯Êý(ÖÐ¶Ï·¨)
-  237          @ parameter :   u16 ms ÑÓÊ±Ê±¼ä(0~1000ms)
-  238          @ date      :   2026-3-5
-  239          -------------------------------------------------------*/
-  240          u8 Timer_Delay_ms(u16 ms)
-  241          {
-  242   1          //1.²ÎÊý·¶Î§¼ì²é
-  243   1          if (ms == 0) return 0;
-  244   1          else if(ms > 1000)
-  245   1          {
-  246   2              ms = 1000;  // Ä¬ÈÏ×îÐ¡1us
-  247   2          }
-  248   1          
-  249   1          //2.Æô¶¯¶¨Ê±Æ÷
-  250   1          if(ms_delay_ticks.start == 0)
-  251   1          {
-  252   2              ms_delay_ticks.count = 0;    //¼ÆÊýÇåÁã
-C251 COMPILER V5.60.0,  Timer                                                              21/05/26  11:01:05  PAGE 5   
-
-  253   2              ms_delay_ticks.end = 0;      //½áÊø±êÖ¾Î»ÇåÁã
-  254   2              ms_delay_ticks.start = 1;    //¿ªÊ¼¼ÆÊý
-  255   2              Timer3_Run(1);  //Æô¶¯¶¨Ê±Æ÷
-  256   2          }
-  257   1          
-  258   1          if(ms_delay_ticks.count >= ms)
-  259   1          {
-  260   2              ms_delay_ticks.end = 1;     //ÑÓÊ±½áÊø±êÖ¾Î»
-  261   2              ms_delay_ticks.start = 0;   //¿ªÊ¼±êÖ¾Î»ÇåÁã
-  262   2              Timer3_Stop();  //Í£Ö¹¶¨Ê±Æ÷
-  263   2          }
-  264   1          else
-  265   1          {
-  266   2              ms_delay_ticks.end = 0;
-  267   2          }
-  268   1          
-  269   1          //3.·µ»Ø¶¨Ê±Æ÷Íê³É×´Ì¬
-  270   1          return ms_delay_ticks.end;
-  271   1      }
+  189   1      
+  190   1          if(TIM == Timer4)        //Timer4,¹Ì¶¨Îª16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÎÞÓÅÏÈ¼¶
+  191   1          {
+  192   2              Timer4_Stop();    //Í£Ö¹¼ÆÊý
+  193   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
+  194   2              Timer4_Mode_Select(TIMx->TIM_ClkMode);      //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
+  195   2              Timer4_CLK_Output(TIMx->TIM_ClkOut);        //Êä³öÊ±ÖÓÊ¹ÄÜ
+  196   2      
+  197   2              T4_Load(TIMx->TIM_Value);
+  198   2              TM4PS = TIMx->TIM_PS;
+  199   2              Timer4_Run(TIMx->TIM_Run);
+  200   2              return    SUCCESS;        //³É¹¦
+  201   2          }
+  202   1      
+  203   1          if(TIM == Timer11)        //Timer11,¹Ì¶¨Îª16Î»×Ô¶¯ÖØ×°, ÖÐ¶ÏÎÞÓÅÏÈ¼¶
+  204   1          {
+  205   2              Timer11_Stop();    //Í£Ö¹¼ÆÊý
+  206   2              if(TIMx->TIM_ClkMode > TIM_CLOCK_Ext)    return FAIL;
+  207   2              Timer11_Mode_Select(TIMx->TIM_ClkMode);     //¶ÔÍâ¼ÆÊý»ò·ÖÆµ, ¶¨Ê±12T/1T
+  208   2              Timer11_CLK_Output(TIMx->TIM_ClkOut);       //Êä³öÊ±ÖÓÊ¹ÄÜ
+  209   2      
+  210   2              T11_Load(TIMx->TIM_Value);
+  211   2              T11PS = TIMx->TIM_PS;
+  212   2              
+  213   2              if(TIMx->TIM_ClkSource > TIM_SOURCE_LIRC)
+  214   2              {
+  215   3                  return FAIL;
+  216   3              }
+  217   2              else
+  218   2              {
+  219   3                  if(TIMx->TIM_ClkSource == TIM_SOURCE_X32K)
+  220   3                  {
+  221   4                      X32KCR = 0x80 + 0x40;   //Æô¶¯Íâ²¿32K¾§Õñ, µÍÔöÒæ+0x00, ¸ßÔöÒæ+0x40.
+  222   4                      while (!(X32KCR & 1));  //µÈ´ýÊ±ÖÓÎÈ¶¨
+  223   4                  }
+  224   3                  Timer11_CLK_Select(TIMx->TIM_ClkSource);
+  225   3              }
+  226   2      
+  227   2              Timer11_Run(TIMx->TIM_Run);
+  228   2              return    SUCCESS;        //³É¹¦
+  229   2          }
+  230   1          return FAIL;    //´íÎó
+  231   1      }
+  232          
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      1553     ------
+  ecode size           =      1421     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =    ------          8
+  xdata size           =    ------     ------
   xdata-const size     =    ------     ------
   edata size           =         8     ------
   bit size             =    ------     ------

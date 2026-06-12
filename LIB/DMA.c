@@ -9,45 +9,7 @@
 #include "UART.h"
 #include "Motor.h"
 
-u16 xdata ADC_Result_Buffer[4];		//ADC转换结果
 
-void DMA_ADC_Init(void)
-{
-	DMA_ADC_InitTypeDef xdata DMA_ADC_InitStructure;
-	DMA_ADC_InitStructure.DMA_Enable = ENABLE;
-	DMA_ADC_InitStructure.DMA_Channel = ADC_DMA_CHANNEL_0 | ADC_DMA_CHANNEL_1 | ADC_DMA_CHANNEL_2 | ADC_DMA_CHANNEL_2;//ADC0、ADC1、ADC2、ADC3
-	DMA_ADC_InitStructure.DMA_Buffer_Address = (u16)&ADC_Result_Buffer[0]; 	//设定DMA存放ADC数据的地址
-	DMA_ADC_InitStructure.DMA_Times = ADC_4_Times;	//每个通道转换次数(自动采样多次并取均值)
-	DMA_ADC_InitStructure.DMA_Scan_Times = 0xFFFF;	//无限循环采样
-	DMA_ADC_Inilize(&DMA_ADC_InitStructure);		//调用初始化函数
-}
-
-void DMA_SPI_Init(void)
-{
-	DMA_SPI_InitTypeDef xdata DMA_SPI_InitStructure;
-	DMA_SPI_InitStructure.SPI_DMA_Interrupt_En = ENABLE;		//使能SPI_DMA中断
-	DMA_SPI_InitStructure.SPI_DMA_TX_En = ENABLE;				//使能SPI_DMA发送数据
-	DMA_SPI_InitStructure.SPI_DMA_RX_En = ENABLE;				//使能SPI_DMA接收数据
-	DMA_SPI_InitStructure.SPI_DMA_Interrupt_Priority = 0x01;	//设置SPI_DMA中断优先级
-	DMA_SPI_InitStructure.SPI_DMA_BusData_Priority = 0x01;		//设置SPI_DMA总线数据优先级
-	
-	DMA_SPI_InitStructure.SPI_DMA_Enable = ENABLE;				//使能DMA_SPI功能
-	DMA_SPI_InitStructure.SPI_DMA_Master_Mode_Triggle = ENABLE;	//使能主机模式触发控制
-	DMA_SPI_InitStructure.SPI_DMA_Slave_Mode_Triggle = DISABLE;	//失能从机模式触发控制
-	DMA_SPI_InitStructure.SPI_DMA_FIFO_Clear_En = ENABLE;		//使能SPI_DMA操作前先清空FIFO
-	
-	DMA_SPI_InitStructure.SPI_DMA_Length = 0xFFFF;						//设置SPI_DMA传输总字节数(DMA_SPI_AMT为FFFFH时无限循环)
-	DMA_SPI_InitStructure.SPI_DMA_Tx_Buffer = (u8)&SPI_TX_Buffer[1];	//SPI发送地址寄存器低8位
-	DMA_SPI_InitStructure.SPI_DMA_Tx_Buffer |= (u8)&SPI_TX_Buffer[0];	//SPI发送地址寄存器高8位
-	DMA_SPI_InitStructure.SPI_DMA_Rx_Buffer = (u8)&SPI_RX_Buffer[1];	//SPI发送地址寄存器低8位
-	DMA_SPI_InitStructure.SPI_DMA_Rx_Buffer |= (u8)&SPI_RX_Buffer[0];	//SPI发送地址寄存器高8位
-	
-	DMA_SPI_InitStructure.SPI_DMA_AUTO_SS = ENABLE;				//SPI_DMA传输过程中自动控制SS引脚
-	DMA_SPI_InitStructure.SPI_DMA_SS_Sel = 0x00;				//设置SS片选引脚
-	DMA_SPI_InitStructure.SPI_DMA_Transport_Time_Gap = 0;		//设置SPI_DMA传输间隔时间(默认为3, 0 最快)
-	
-	DMA_SPI_Inilize(&DMA_SPI_InitStructure);
-}
 
 //========================================================================
 // 函数: void DMA_ADC_Inilize(DMA_ADC_InitTypeDef *DMA)

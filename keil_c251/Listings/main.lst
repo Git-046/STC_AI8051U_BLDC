@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               22/05/26  15:11:34  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               12/06/26  11:20:03  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -16,23 +16,31 @@ stmt  level    source
     6          
     7          void main(void)
     8          {
-    9   1              System_Context xdata ctx = {0};
-   10   1              g_ctx = &ctx;
-   11   1      
-   12   1              System_Init();
-   13   1              g_ctx->motor_state = motor_init;
-   14   1      
-   15   1              while(1)
-   16   1              {
-   17   2      
-   18   2              }
-   19   1      }
+    9   1              u16 cnt = 0;
+   10   1      
+   11   1              System_Context xdata ctx = {0};
+   12   1              g_ctx = &ctx;
+   13   1      
+   14   1              System_Init();
+   15   1              g_ctx->motor_state = motor_init;
+   16   1      
+   17   1              
+   18   1              while(1)
+   19   1              {
+   20   2                      cnt++;
+   21   2                      if(cnt >= 1000)
+   22   2                      {
+   23   3                              cnt = 0;
+   24   3                              printf("UART2\n");
+   25   3                      }
+   26   2              }
+   27   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =        75     ------
+  ecode size           =        99     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
@@ -46,7 +54,7 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =       352     ------
+  hconst size          =       359     ------
 End of Module Information.
 
 

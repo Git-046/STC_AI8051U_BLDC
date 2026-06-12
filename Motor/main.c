@@ -6,14 +6,22 @@ System_Context xdata *g_ctx;
 
 void main(void)
 {
+	u16 cnt = 0;
+
 	System_Context xdata ctx = {0};
 	g_ctx = &ctx;
 
 	System_Init();
 	g_ctx->motor_state = motor_init;
 
+	
 	while(1)
 	{
-
+		cnt++;
+		if(cnt >= 1000)
+		{
+			cnt = 0;
+			printf("UART2\n");
+		}
 	}
 }

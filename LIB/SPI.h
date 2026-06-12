@@ -115,12 +115,7 @@ typedef struct
 } SPI_InitTypeDef;
 
 
-extern bit B_SPI_Busy;  //∑¢ÀÕ√¶±Í÷æ
-extern bit SPI_RxTimerOut;
-extern u8  SPI_RxCnt;
-extern u8  SPI_BUF_type SPI_RxBuffer[SPI_BUF_LENTH];
-
-void SPI_Init(void);
+void SPI_Configuration_2(SPI_InitTypeDef *SPIx);
 void SPI_Configuration(SPI_InitTypeDef *SPIx);
 void SPI_SetMode(u8 mode);
 void SPI_WriteByte(u8 dat);

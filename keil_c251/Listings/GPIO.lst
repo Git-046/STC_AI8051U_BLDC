@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  GPIO                                                               21/05/26  11:01:04  PAGE 1   
+C251 COMPILER V5.60.0,  GPIO                                                               12/06/26  11:03:17  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE GPIO
@@ -14,481 +14,274 @@ stmt  level    source
     4          
     5          #include "GPIO.h"
     6          
-    7          void GPIO_Init()
-    8          {
-    9   1              //1.ÉèÖÃPWM²¨Êä³ö¶ÔÓ¦µÄIO¿Ú
-   10   1              GPIO_InitTypeDef GPIOx_InitStructure;
-   11   1              
-   12   1              GPIOx_InitStructure.Mode = GPIO_OUT_PP;                 //ÍÆÍìÊä³ö
-   13   1              GPIOx_InitStructure.Port = GPIO_P2;                             //P2.x
-   14   1              GPIOx_InitStructure.Pin  = GPIO_Pin_4;                  //P2.4
-   15   1              GPIOx_InitStructure.Pull_Up_En = DISABLE;
-   16   1              GPIOx_InitStructure.Pull_Down_En = DISABLE;
-   17   1              GPIOx_InitStructure.Smit_Triggle_En = DISABLE;
-   18   1              GPIOx_InitStructure.Fast_Switch_Speed_En = ENABLE;
-   19   1              GPIOx_InitStructure.Strengthen_Current_En = ENABLE;
-   20   1              GPIOx_InitStructure.Digital_Input_En = DISABLE;
-   21   1              GPIOx_InitStructure.User_Control_En = DISABLE;
-   22   1              GPIO_Inilize_2(&GPIOx_InitStructure);
-   23   1              
-   24   1              GPIOx_InitStructure.Port = GPIO_P2;                             //P2.x
-   25   1              GPIOx_InitStructure.Pin  = GPIO_Pin_2;                  //P2.2
-   26   1              GPIO_Inilize_2(&GPIOx_InitStructure);
-   27   1              
-   28   1              GPIOx_InitStructure.Port = GPIO_P2;                             //P2.x
-   29   1              GPIOx_InitStructure.Pin  = GPIO_Pin_0;                  //P2.0
-   30   1              GPIO_Inilize_2(&GPIOx_InitStructure);
-   31   1              
-   32   1              //2.ÉèÖÃADC²ÉÑù(µçÁ÷²ÉÑù)µÄIO¿Ú
-   33   1              GPIOx_InitStructure.Mode = GPIO_HighZ;                  //¸¡¿ÕÊäÈë
-   34   1      //      GPIOx_InitStructure.Port = GPIO_P2;                             //P2.x
-   35   1      //      GPIOx_InitStructure.Pin  = GPIO_Pin_0;                  //P2.0
-   36   1              GPIO_Inilize_2(&GPIOx_InitStructure);
-   37   1              
-   38   1              /* ... */
-   39   1              
-   40   1              //3.ÉèÖÃ´Å±àÂëÆ÷Í¨ÐÅ½Ó¿Ú
-   41   1              GPIOx_InitStructure.Mode = GPIO_OUT_PP;                 //ÍÆÍìÊä³ö
-   42   1              GPIOx_InitStructure.Port = GPIO_P1;                             //P1.x
-   43   1              GPIOx_InitStructure.Pin  = GPIO_Pin_5;                  //P1.5
-   44   1              GPIO_Inilize_2(&GPIOx_InitStructure);                   //MOSI
-   45   1              
-   46   1              GPIOx_InitStructure.Mode = GPIO_HighZ;                  //¸¡¿ÕÊäÈë
-   47   1              GPIOx_InitStructure.Port = GPIO_P1;                             //P1.x
-   48   1              GPIOx_InitStructure.Pin  = GPIO_Pin_6;                  //P1.6
-   49   1              GPIO_Inilize_2(&GPIOx_InitStructure);                   //MISO
-   50   1              
-   51   1              GPIOx_InitStructure.Mode = GPIO_OUT_PP;                 //ÍÆÍìÊä³ö
-   52   1              GPIOx_InitStructure.Port = GPIO_P1;                             //P1.x
-   53   1              GPIOx_InitStructure.Pin  = GPIO_Pin_7;                  //P1.7
-   54   1              GPIO_Inilize_2(&GPIOx_InitStructure);                   //CLK
-   55   1              
-   56   1      }
-   57          
-   58          u8 GPIO_Inilize_2(GPIO_InitTypeDef *GPIOx)
-C251 COMPILER V5.60.0,  GPIO                                                               21/05/26  11:01:04  PAGE 2   
+    7          
+    8          
+    9          //========================================================================
+   10          // º¯Êý: u8 GPIO_Inilize(u8 GPIO, GPIO_InitTypeDef *GPIOx)
+   11          // ÃèÊö: ³õÊ¼»¯IO¿Ú.
+   12          // ²ÎÊý: GPIOx: ½á¹¹²ÎÊý,Çë²Î¿¼Í·ÎÄ¼þÀïµÄ¶¨Òå.
+   13          // ·µ»Ø: ³É¹¦·µ»Ø SUCCESS, ´íÎó·µ»Ø FAIL.
+   14          // °æ±¾: V1.0, 2012-10-22
+   15          //========================================================================
+   16          u8 GPIO_Inilize(u8 GPIO, GPIO_InitTypeDef *GPIOx)
+   17          {
+   18   1          if(GPIO > GPIO_P7)               return FAIL;    //´íÎó
+   19   1          if(GPIOx->Mode > GPIO_OUT_PP)    return FAIL;    //´íÎó
+   20   1              
+   21   1          if(GPIO == GPIO_P0)
+   22   1          {
+   23   2              if(GPIOx->Mode == GPIO_PullUp)        P0M1 &= ~GPIOx->Pin,    P0M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+   24   2              if(GPIOx->Mode == GPIO_HighZ)         P0M1 |=  GPIOx->Pin,    P0M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+   25   2              if(GPIOx->Mode == GPIO_OUT_OD)        P0M1 |=  GPIOx->Pin,    P0M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+   26   2              if(GPIOx->Mode == GPIO_OUT_PP)        P0M1 &= ~GPIOx->Pin,    P0M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+   27   2          }
+   28   1          if(GPIO == GPIO_P1)
+   29   1          {
+   30   2              if(GPIOx->Mode == GPIO_PullUp)        P1M1 &= ~GPIOx->Pin,    P1M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+   31   2              if(GPIOx->Mode == GPIO_HighZ)         P1M1 |=  GPIOx->Pin,    P1M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+   32   2              if(GPIOx->Mode == GPIO_OUT_OD)        P1M1 |=  GPIOx->Pin,    P1M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+   33   2              if(GPIOx->Mode == GPIO_OUT_PP)        P1M1 &= ~GPIOx->Pin,    P1M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+   34   2          }
+   35   1          if(GPIO == GPIO_P2)
+   36   1          {
+   37   2              if(GPIOx->Mode == GPIO_PullUp)        P2M1 &= ~GPIOx->Pin,    P2M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+   38   2              if(GPIOx->Mode == GPIO_HighZ)         P2M1 |=  GPIOx->Pin,    P2M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+   39   2              if(GPIOx->Mode == GPIO_OUT_OD)        P2M1 |=  GPIOx->Pin,    P2M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+   40   2              if(GPIOx->Mode == GPIO_OUT_PP)        P2M1 &= ~GPIOx->Pin,    P2M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+   41   2          }
+   42   1          if(GPIO == GPIO_P3)
+   43   1          {
+   44   2              if(GPIOx->Mode == GPIO_PullUp)        P3M1 &= ~GPIOx->Pin,    P3M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+   45   2              if(GPIOx->Mode == GPIO_HighZ)         P3M1 |=  GPIOx->Pin,    P3M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+   46   2              if(GPIOx->Mode == GPIO_OUT_OD)        P3M1 |=  GPIOx->Pin,    P3M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+   47   2              if(GPIOx->Mode == GPIO_OUT_PP)        P3M1 &= ~GPIOx->Pin,    P3M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+   48   2          }
+   49   1          if(GPIO == GPIO_P4)
+   50   1          {
+   51   2              if(GPIOx->Mode == GPIO_PullUp)        P4M1 &= ~GPIOx->Pin,    P4M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+   52   2              if(GPIOx->Mode == GPIO_HighZ)         P4M1 |=  GPIOx->Pin,    P4M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+   53   2              if(GPIOx->Mode == GPIO_OUT_OD)        P4M1 |=  GPIOx->Pin,    P4M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+C251 COMPILER V5.60.0,  GPIO                                                               12/06/26  11:03:17  PAGE 2   
 
-   59          {
-   60   1          if(GPIOx->Port > GPIO_P7)        return FAIL;    //´íÎó
-   61   1          if(GPIOx->Mode > GPIO_OUT_PP)    return FAIL;    //´íÎó
-   62   1              
-   63   1          if(GPIOx->Port == GPIO_P0)
+   54   2              if(GPIOx->Mode == GPIO_OUT_PP)        P4M1 &= ~GPIOx->Pin,    P4M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+   55   2          }
+   56   1          if(GPIO == GPIO_P5)
+   57   1          {
+   58   2              if(GPIOx->Mode == GPIO_PullUp)        P5M1 &= ~GPIOx->Pin,    P5M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+             -Ïò¿Ú
+   59   2              if(GPIOx->Mode == GPIO_HighZ)         P5M1 |=  GPIOx->Pin,    P5M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+   60   2              if(GPIOx->Mode == GPIO_OUT_OD)        P5M1 |=  GPIOx->Pin,    P5M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+   61   2              if(GPIOx->Mode == GPIO_OUT_PP)        P5M1 &= ~GPIOx->Pin,    P5M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+   62   2          }
+   63   1          if(GPIO == GPIO_P6)
    64   1          {
-   65   2              if(GPIOx->Mode == GPIO_PullUp)        P0M1 &= ~GPIOx->Pin,    P0M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+   65   2              if(GPIOx->Mode == GPIO_PullUp)        P6M1 &= ~GPIOx->Pin,    P6M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
              -Ïò¿Ú
-   66   2              if(GPIOx->Mode == GPIO_HighZ)         P0M1 |=  GPIOx->Pin,    P0M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-   67   2              if(GPIOx->Mode == GPIO_OUT_OD)        P0M1 |=  GPIOx->Pin,    P0M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-   68   2              if(GPIOx->Mode == GPIO_OUT_PP)        P0M1 &= ~GPIOx->Pin,    P0M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-   69   2                      
-   70   2                      P0PU = GPIOx->Pull_Up_En == ENABLE ? P0PU | GPIOx->Pin : P0PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
-   71   2                      P0PD = GPIOx->Pull_Down_En == ENABLE ? P0PD | GPIOx->Pin : P0PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
-   72   2                      P0NCS = GPIOx->Smit_Triggle_En == ENABLE ? P0NCS |GPIOx->Pin : P0NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
-   73   2                      P0SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P0SR | GPIOx->Pin : P0SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
-             -ËÙ¶È
-   74   2                      P0DR = GPIOx->Strengthen_Current_En == ENABLE ? P0DR | GPIOx->Pin : P0DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
-             -ÜÁ¦ÔöÇ¿
-   75   2                      P0IE = GPIOx->Digital_Input_En == ENABLE ? P0IE | GPIOx->Pin : P0IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
-   76   2                      P0BP = GPIOx->User_Control_En == ENABLE ? P0BP | GPIOx->Pin : P0BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
-   77   2          }
-   78   1          if(GPIOx->Port == GPIO_P1)
-   79   1          {
-   80   2              if(GPIOx->Mode == GPIO_PullUp)        P1M1 &= ~GPIOx->Pin,    P1M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
+   66   2              if(GPIOx->Mode == GPIO_HighZ)         P6M1 |=  GPIOx->Pin,    P6M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+   67   2              if(GPIOx->Mode == GPIO_OUT_OD)        P6M1 |=  GPIOx->Pin,    P6M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+   68   2              if(GPIOx->Mode == GPIO_OUT_PP)        P6M1 &= ~GPIOx->Pin,    P6M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+   69   2          }
+   70   1          if(GPIO == GPIO_P7)
+   71   1          {
+   72   2              if(GPIOx->Mode == GPIO_PullUp)        P7M1 &= ~GPIOx->Pin,    P7M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
              -Ïò¿Ú
-   81   2              if(GPIOx->Mode == GPIO_HighZ)         P1M1 |=  GPIOx->Pin,    P1M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-   82   2              if(GPIOx->Mode == GPIO_OUT_OD)        P1M1 |=  GPIOx->Pin,    P1M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-   83   2              if(GPIOx->Mode == GPIO_OUT_PP)        P1M1 &= ~GPIOx->Pin,    P1M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-   84   2                      
-   85   2                      P1PU = GPIOx->Pull_Up_En == ENABLE ? P1PU | GPIOx->Pin : P1PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
-   86   2                      P1PD = GPIOx->Pull_Down_En == ENABLE ? P1PD | GPIOx->Pin : P1PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
-   87   2                      P1NCS = GPIOx->Smit_Triggle_En == ENABLE ? P1NCS |GPIOx->Pin : P1NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
-   88   2                      P1SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P1SR | GPIOx->Pin : P1SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
-             -ËÙ¶È
-   89   2                      P1DR = GPIOx->Strengthen_Current_En == ENABLE ? P1DR | GPIOx->Pin : P1DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
-             -ÜÁ¦ÔöÇ¿
-   90   2                      P1IE = GPIOx->Digital_Input_En == ENABLE ? P1IE | GPIOx->Pin : P1IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
-   91   2                      P1BP = GPIOx->User_Control_En == ENABLE ? P1BP | GPIOx->Pin : P1BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
-   92   2          }
-   93   1          if(GPIOx->Port == GPIO_P2)
-   94   1          {
-   95   2              if(GPIOx->Mode == GPIO_PullUp)        P2M1 &= ~GPIOx->Pin,    P2M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-   96   2              if(GPIOx->Mode == GPIO_HighZ)         P2M1 |=  GPIOx->Pin,    P2M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-   97   2              if(GPIOx->Mode == GPIO_OUT_OD)        P2M1 |=  GPIOx->Pin,    P2M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-   98   2              if(GPIOx->Mode == GPIO_OUT_PP)        P2M1 &= ~GPIOx->Pin,    P2M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-   99   2                      
-  100   2                      P2PU = GPIOx->Pull_Up_En == ENABLE ? P2PU | GPIOx->Pin : P2PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
-  101   2                      P2PD = GPIOx->Pull_Down_En == ENABLE ? P2PD | GPIOx->Pin : P2PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
-  102   2                      P2NCS = GPIOx->Smit_Triggle_En == ENABLE ? P2NCS |GPIOx->Pin : P2NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
-  103   2                      P2SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P2SR | GPIOx->Pin : P2SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
-             -ËÙ¶È
-  104   2                      P2DR = GPIOx->Strengthen_Current_En == ENABLE ? P2DR | GPIOx->Pin : P2DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
-             -ÜÁ¦ÔöÇ¿
-  105   2                      P2IE = GPIOx->Digital_Input_En == ENABLE ? P2IE | GPIOx->Pin : P2IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
-  106   2                      P2BP = GPIOx->User_Control_En == ENABLE ? P2BP | GPIOx->Pin : P2BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
-  107   2          }
-  108   1          if(GPIOx->Port == GPIO_P3)
-  109   1          {
-  110   2              if(GPIOx->Mode == GPIO_PullUp)        P3M1 &= ~GPIOx->Pin,    P3M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  111   2              if(GPIOx->Mode == GPIO_HighZ)         P3M1 |=  GPIOx->Pin,    P3M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  112   2              if(GPIOx->Mode == GPIO_OUT_OD)        P3M1 |=  GPIOx->Pin,    P3M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  113   2              if(GPIOx->Mode == GPIO_OUT_PP)        P3M1 &= ~GPIOx->Pin,    P3M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  114   2                      
-C251 COMPILER V5.60.0,  GPIO                                                               21/05/26  11:01:04  PAGE 3   
+   73   2              if(GPIOx->Mode == GPIO_HighZ)         P7M1 |=  GPIOx->Pin,    P7M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
+   74   2              if(GPIOx->Mode == GPIO_OUT_OD)        P7M1 |=  GPIOx->Pin,    P7M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
+   75   2              if(GPIOx->Mode == GPIO_OUT_PP)        P7M1 &= ~GPIOx->Pin,    P7M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
+   76   2          }
+   77   1          return SUCCESS;    //³É¹¦
+   78   1      }
+   79          
+   80          //========================================================================
+   81          // º¯Êý: u8 GPIO_INT_Inilize(u8 GPIO, GPIO_Int_InitTypeDef *GPIOx)
+   82          // ÃèÊö: ³õÊ¼»¯IO¿ÚÖÐ¶Ï.
+   83          // ²ÎÊý: GPIOx: ½á¹¹²ÎÊý,Çë²Î¿¼Í·ÎÄ¼þÀïµÄ¶¨Òå.
+   84          // ·µ»Ø: ³É¹¦·µ»Ø SUCCESS, ´íÎó·µ»Ø FAIL.
+   85          // °æ±¾: V1.0, 2025-02-11
+   86          //========================================================================
+   87          u8 GPIO_INT_Inilize(u8 GPIO, GPIO_Int_InitTypeDef *GPIOx)
+   88          {
+   89   1          if(GPIO > GPIO_P7)                   return FAIL;    //´íÎó
+   90   1          if(GPIOx->Mode > GPIO_HIGH_LEVEL)    return FAIL;    //´íÎó
+   91   1      
+   92   1          if(GPIO == GPIO_P0)
+   93   1          {
+   94   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P0IM1 &= ~GPIOx->Pin,    P0IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
+             -ÑØÖÐ¶Ï
+   95   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P0IM1 &= ~GPIOx->Pin,    P0IM0 |=  GPIOx->Pin;     //ÉÏÉý
+             -ÑØÖÐ¶Ï
+   96   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P0IM1 |=  GPIOx->Pin,    P0IM0 &= ~GPIOx->Pin;     //µÍµç
+             -Æ½ÖÐ¶Ï
+   97   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P0IM1 |=  GPIOx->Pin,    P0IM0 |=  GPIOx->Pin;     //¸ßµç
+             -Æ½ÖÐ¶Ï
+   98   2      
+   99   2              if(GPIOx->WakeUpEn == ENABLE)           P0WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
+  100   2              else                                    P0WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
+  101   2      
+  102   2              if(GPIOx->IntEnable == ENABLE)          P0INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
+  103   2              else                                    P0INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
+  104   2          }
+  105   1      
+  106   1          if(GPIO == GPIO_P1)
+  107   1          {
+  108   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P1IM1 &= ~GPIOx->Pin,    P1IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
+             -ÑØÖÐ¶Ï
+  109   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P1IM1 &= ~GPIOx->Pin,    P1IM0 |=  GPIOx->Pin;     //ÉÏÉý
+             -ÑØÖÐ¶Ï
+  110   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P1IM1 |=  GPIOx->Pin,    P1IM0 &= ~GPIOx->Pin;     //µÍµç
+C251 COMPILER V5.60.0,  GPIO                                                               12/06/26  11:03:17  PAGE 3   
 
-  115   2                      P3PU = GPIOx->Pull_Up_En == ENABLE ? P3PU | GPIOx->Pin : P3PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
-  116   2                      P3PD = GPIOx->Pull_Down_En == ENABLE ? P3PD | GPIOx->Pin : P3PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
-  117   2                      P3NCS = GPIOx->Smit_Triggle_En == ENABLE ? P3NCS |GPIOx->Pin : P3NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
-  118   2                      P3SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P3SR | GPIOx->Pin : P3SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
-             -ËÙ¶È
-  119   2                      P3DR = GPIOx->Strengthen_Current_En == ENABLE ? P3DR | GPIOx->Pin : P3DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
-             -ÜÁ¦ÔöÇ¿
-  120   2                      P3IE = GPIOx->Digital_Input_En == ENABLE ? P3IE | GPIOx->Pin : P3IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
-  121   2                      P3BP = GPIOx->User_Control_En == ENABLE ? P3BP | GPIOx->Pin : P3BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
-  122   2          }
-  123   1          if(GPIOx->Port == GPIO_P4)
-  124   1          {
-  125   2              if(GPIOx->Mode == GPIO_PullUp)        P4M1 &= ~GPIOx->Pin,    P4M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  126   2              if(GPIOx->Mode == GPIO_HighZ)         P4M1 |=  GPIOx->Pin,    P4M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  127   2              if(GPIOx->Mode == GPIO_OUT_OD)        P4M1 |=  GPIOx->Pin,    P4M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  128   2              if(GPIOx->Mode == GPIO_OUT_PP)        P4M1 &= ~GPIOx->Pin,    P4M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  129   2                      
-  130   2                      P4PU = GPIOx->Pull_Up_En == ENABLE ? P4PU | GPIOx->Pin : P4PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
-  131   2                      P4PD = GPIOx->Pull_Down_En == ENABLE ? P4PD | GPIOx->Pin : P4PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
-  132   2                      P4NCS = GPIOx->Smit_Triggle_En == ENABLE ? P4NCS |GPIOx->Pin : P4NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
-  133   2                      P4SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P4SR | GPIOx->Pin : P4SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
-             -ËÙ¶È
-  134   2                      P4DR = GPIOx->Strengthen_Current_En == ENABLE ? P4DR | GPIOx->Pin : P4DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
-             -ÜÁ¦ÔöÇ¿
-  135   2                      P4IE = GPIOx->Digital_Input_En == ENABLE ? P4IE | GPIOx->Pin : P4IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
-  136   2                      P4BP = GPIOx->User_Control_En == ENABLE ? P4BP | GPIOx->Pin : P4BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
-  137   2          }
-  138   1          if(GPIOx->Port == GPIO_P5)
-  139   1          {
-  140   2              if(GPIOx->Mode == GPIO_PullUp)        P5M1 &= ~GPIOx->Pin,    P5M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  141   2              if(GPIOx->Mode == GPIO_HighZ)         P5M1 |=  GPIOx->Pin,    P5M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  142   2              if(GPIOx->Mode == GPIO_OUT_OD)        P5M1 |=  GPIOx->Pin,    P5M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  143   2              if(GPIOx->Mode == GPIO_OUT_PP)        P5M1 &= ~GPIOx->Pin,    P5M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  144   2                      
-  145   2                      P5PU = GPIOx->Pull_Up_En == ENABLE ? P5PU | GPIOx->Pin : P5PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
-  146   2                      P5PD = GPIOx->Pull_Down_En == ENABLE ? P5PD | GPIOx->Pin : P5PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
-  147   2                      P5NCS = GPIOx->Smit_Triggle_En == ENABLE ? P5NCS |GPIOx->Pin : P5NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
-  148   2                      P5SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P5SR | GPIOx->Pin : P5SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
-             -ËÙ¶È
-  149   2                      P5DR = GPIOx->Strengthen_Current_En == ENABLE ? P5DR | GPIOx->Pin : P5DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
-             -ÜÁ¦ÔöÇ¿
-  150   2                      P5IE = GPIOx->Digital_Input_En == ENABLE ? P5IE | GPIOx->Pin : P5IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
-  151   2                      P5BP = GPIOx->User_Control_En == ENABLE ? P5BP | GPIOx->Pin : P5BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
-  152   2          }
-  153   1          if(GPIOx->Port == GPIO_P6)
-  154   1          {
-  155   2              if(GPIOx->Mode == GPIO_PullUp)        P6M1 &= ~GPIOx->Pin,    P6M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  156   2              if(GPIOx->Mode == GPIO_HighZ)         P6M1 |=  GPIOx->Pin,    P6M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  157   2              if(GPIOx->Mode == GPIO_OUT_OD)        P6M1 |=  GPIOx->Pin,    P6M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  158   2              if(GPIOx->Mode == GPIO_OUT_PP)        P6M1 &= ~GPIOx->Pin,    P6M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  159   2                      
-  160   2                      P6PU = GPIOx->Pull_Up_En == ENABLE ? P6PU | GPIOx->Pin : P6PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
-  161   2                      P6PD = GPIOx->Pull_Down_En == ENABLE ? P6PD | GPIOx->Pin : P6PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
-  162   2                      P6NCS = GPIOx->Smit_Triggle_En == ENABLE ? P6NCS |GPIOx->Pin : P6NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
-  163   2                      P6SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P6SR | GPIOx->Pin : P6SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
-             -ËÙ¶È
-  164   2                      P6DR = GPIOx->Strengthen_Current_En == ENABLE ? P6DR | GPIOx->Pin : P6DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
-             -ÜÁ¦ÔöÇ¿
-  165   2                      P6IE = GPIOx->Digital_Input_En == ENABLE ? P6IE | GPIOx->Pin : P6IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
-  166   2                      P6BP = GPIOx->User_Control_En == ENABLE ? P6BP | GPIOx->Pin : P6BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
-  167   2          }
-  168   1          if(GPIOx->Port == GPIO_P7)
-  169   1          {
-C251 COMPILER V5.60.0,  GPIO                                                               21/05/26  11:01:04  PAGE 4   
+             -Æ½ÖÐ¶Ï
+  111   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P1IM1 |=  GPIOx->Pin,    P1IM0 |=  GPIOx->Pin;     //¸ßµç
+             -Æ½ÖÐ¶Ï
+  112   2      
+  113   2              if(GPIOx->WakeUpEn == ENABLE)           P1WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
+  114   2              else                                    P1WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
+  115   2      
+  116   2              if(GPIOx->IntEnable == ENABLE)          P1INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
+  117   2              else                                    P1INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
+  118   2          }
+  119   1      
+  120   1          if(GPIO == GPIO_P2)
+  121   1          {
+  122   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P2IM1 &= ~GPIOx->Pin,    P2IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
+             -ÑØÖÐ¶Ï
+  123   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P2IM1 &= ~GPIOx->Pin,    P2IM0 |=  GPIOx->Pin;     //ÉÏÉý
+             -ÑØÖÐ¶Ï
+  124   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P2IM1 |=  GPIOx->Pin,    P2IM0 &= ~GPIOx->Pin;     //µÍµç
+             -Æ½ÖÐ¶Ï
+  125   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P2IM1 |=  GPIOx->Pin,    P2IM0 |=  GPIOx->Pin;     //¸ßµç
+             -Æ½ÖÐ¶Ï
+  126   2      
+  127   2              if(GPIOx->WakeUpEn == ENABLE)           P2WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
+  128   2              else                                    P2WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
+  129   2      
+  130   2              if(GPIOx->IntEnable == ENABLE)          P2INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
+  131   2              else                                    P2INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
+  132   2          }
+  133   1      
+  134   1          if(GPIO == GPIO_P3)
+  135   1          {
+  136   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P3IM1 &= ~GPIOx->Pin,    P3IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
+             -ÑØÖÐ¶Ï
+  137   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P3IM1 &= ~GPIOx->Pin,    P3IM0 |=  GPIOx->Pin;     //ÉÏÉý
+             -ÑØÖÐ¶Ï
+  138   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P3IM1 |=  GPIOx->Pin,    P3IM0 &= ~GPIOx->Pin;     //µÍµç
+             -Æ½ÖÐ¶Ï
+  139   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P3IM1 |=  GPIOx->Pin,    P3IM0 |=  GPIOx->Pin;     //¸ßµç
+             -Æ½ÖÐ¶Ï
+  140   2      
+  141   2              if(GPIOx->WakeUpEn == ENABLE)           P3WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
+  142   2              else                                    P3WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
+  143   2      
+  144   2              if(GPIOx->IntEnable == ENABLE)          P3INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
+  145   2              else                                    P3INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
+  146   2          }
+  147   1      
+  148   1          if(GPIO == GPIO_P4)
+  149   1          {
+  150   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P4IM1 &= ~GPIOx->Pin,    P4IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
+             -ÑØÖÐ¶Ï
+  151   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P4IM1 &= ~GPIOx->Pin,    P4IM0 |=  GPIOx->Pin;     //ÉÏÉý
+             -ÑØÖÐ¶Ï
+  152   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P4IM1 |=  GPIOx->Pin,    P4IM0 &= ~GPIOx->Pin;     //µÍµç
+             -Æ½ÖÐ¶Ï
+  153   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P4IM1 |=  GPIOx->Pin,    P4IM0 |=  GPIOx->Pin;     //¸ßµç
+             -Æ½ÖÐ¶Ï
+  154   2      
+  155   2              if(GPIOx->WakeUpEn == ENABLE)           P4WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
+  156   2              else                                    P4WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
+  157   2      
+  158   2              if(GPIOx->IntEnable == ENABLE)          P4INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
+  159   2              else                                    P4INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
+  160   2          }
+  161   1      
+  162   1          if(GPIO == GPIO_P5)
+C251 COMPILER V5.60.0,  GPIO                                                               12/06/26  11:03:17  PAGE 4   
 
-  170   2              if(GPIOx->Mode == GPIO_PullUp)        P7M1 &= ~GPIOx->Pin,    P7M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  171   2              if(GPIOx->Mode == GPIO_HighZ)         P7M1 |=  GPIOx->Pin,    P7M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  172   2              if(GPIOx->Mode == GPIO_OUT_OD)        P7M1 |=  GPIOx->Pin,    P7M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  173   2              if(GPIOx->Mode == GPIO_OUT_PP)        P7M1 &= ~GPIOx->Pin,    P7M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  174   2                      
-  175   2                      P7PU = GPIOx->Pull_Up_En == ENABLE ? P7PU | GPIOx->Pin : P7PU & ~GPIOx->Pin;                    //ÉÏÀ­µç×è
-  176   2                      P7PD = GPIOx->Pull_Down_En == ENABLE ? P7PD | GPIOx->Pin : P7PD & ~GPIOx->Pin;                  //ÏÂÀ­µç×è
-  177   2                      P7NCS = GPIOx->Smit_Triggle_En == ENABLE ? P7NCS |GPIOx->Pin : P7NCS & ~GPIOx->Pin;             //¶Ë¿ÚÊ©ÃÜÌØ´¥·¢
-  178   2                      P7SR = GPIOx->Fast_Switch_Speed_En == ENABLE ? P7SR | GPIOx->Pin : P7SR & ~GPIOx->Pin;  //¶Ë¿ÚµçµçÆ½ÇÐ»»
-             -ËÙ¶È
-  179   2                      P7DR = GPIOx->Strengthen_Current_En == ENABLE ? P7DR | GPIOx->Pin : P7DR & ~GPIOx->Pin; //¶Ë¿ÚµçÁ÷Çý¶¯Ä
-             -ÜÁ¦ÔöÇ¿
-  180   2                      P7IE = GPIOx->Digital_Input_En == ENABLE ? P7IE | GPIOx->Pin : P7IE & ~GPIOx->Pin;              //¶Ë¿ÚµçÆ½ÊäÈëÊ¹ÄÜ
-  181   2                      P7BP = GPIOx->User_Control_En == ENABLE ? P7BP | GPIOx->Pin : P7BP & ~GPIOx->Pin;               //¶Ë¿ÚÄ£Ê½ÓÃ»§ÉèÖÃ
-  182   2          }
-  183   1          return SUCCESS;    //³É¹¦
-  184   1      }
-  185          
-  186          //========================================================================
-  187          // º¯Êý: u8 GPIO_Inilize(u8 GPIO, GPIO_InitTypeDef *GPIOx)
-  188          // ÃèÊö: ³õÊ¼»¯IO¿Ú.
-  189          // ²ÎÊý: GPIOx: ½á¹¹²ÎÊý,Çë²Î¿¼Í·ÎÄ¼þÀïµÄ¶¨Òå.
-  190          // ·µ»Ø: ³É¹¦·µ»Ø SUCCESS, ´íÎó·µ»Ø FAIL.
-  191          // °æ±¾: V1.0, 2012-10-22
-  192          //========================================================================
-  193          u8 GPIO_Inilize(u8 GPIO, GPIO_InitTypeDef *GPIOx)
-  194          {
-  195   1          if(GPIO > GPIO_P7)               return FAIL;    //´íÎó
-  196   1          if(GPIOx->Mode > GPIO_OUT_PP)    return FAIL;    //´íÎó
-  197   1              
-  198   1          if(GPIO == GPIO_P0)
-  199   1          {
-  200   2              if(GPIOx->Mode == GPIO_PullUp)        P0M1 &= ~GPIOx->Pin,    P0M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  201   2              if(GPIOx->Mode == GPIO_HighZ)         P0M1 |=  GPIOx->Pin,    P0M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  202   2              if(GPIOx->Mode == GPIO_OUT_OD)        P0M1 |=  GPIOx->Pin,    P0M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  203   2              if(GPIOx->Mode == GPIO_OUT_PP)        P0M1 &= ~GPIOx->Pin,    P0M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  204   2          }
-  205   1          if(GPIO == GPIO_P1)
-  206   1          {
-  207   2              if(GPIOx->Mode == GPIO_PullUp)        P1M1 &= ~GPIOx->Pin,    P1M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  208   2              if(GPIOx->Mode == GPIO_HighZ)         P1M1 |=  GPIOx->Pin,    P1M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  209   2              if(GPIOx->Mode == GPIO_OUT_OD)        P1M1 |=  GPIOx->Pin,    P1M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  210   2              if(GPIOx->Mode == GPIO_OUT_PP)        P1M1 &= ~GPIOx->Pin,    P1M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  211   2          }
-  212   1          if(GPIO == GPIO_P2)
-  213   1          {
-  214   2              if(GPIOx->Mode == GPIO_PullUp)        P2M1 &= ~GPIOx->Pin,    P2M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  215   2              if(GPIOx->Mode == GPIO_HighZ)         P2M1 |=  GPIOx->Pin,    P2M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  216   2              if(GPIOx->Mode == GPIO_OUT_OD)        P2M1 |=  GPIOx->Pin,    P2M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  217   2              if(GPIOx->Mode == GPIO_OUT_PP)        P2M1 &= ~GPIOx->Pin,    P2M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  218   2          }
-  219   1          if(GPIO == GPIO_P3)
-  220   1          {
-  221   2              if(GPIOx->Mode == GPIO_PullUp)        P3M1 &= ~GPIOx->Pin,    P3M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  222   2              if(GPIOx->Mode == GPIO_HighZ)         P3M1 |=  GPIOx->Pin,    P3M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  223   2              if(GPIOx->Mode == GPIO_OUT_OD)        P3M1 |=  GPIOx->Pin,    P3M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  224   2              if(GPIOx->Mode == GPIO_OUT_PP)        P3M1 &= ~GPIOx->Pin,    P3M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  225   2          }
-  226   1          if(GPIO == GPIO_P4)
-  227   1          {
-  228   2              if(GPIOx->Mode == GPIO_PullUp)        P4M1 &= ~GPIOx->Pin,    P4M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-C251 COMPILER V5.60.0,  GPIO                                                               21/05/26  11:01:04  PAGE 5   
-
-             -Ïò¿Ú
-  229   2              if(GPIOx->Mode == GPIO_HighZ)         P4M1 |=  GPIOx->Pin,    P4M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  230   2              if(GPIOx->Mode == GPIO_OUT_OD)        P4M1 |=  GPIOx->Pin,    P4M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  231   2              if(GPIOx->Mode == GPIO_OUT_PP)        P4M1 &= ~GPIOx->Pin,    P4M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  232   2          }
-  233   1          if(GPIO == GPIO_P5)
-  234   1          {
-  235   2              if(GPIOx->Mode == GPIO_PullUp)        P5M1 &= ~GPIOx->Pin,    P5M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  236   2              if(GPIOx->Mode == GPIO_HighZ)         P5M1 |=  GPIOx->Pin,    P5M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  237   2              if(GPIOx->Mode == GPIO_OUT_OD)        P5M1 |=  GPIOx->Pin,    P5M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  238   2              if(GPIOx->Mode == GPIO_OUT_PP)        P5M1 &= ~GPIOx->Pin,    P5M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  239   2          }
-  240   1          if(GPIO == GPIO_P6)
-  241   1          {
-  242   2              if(GPIOx->Mode == GPIO_PullUp)        P6M1 &= ~GPIOx->Pin,    P6M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  243   2              if(GPIOx->Mode == GPIO_HighZ)         P6M1 |=  GPIOx->Pin,    P6M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  244   2              if(GPIOx->Mode == GPIO_OUT_OD)        P6M1 |=  GPIOx->Pin,    P6M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  245   2              if(GPIOx->Mode == GPIO_OUT_PP)        P6M1 &= ~GPIOx->Pin,    P6M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  246   2          }
-  247   1          if(GPIO == GPIO_P7)
-  248   1          {
-  249   2              if(GPIOx->Mode == GPIO_PullUp)        P7M1 &= ~GPIOx->Pin,    P7M0 &= ~GPIOx->Pin;     //ÉÏÀ­×¼Ë«
-             -Ïò¿Ú
-  250   2              if(GPIOx->Mode == GPIO_HighZ)         P7M1 |=  GPIOx->Pin,    P7M0 &= ~GPIOx->Pin;     //¸¡¿ÕÊäÈë
-  251   2              if(GPIOx->Mode == GPIO_OUT_OD)        P7M1 |=  GPIOx->Pin,    P7M0 |=  GPIOx->Pin;     //¿ªÂ©Êä³ö
-  252   2              if(GPIOx->Mode == GPIO_OUT_PP)        P7M1 &= ~GPIOx->Pin,    P7M0 |=  GPIOx->Pin;     //ÍÆÍìÊä³ö
-  253   2          }
-  254   1          return SUCCESS;    //³É¹¦
-  255   1      }
-  256          
-  257          //========================================================================
-  258          // º¯Êý: u8 GPIO_INT_Inilize(u8 GPIO, GPIO_Int_InitTypeDef *GPIOx)
-  259          // ÃèÊö: ³õÊ¼»¯IO¿ÚÖÐ¶Ï.
-  260          // ²ÎÊý: GPIOx: ½á¹¹²ÎÊý,Çë²Î¿¼Í·ÎÄ¼þÀïµÄ¶¨Òå.
-  261          // ·µ»Ø: ³É¹¦·µ»Ø SUCCESS, ´íÎó·µ»Ø FAIL.
-  262          // °æ±¾: V1.0, 2025-02-11
-  263          //========================================================================
-  264          u8 GPIO_INT_Inilize(u8 GPIO, GPIO_Int_InitTypeDef *GPIOx)
-  265          {
-  266   1          if(GPIO > GPIO_P7)                   return FAIL;    //´íÎó
-  267   1          if(GPIOx->Mode > GPIO_HIGH_LEVEL)    return FAIL;    //´íÎó
-  268   1      
-  269   1          if(GPIO == GPIO_P0)
-  270   1          {
-  271   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P0IM1 &= ~GPIOx->Pin,    P0IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
+  163   1          {
+  164   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P5IM1 &= ~GPIOx->Pin,    P5IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
              -ÑØÖÐ¶Ï
-  272   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P0IM1 &= ~GPIOx->Pin,    P0IM0 |=  GPIOx->Pin;     //ÉÏÉý
+  165   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P5IM1 &= ~GPIOx->Pin,    P5IM0 |=  GPIOx->Pin;     //ÉÏÉý
              -ÑØÖÐ¶Ï
-  273   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P0IM1 |=  GPIOx->Pin,    P0IM0 &= ~GPIOx->Pin;     //µÍµç
+  166   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P5IM1 |=  GPIOx->Pin,    P5IM0 &= ~GPIOx->Pin;     //µÍµç
              -Æ½ÖÐ¶Ï
-  274   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P0IM1 |=  GPIOx->Pin,    P0IM0 |=  GPIOx->Pin;     //¸ßµç
+  167   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P5IM1 |=  GPIOx->Pin,    P5IM0 |=  GPIOx->Pin;     //¸ßµç
              -Æ½ÖÐ¶Ï
-  275   2      
-  276   2              if(GPIOx->WakeUpEn == ENABLE)           P0WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
-  277   2              else                                    P0WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
-  278   2      
-  279   2              if(GPIOx->IntEnable == ENABLE)          P0INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
-  280   2              else                                    P0INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
-  281   2          }
-  282   1      
-  283   1          if(GPIO == GPIO_P1)
-  284   1          {
-  285   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P1IM1 &= ~GPIOx->Pin,    P1IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
+  168   2      
+  169   2              if(GPIOx->WakeUpEn == ENABLE)           P5WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
+  170   2              else                                    P5WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
+  171   2      
+  172   2              if(GPIOx->IntEnable == ENABLE)          P5INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
+  173   2              else                                    P5INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
+  174   2          }
+  175   1      
+  176   1          if(GPIO == GPIO_P6)
+  177   1          {
+  178   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P6IM1 &= ~GPIOx->Pin,    P6IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
              -ÑØÖÐ¶Ï
-C251 COMPILER V5.60.0,  GPIO                                                               21/05/26  11:01:04  PAGE 6   
-
-  286   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P1IM1 &= ~GPIOx->Pin,    P1IM0 |=  GPIOx->Pin;     //ÉÏÉý
+  179   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P6IM1 &= ~GPIOx->Pin,    P6IM0 |=  GPIOx->Pin;     //ÉÏÉý
              -ÑØÖÐ¶Ï
-  287   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P1IM1 |=  GPIOx->Pin,    P1IM0 &= ~GPIOx->Pin;     //µÍµç
+  180   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P6IM1 |=  GPIOx->Pin,    P6IM0 &= ~GPIOx->Pin;     //µÍµç
              -Æ½ÖÐ¶Ï
-  288   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P1IM1 |=  GPIOx->Pin,    P1IM0 |=  GPIOx->Pin;     //¸ßµç
+  181   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P6IM1 |=  GPIOx->Pin,    P6IM0 |=  GPIOx->Pin;     //¸ßµç
              -Æ½ÖÐ¶Ï
-  289   2      
-  290   2              if(GPIOx->WakeUpEn == ENABLE)           P1WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
-  291   2              else                                    P1WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
-  292   2      
-  293   2              if(GPIOx->IntEnable == ENABLE)          P1INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
-  294   2              else                                    P1INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
-  295   2          }
-  296   1      
-  297   1          if(GPIO == GPIO_P2)
-  298   1          {
-  299   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P2IM1 &= ~GPIOx->Pin,    P2IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
+  182   2      
+  183   2              if(GPIOx->WakeUpEn == ENABLE)           P6WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
+  184   2              else                                    P6WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
+  185   2      
+  186   2              if(GPIOx->IntEnable == ENABLE)          P6INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
+  187   2              else                                    P6INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
+  188   2          }
+  189   1      
+  190   1          if(GPIO == GPIO_P7)
+  191   1          {
+  192   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P7IM1 &= ~GPIOx->Pin,    P7IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
              -ÑØÖÐ¶Ï
-  300   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P2IM1 &= ~GPIOx->Pin,    P2IM0 |=  GPIOx->Pin;     //ÉÏÉý
+  193   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P7IM1 &= ~GPIOx->Pin,    P7IM0 |=  GPIOx->Pin;     //ÉÏÉý
              -ÑØÖÐ¶Ï
-  301   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P2IM1 |=  GPIOx->Pin,    P2IM0 &= ~GPIOx->Pin;     //µÍµç
+  194   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P7IM1 |=  GPIOx->Pin,    P7IM0 &= ~GPIOx->Pin;     //µÍµç
              -Æ½ÖÐ¶Ï
-  302   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P2IM1 |=  GPIOx->Pin,    P2IM0 |=  GPIOx->Pin;     //¸ßµç
+  195   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P7IM1 |=  GPIOx->Pin,    P7IM0 |=  GPIOx->Pin;     //¸ßµç
              -Æ½ÖÐ¶Ï
-  303   2      
-  304   2              if(GPIOx->WakeUpEn == ENABLE)           P2WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
-  305   2              else                                    P2WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
-  306   2      
-  307   2              if(GPIOx->IntEnable == ENABLE)          P2INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
-  308   2              else                                    P2INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
-  309   2          }
-  310   1      
-  311   1          if(GPIO == GPIO_P3)
-  312   1          {
-  313   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P3IM1 &= ~GPIOx->Pin,    P3IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
-             -ÑØÖÐ¶Ï
-  314   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P3IM1 &= ~GPIOx->Pin,    P3IM0 |=  GPIOx->Pin;     //ÉÏÉý
-             -ÑØÖÐ¶Ï
-  315   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P3IM1 |=  GPIOx->Pin,    P3IM0 &= ~GPIOx->Pin;     //µÍµç
-             -Æ½ÖÐ¶Ï
-  316   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P3IM1 |=  GPIOx->Pin,    P3IM0 |=  GPIOx->Pin;     //¸ßµç
-             -Æ½ÖÐ¶Ï
-  317   2      
-  318   2              if(GPIOx->WakeUpEn == ENABLE)           P3WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
-  319   2              else                                    P3WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
-  320   2      
-  321   2              if(GPIOx->IntEnable == ENABLE)          P3INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
-  322   2              else                                    P3INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
-  323   2          }
-  324   1      
-  325   1          if(GPIO == GPIO_P4)
-  326   1          {
-  327   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P4IM1 &= ~GPIOx->Pin,    P4IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
-             -ÑØÖÐ¶Ï
-  328   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P4IM1 &= ~GPIOx->Pin,    P4IM0 |=  GPIOx->Pin;     //ÉÏÉý
-             -ÑØÖÐ¶Ï
-  329   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P4IM1 |=  GPIOx->Pin,    P4IM0 &= ~GPIOx->Pin;     //µÍµç
-             -Æ½ÖÐ¶Ï
-  330   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P4IM1 |=  GPIOx->Pin,    P4IM0 |=  GPIOx->Pin;     //¸ßµç
-             -Æ½ÖÐ¶Ï
-  331   2      
-  332   2              if(GPIOx->WakeUpEn == ENABLE)           P4WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
-  333   2              else                                    P4WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
-  334   2      
-  335   2              if(GPIOx->IntEnable == ENABLE)          P4INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
-  336   2              else                                    P4INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
-C251 COMPILER V5.60.0,  GPIO                                                               21/05/26  11:01:04  PAGE 7   
-
-  337   2          }
-  338   1      
-  339   1          if(GPIO == GPIO_P5)
-  340   1          {
-  341   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P5IM1 &= ~GPIOx->Pin,    P5IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
-             -ÑØÖÐ¶Ï
-  342   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P5IM1 &= ~GPIOx->Pin,    P5IM0 |=  GPIOx->Pin;     //ÉÏÉý
-             -ÑØÖÐ¶Ï
-  343   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P5IM1 |=  GPIOx->Pin,    P5IM0 &= ~GPIOx->Pin;     //µÍµç
-             -Æ½ÖÐ¶Ï
-  344   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P5IM1 |=  GPIOx->Pin,    P5IM0 |=  GPIOx->Pin;     //¸ßµç
-             -Æ½ÖÐ¶Ï
-  345   2      
-  346   2              if(GPIOx->WakeUpEn == ENABLE)           P5WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
-  347   2              else                                    P5WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
-  348   2      
-  349   2              if(GPIOx->IntEnable == ENABLE)          P5INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
-  350   2              else                                    P5INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
-  351   2          }
-  352   1      
-  353   1          if(GPIO == GPIO_P6)
-  354   1          {
-  355   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P6IM1 &= ~GPIOx->Pin,    P6IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
-             -ÑØÖÐ¶Ï
-  356   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P6IM1 &= ~GPIOx->Pin,    P6IM0 |=  GPIOx->Pin;     //ÉÏÉý
-             -ÑØÖÐ¶Ï
-  357   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P6IM1 |=  GPIOx->Pin,    P6IM0 &= ~GPIOx->Pin;     //µÍµç
-             -Æ½ÖÐ¶Ï
-  358   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P6IM1 |=  GPIOx->Pin,    P6IM0 |=  GPIOx->Pin;     //¸ßµç
-             -Æ½ÖÐ¶Ï
-  359   2      
-  360   2              if(GPIOx->WakeUpEn == ENABLE)           P6WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
-  361   2              else                                    P6WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
-  362   2      
-  363   2              if(GPIOx->IntEnable == ENABLE)          P6INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
-  364   2              else                                    P6INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
-  365   2          }
-  366   1      
-  367   1          if(GPIO == GPIO_P7)
-  368   1          {
-  369   2              if(GPIOx->Mode == GPIO_FALLING_EDGE)    P7IM1 &= ~GPIOx->Pin,    P7IM0 &= ~GPIOx->Pin;     //ÏÂ½µ
-             -ÑØÖÐ¶Ï
-  370   2              if(GPIOx->Mode == GPIO_RISING_EDGE)     P7IM1 &= ~GPIOx->Pin,    P7IM0 |=  GPIOx->Pin;     //ÉÏÉý
-             -ÑØÖÐ¶Ï
-  371   2              if(GPIOx->Mode == GPIO_LOW_LEVEL)       P7IM1 |=  GPIOx->Pin,    P7IM0 &= ~GPIOx->Pin;     //µÍµç
-             -Æ½ÖÐ¶Ï
-  372   2              if(GPIOx->Mode == GPIO_HIGH_LEVEL)      P7IM1 |=  GPIOx->Pin,    P7IM0 |=  GPIOx->Pin;     //¸ßµç
-             -Æ½ÖÐ¶Ï
-  373   2      
-  374   2              if(GPIOx->WakeUpEn == ENABLE)           P7WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
-  375   2              else                                    P7WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
-  376   2      
-  377   2              if(GPIOx->IntEnable == ENABLE)          P7INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
-  378   2              else                                    P7INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
-  379   2          }
-  380   1      
-  381   1          if(GPIOx->Priority == Priority_0)        PINIPH &= ~(1<<GPIO),    PINIPL &= ~(1<<GPIO);     //ÖÐ¶ÏÓÅÏ
+  196   2      
+  197   2              if(GPIOx->WakeUpEn == ENABLE)           P7WKUE |=  GPIOx->Pin;     //µôµç»½ÐÑÊ¹ÄÜ
+  198   2              else                                    P7WKUE &=  ~GPIOx->Pin;    //µôµç»½ÐÑ½ûÄÜ
+  199   2      
+  200   2              if(GPIOx->IntEnable == ENABLE)          P7INTE |=  GPIOx->Pin;     //ÖÐ¶ÏÊ¹ÄÜ
+  201   2              else                                    P7INTE &=  ~GPIOx->Pin;    //ÖÐ¶Ï½ûÄÜ
+  202   2          }
+  203   1      
+  204   1          if(GPIOx->Priority == Priority_0)        PINIPH &= ~(1<<GPIO),    PINIPL &= ~(1<<GPIO);     //ÖÐ¶ÏÓÅÏ
              -È¼¶Îª0
-  382   1          if(GPIOx->Priority == Priority_1)        PINIPH &= ~(1<<GPIO),    PINIPL |=  (1<<GPIO);     //ÖÐ¶ÏÓÅÏ
+  205   1          if(GPIOx->Priority == Priority_1)        PINIPH &= ~(1<<GPIO),    PINIPL |=  (1<<GPIO);     //ÖÐ¶ÏÓÅÏ
              -È¼¶Îª1
-  383   1          if(GPIOx->Priority == Priority_2)        PINIPH |=  (1<<GPIO),    PINIPL &= ~(1<<GPIO);     //ÖÐ¶ÏÓÅÏ
+  206   1          if(GPIOx->Priority == Priority_2)        PINIPH |=  (1<<GPIO),    PINIPL &= ~(1<<GPIO);     //ÖÐ¶ÏÓÅÏ
              -È¼¶Îª2
-  384   1          if(GPIOx->Priority == Priority_3)        PINIPH |=  (1<<GPIO),    PINIPL |=  (1<<GPIO);     //ÖÐ¶ÏÓÅÏ
+  207   1          if(GPIOx->Priority == Priority_3)        PINIPH |=  (1<<GPIO),    PINIPL |=  (1<<GPIO);     //ÖÐ¶ÏÓÅÏ
              -È¼¶Îª3
-  385   1      
-  386   1          return SUCCESS;    //³É¹¦
-C251 COMPILER V5.60.0,  GPIO                                                               21/05/26  11:01:04  PAGE 8   
+  208   1      
+  209   1          return SUCCESS;    //³É¹¦
+  210   1      }
 
-  387   1      }
 
+C251 COMPILER V5.60.0,  GPIO                                                               12/06/26  11:03:17  PAGE 5   
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      6858     ------
+  ecode size           =      2875     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
   xdata size           =    ------     ------
   xdata-const size     =    ------     ------
-  edata size           =    ------         10
+  edata size           =    ------     ------
   bit size             =    ------     ------
   ebit size            =    ------     ------
   bitaddressable size  =    ------     ------

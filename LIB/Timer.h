@@ -7,7 +7,6 @@
 
 #include "config.h"
 #include "def.h"
-
 typedef struct
 {
     u8 start;
@@ -21,6 +20,7 @@ extern Delay_Ticks ms_delay_ticks;
 u8 Timer_Delay_s(u16 s);
 u8 Timer_Delay_ms(u16 ms);
 void Timer_Delay_us(u16 us);
+
 //========================================================================
 //                             ∂® ±∆˜0…Ë÷√
 //========================================================================

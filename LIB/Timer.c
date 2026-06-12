@@ -8,6 +8,123 @@
 Delay_Ticks s_delay_ticks;
 Delay_Ticks ms_delay_ticks;
 
+/*------------------------------------------------------
+@ function  :   void Timer_Delay_us(u16 us)
+@ describe  :   定时器TIM3延时函数(查询法)
+@ parameter :   u16 us 延时时间(1~1000us)
+@ date      :   2026-3-4
+-------------------------------------------------------*/
+void Timer_Delay_us(u16 us)
+{
+    u32 start, current, elapsed;
+    // 参数范围检查
+    if (us == 0 || us > 1000) 
+    {
+        us = 1;  // 默认最小1us
+    }
+    
+    start = (u16)T3H << 8 + T3L;  // 读取当前计数值
+    
+    // 查询方式等待
+    while (1)
+    {
+        current = (u16)T3H << 8 + T3L;
+        
+        // 处理计数器溢出
+        if (current >= start) 
+        {
+            elapsed = current - start;
+        } 
+        else 
+        {
+            elapsed = (0xFFFF - start) + current + 1;
+        }
+        
+        if (elapsed >= us) 
+        {
+            break;
+        }
+    }
+}
+
+/*------------------------------------------------------
+@ function  :   u8 Timer_Delay_s(u16 s)
+@ describe  :   定时器TIM3延时函数(中断法)
+@ parameter :   u16 s 延时时间(0~1000s)
+@ date      :   2026-3-5
+-------------------------------------------------------*/
+u8 Timer_Delay_s(u16 s)
+{
+    //1.参数范围检查
+    if (s == 0) return 0;
+    else if(s > 1000)
+    {
+        s = 1000;  // 默认最大1000s
+    }
+    
+    //2.启动定时器
+    if(s_delay_ticks.start == 0)
+    {
+        s_delay_ticks.count = 0;    //计数清零
+        s_delay_ticks.end = 0;      //结束标志位清零
+        s_delay_ticks.start = 1;    //开始计数
+        Timer3_Run(1); //启动定时器
+    }
+    
+    if(s_delay_ticks.count >= s)
+    {
+        s_delay_ticks.end = 1;      //到达延时时间
+        s_delay_ticks.start = 0;   //开始标志位清零
+        Timer3_Stop();  //停止定时器
+    }
+    else
+    {
+        s_delay_ticks.end = 0;      //未到达延时时间
+    }
+    
+    //3.返回定时器完成状态
+    return s_delay_ticks.end;   //返回延时状态
+}
+
+/*------------------------------------------------------
+@ function  :   u8 Timer_Delay_ms(u16 ms)
+@ describe  :   定时器TIM4延时函数(中断法)
+@ parameter :   u16 ms 延时时间(0~1000ms)
+@ date      :   2026-3-5
+-------------------------------------------------------*/
+u8 Timer_Delay_ms(u16 ms)
+{
+    //1.参数范围检查
+    if (ms == 0) return 0;
+    else if(ms > 1000)
+    {
+        ms = 1000;  // 默认最大1000ms
+    }
+    
+    //2.启动定时器
+    if(ms_delay_ticks.start == 0)
+    {
+        ms_delay_ticks.count = 0;    //计数清零
+        ms_delay_ticks.end = 0;      //结束标志位清零
+        ms_delay_ticks.start = 1;    //开始计数
+        Timer3_Run(1);  //启动定时器
+    }
+    
+    if(ms_delay_ticks.count >= ms)
+    {
+        ms_delay_ticks.end = 1;     //延时结束标志位
+        ms_delay_ticks.start = 0;   //开始标志位清零
+        Timer3_Stop();  //停止定时器
+    }
+    else
+    {
+        ms_delay_ticks.end = 0;
+    }
+    
+    //3.返回定时器完成状态
+    return ms_delay_ticks.end;
+}
+
 //========================================================================
 // 函数: u8    Timer_Inilize(u8 TIM, TIM_InitTypeDef *TIMx)
 // 描述: 定时器初始化程序.
@@ -113,159 +230,3 @@ u8 Timer_Inilize(u8 TIM, TIM_InitTypeDef xdata *TIMx)
     return FAIL;    //错误
 }
 
-void Timer_Init()
-{
-    /*
-    u8    TIM_Mode;       //工作模式,      TIM_16BitAutoReload,TIM_16Bit,TIM_8BitAutoReload,TIM_16BitAutoReloadNoMask
-    u8    TIM_ClkMode;    //模式选择       TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ext
-    u8    TIM_ClkSource;  //时钟源         TIM_SOURCE_SYSCLK,TIM_SOURCE_HIRC,TIM_SOURCE_X32K,TIM_SOURCE_LIRC
-    u8    TIM_ClkOut;     //定时器时钟输出, ENABLE,DISABLE
-    u16   TIM_Value;      //装载初值
-    u8    TIM_PS;         //8位预分频器
-    u8    TIM_Run;        //是否运行        ENABLE,DISABLE
-    */
-    //配置一个1ms定时
-    TIM_InitTypeDef xdata TIM_Structure;
-    TIM_Structure.TIM_Mode = TIM_16BitAutoReload;   //工作模式
-    TIM_Structure.TIM_ClkMode = TIM_CLOCK_1T;       //定时器时钟源分频
-    TIM_Structure.TIM_ClkSource = TIM_SOURCE_HIRC;  //定时器时钟源
-    TIM_Structure.TIM_PS = 40;                      //预分频
-    TIM_Structure.TIM_Value = 65535 - 1000;         //预装载初值   40MHz / 1 / 40 / 1000 = 1000 Hz
-    TIM_Structure.TIM_ClkOut = ENABLE;
-    TIM_Structure.TIM_Run = ENABLE;
-    Timer_Inilize(Timer11, &TIM_Structure);
-    
-    
-    //配置一个1us定时
-    TIM_Structure.TIM_ClkMode = TIM_CLOCK_1T;       //定时器时钟源分频
-    TIM_Structure.TIM_PS = 1;                       //预分频
-    TIM_Structure.TIM_Value = 65535 - 40;           //预装载初值   40MHz / 1 / 1 / 40 = 1000000 Hz
-    TIM_Structure.TIM_ClkOut = ENABLE;
-    TIM_Structure.TIM_Run = DISABLE;
-    Timer_Inilize(Timer3, &TIM_Structure);
-    
-    //配置一个1s定时
-    TIM_Structure.TIM_ClkMode = TIM_CLOCK_12T;       //定时器时钟源分频
-    TIM_Structure.TIM_PS = 100;                      //预分频
-    TIM_Structure.TIM_Value = 65535 - 33333;         //预装载初值   40MHz / 12 / 100 / 33333 = 1 Hz
-    TIM_Structure.TIM_ClkOut = ENABLE;
-    TIM_Structure.TIM_Run = DISABLE;
-    Timer_Inilize(Timer4, &TIM_Structure);
-}
-
-/*------------------------------------------------------
-@ function  :   oid Timer_Delay_us(u16 us)
-@ describe  :   定时器TIM3延时函数(查询法)
-@ parameter :   u16 us 延时时间(1~1000us)
-@ date      :   2026-3-4
--------------------------------------------------------*/
-void Timer_Delay_us(u16 us)
-{
-    u32 start, current, elapsed;
-    // 参数范围检查
-    if (us == 0 || us > 1000) 
-    {
-        us = 1;  // 默认最小1us
-    }
-    
-    start = (u16)T3H << 8 + T3L;  // 读取当前计数值
-    
-    // 查询方式等待
-    while (1)
-    {
-        current = (u16)T3H << 8 + T3L;
-        
-        // 处理计数器溢出
-        if (current >= start) 
-        {
-            elapsed = current - start;
-        } 
-        else 
-        {
-            elapsed = (0xFFFF - start) + current + 1;
-        }
-        
-        if (elapsed >= us) 
-        {
-            break;
-        }
-    }
-}
-
-/*------------------------------------------------------
-@ function  :   u8 Timer_Delay_s(u16 s)
-@ describe  :   定时器TIM3延时函数(中断法)
-@ parameter :   u16 s 延时时间(0~1000s)
-@ date      :   2026-3-5
--------------------------------------------------------*/
-u8 Timer_Delay_s(u16 s)
-{
-    //1.参数范围检查
-    if (s == 0) return 0;
-    else if(s > 1000)
-    {
-        s = 1000;  // 默认最小1us
-    }
-    
-    //2.启动定时器
-    if(s_delay_ticks.start == 0)
-    {
-        s_delay_ticks.count = 0;    //计数清零
-        s_delay_ticks.end = 0;      //结束标志位清零
-        s_delay_ticks.start = 1;    //开始计数
-        Timer3_Run(1); //启动定时器
-    }
-    
-    if(s_delay_ticks.count >= s)
-    {
-        s_delay_ticks.end = 1;      //到达延时时间
-        s_delay_ticks.start = 0;   //开始标志位清零
-        Timer3_Stop();  //停止定时器
-    }
-    else
-    {
-        s_delay_ticks.end = 0;      //未到达延时时间
-    }
-    
-    //3.返回定时器完成状态
-    return s_delay_ticks.end;   //返回延时状态
-}
-
-/*------------------------------------------------------
-@ function  :   u8 Timer_Delay_ms(u16 ms)
-@ describe  :   定时器TIM4延时函数(中断法)
-@ parameter :   u16 ms 延时时间(0~1000ms)
-@ date      :   2026-3-5
--------------------------------------------------------*/
-u8 Timer_Delay_ms(u16 ms)
-{
-    //1.参数范围检查
-    if (ms == 0) return 0;
-    else if(ms > 1000)
-    {
-        ms = 1000;  // 默认最小1us
-    }
-    
-    //2.启动定时器
-    if(ms_delay_ticks.start == 0)
-    {
-        ms_delay_ticks.count = 0;    //计数清零
-        ms_delay_ticks.end = 0;      //结束标志位清零
-        ms_delay_ticks.start = 1;    //开始计数
-        Timer3_Run(1);  //启动定时器
-    }
-    
-    if(ms_delay_ticks.count >= ms)
-    {
-        ms_delay_ticks.end = 1;     //延时结束标志位
-        ms_delay_ticks.start = 0;   //开始标志位清零
-        Timer3_Stop();  //停止定时器
-    }
-    else
-    {
-        ms_delay_ticks.end = 0;
-    }
-    
-    //3.返回定时器完成状态
-    return ms_delay_ticks.end;
-}

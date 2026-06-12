@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 1   
+C251 COMPILER V5.60.0,  interrpt                                                           12/06/26  11:05:39  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE interrpt
@@ -21,7 +21,7 @@ stmt  level    source
    11          
    12          /*---------------------------------------
    13          @ function  :   void TIM11_ISR() interrupt TMR11_VECTOR
-   14          @ describe  :   ��ʱ�� 11 �жϴ�������
+   14          @ describe  :   Timer 11 Interrupt Handler
    15          @ time      :   1ms
    16          @ parameter :   None
    17          @ date      :   2026-2-24
@@ -30,249 +30,250 @@ stmt  level    source
    20          {
    21   1              if(TCON & 0x20)
    22   1          {
-   23   2              TCON &= ~0x20;  //�������жϱ�־λ
+   23   2              TCON &= ~0x20;  //Clear Timer 11 interrupt flag
    24   2          }
    25   1          
-   26   1          Speed_Update(&g_ctx->motor_speed);     //����ת�١�ռ�ձȵ�
-   27   1          Motor_Speed_Ramp(&g_ctx->motor_speed); //ͨ���ٶ�б�����ߣ������ٶȿ�
-             -���ź�    
-   28   1          /* �������� */  
-   29   1          
+   26   1          Speed_Update(&g_ctx->motor_speed);     //Update motor speed and pwm duty
+   27   1          Motor_Speed_Ramp(&g_ctx->motor_speed); //Ramp motor speed
+   28   1      
+   29   1          /* Protection */  
    30   1          
-   31   1          /* ״̬�� */
-   32   1          State_Machine();
-   33   1          Motor_Run_Stop_Control();
-   34   1      }
-   35          
-   36          /*---------------------------------------
-   37          @ function  :   void TIM4_ISR() interrupt TMR4_VECTOR
-   38          @ describe  :   ��ʱ�� 4 �жϴ�������
-   39          @ time      :   1us
-   40          @ parameter :   None
-   41          @ date      :   2026-3-4
-   42          -----------------------------------------*/
-   43          void TIM4_ISR() interrupt TMR4_VECTOR
-   44                          {
-   45   1          if(AUXINTIF & 0x04)     //�жϷ�������У�Ӳ���Զ�����
-   46   1          {
-   47   2              s_delay_ticks.count++;
-   48   2          }
-   49   1          
-   50   1      }
-   51          
-   52          /*---------------------------------------
-   53          @ function  :   void TIM3_ISR() interrupt TMR4_VECTOR
-   54          @ describe  :   ��ʱ�� 3 �жϴ�������
-   55          @ time      :   1s
-   56          @ parameter :   None
-   57          @ date      :   2026-3-4
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 2   
+   31   1          
+   32   1          /* State Machine */
+   33   1          State_Machine();
+   34   1          Motor_Run_Stop_Control();
+   35   1      }
+   36          
+   37          /*---------------------------------------
+   38          @ function  :   void TIM4_ISR() interrupt TMR4_VECTOR
+   39          @ describe  :   Timer 4 Interrupt Handler
+   40          @ time      :   1us
+   41          @ parameter :   None
+   42          @ date      :   2026-3-4
+   43          -----------------------------------------*/
+   44          void TIM4_ISR() interrupt TMR4_VECTOR
+   45                  {
+   46   1          if(AUXINTIF & 0x04)     //Clear Timer 4 interrupt flag
+   47   1          {
+   48   2              AUXINTIF &= ~0x04;
+   49   2          }
+   50   1          {
+   51   2              s_delay_ticks.count++;
+   52   2          }
+   53   1          
+   54   1      }
+   55          
+   56          /*---------------------------------------
+   57          @ function  :   void TIM3_ISR() interrupt TMR3_VECTOR
+   58          @ describe  :   Timer 3 Interrupt Handler
+C251 COMPILER V5.60.0,  interrpt                                                           12/06/26  11:05:39  PAGE 2   
 
-   58          -----------------------------------------*/
-   59          void TIM3_ISR() interrupt TMR3_VECTOR
-   60          {
-   61   1          
-   62   1      }
-   63          
-   64          /*---------------------------------------
-   65          @ function  :   void ADC_ISR() interrupt ADC_VECTOR
-   66          @ describe  :   ADC�жϴ�������
-   67          @ parameter :   None
-   68          @ date      :   2026-2-27
-   69          -----------------------------------------*/
-   70          void ADC_ISR() interrupt ADC_VECTOR
-   71          {
-   72   1              /*�ж�����*/
-   73   1              //1.��ȡ��������
-   74   1              /*�Ѿ���DMA���Զ�����ADC���������*/
-   75   1              
-   76   1              ADC_CONTR &= ~0x10;     //ADCת��������־λADC_FLAG����
-   77   1          
-   78   1          if(g_ctx->motor_state == motor_run || g_ctx->motor_state == motor_start)
-   79   1          {
-   80   2              /* ������ */
-   81   2              Current_Loop();
-   82   2          }
-   83   1      }
-   84          
-   85          /*---------------------------------------
-   86          @ function  :   void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
-   87          @ describe  :   DMA�жϴ�������
-   88          @ parameter :   None
-   89          @ date      :   2026-2-27
-   90          -----------------------------------------*/
-   91          void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
-   92          {
-   93   1              static u8 i = 4;
-   94   1      
-   95   1              //�����任TLE5012B�Ļ�ȡ��Ϣָ��
-   96   1              SPI_TX_Buffer[i] = g_ctx->tx_cmd_arr[i];
-   97   1              SPI_TX_Buffer[i+1] = g_ctx->tx_cmd_arr[i+1];
-   98   1              i += 2;
-   99   1      
-  100   1              if(DMA_SPI_STA & 0x01)
-  101   1              {
-  102   2                      switch(i)
-  103   2                      {
-  104   3                              case 2:
-  105   3                                      g_ctx->motor_data.machine_angle = (s16)((SPI_RX_Buffer[0] << 8) | SPI_RX_Buffer[1]) * PI_DQ14;
-  106   3                                      while(g_ctx->motor_data.machine_angle > PI)
-  107   3                                          g_ctx->motor_data.machine_angle -= 2 * PI;
-  108   3                                      while(g_ctx->motor_data.machine_angle < -PI)
-  109   3                                          g_ctx->motor_data.machine_angle += 2 * PI;
-  110   3                                      g_ctx->motor_data.electrical_angle = g_ctx->motor_data.machine_angle * MOTOR_POLE_PAIRS;
-  111   3                                      break;
-  112   3                              
-  113   3                              case 4:
-  114   3                                      g_ctx->motor_data.speed = (s16)((SPI_RX_Buffer[0] << 8) | SPI_RX_Buffer[1]) * 60;
-  115   3                                      g_ctx->motor_data.loop  = (SPI_RX_Buffer[2] << 8) | SPI_RX_Buffer[3];
-  116   3                                      break;
-  117   3                              
-  118   3                              default:
-  119   3                                      break;
-  120   3                      }
-  121   2                      
-  122   2                      DMA_SPI_STA = DMA_SPI_STA & ~0x01;                                                      //�жϱ�־λ����
-  123   2              if(i > 7)       //�ظ�TLE5012B��ָ�������±�
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 3   
+   59          @ time      :   1s
+   60          @ parameter :   None
+   61          @ date      :   2026-3-4
+   62          -----------------------------------------*/
+   63          void TIM3_ISR() interrupt TMR3_VECTOR
+   64          {
+   65   1          
+   66   1      }
+   67          
+   68          /*---------------------------------------
+   69          @ function  :   void ADC_ISR() interrupt ADC_VECTOR
+   70          @ describe  :   ADC Interrupt Handler
+   71          @ parameter :   None
+   72          @ date      :   2026-2-27
+   73          -----------------------------------------*/
+   74          void ADC_ISR() interrupt ADC_VECTOR
+   75          {
+   76   1              //1.Obtain current sampling results
+   77   1      
+   78   1              /*Auto sampling the current in dma */
+   79   1              
+   80   1              ADC_CONTR &= ~0x10;     //Clear ADC convert finish interrupt flag
+   81   1          
+   82   1          if(g_ctx->motor_state == motor_run || g_ctx->motor_state == motor_start)
+   83   1          {
+   84   2              /* Current Loop */
+   85   2              Current_Loop();
+   86   2          }
+   87   1      }
+   88          
+   89          /*---------------------------------------
+   90          @ function  :   void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
+   91          @ describe  :   DMA Interrupt Handler
+   92          @ parameter :   None
+   93          @ date      :   2026-2-27
+   94          -----------------------------------------*/
+   95          void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
+   96          {
+   97   1              static u8 i = 4;
+   98   1      
+   99   1              if(DMA_SPI_STA & 0x01)//SPI_DMA interrupt flag (SPIIF)
+  100   1              {
+  101   2              //Change the CMD of magenitic encoder for the next data acquisition
+  102   2              SPI_TX_Buffer[i] = g_ctx->tx_cmd_arr[i];
+  103   2                  SPI_TX_Buffer[i+1] = g_ctx->tx_cmd_arr[i+1];
+  104   2                  i += 2;
+  105   2      
+  106   2                      switch(i)
+  107   2                      {
+  108   3                              case 2:
+  109   3                                      g_ctx->motor_data.machine_angle = (s16)((SPI_RX_Buffer[0] << 8) | SPI_RX_Buffer[1]) * PI_DQ14;
+  110   3                                      while(g_ctx->motor_data.machine_angle > PI)
+  111   3                                          g_ctx->motor_data.machine_angle -= 2 * PI;
+  112   3                                      while(g_ctx->motor_data.machine_angle < -PI)
+  113   3                                          g_ctx->motor_data.machine_angle += 2 * PI;
+  114   3                                      g_ctx->motor_data.electrical_angle = g_ctx->motor_data.machine_angle * MOTOR_POLE_PAIRS;
+  115   3                                      break;
+  116   3                              
+  117   3                              case 4:
+  118   3                                      g_ctx->motor_data.speed = (s16)((SPI_RX_Buffer[0] << 8) | SPI_RX_Buffer[1]) * 60;
+  119   3                                      g_ctx->motor_data.loop  = (SPI_RX_Buffer[2] << 8) | SPI_RX_Buffer[3];
+  120   3                                      break;
+  121   3                              
+  122   3                              default:
+  123   3                                      break;
+  124   3                      }
+C251 COMPILER V5.60.0,  interrpt                                                           12/06/26  11:05:39  PAGE 3   
 
-  124   2              {
-  125   3                  i = 4;
-  126   3              }
-  127   2              }
-  128   1              
-  129   1                      if(DMA_SPI_STA & 0x02)  DMA_SPI_STA = DMA_SPI_STA & ~0x02;  //�������Զ�������
-             -����λ����
-  130   1                      if(DMA_SPI_STA & 0x04)  DMA_SPI_STA = DMA_SPI_STA & ~0x04;      //���ݸ�д���´���ʧ��
-             -�ı�־λ����
-  131   1              
-  132   1              
-  133   1      }
-  134          
-  135          
-  136          /*------------------------------------------------------------
-  137          @ function  :   void PWMB_Capture() interrupt PWMB_VECTOR
-  138          @ describe  :   PWMB����/�Ƚ��жϴ�������
-  139          @ parameter :   None
-  140          @ date      :   2026-3-2
-  141          -------------------------------------------------------------*/
-  142          static u16 xdata cc1 = 0, cc2 = 0;
-  143          static u16 xdata cc1_last = 0;
-  144          static u16 xdata cc1_rise_last = 0;
-  145          static u16 xdata count = 0;
-  146          
-  147          static volatile u32 xdata period_ticks = 0;
-  148          static volatile u32 xdata high_ticks = 0;
-  149          
+  125   2                      
+  126   2                      DMA_SPI_STA = DMA_SPI_STA & ~0x01;                                                      //clear SPI DMA transfer complete flag
+  127   2      
+  128   2              if(i > 7)       //repete the SPI transmission for the next data acquisition after finishing the current
+             - data acquisition
+  129   2              {
+  130   3                  i = 4;
+  131   3              }
+  132   2              }
+  133   1              
+  134   1                      if(DMA_SPI_STA & 0x02)  DMA_SPI_STA = DMA_SPI_STA & ~0x02;  //clear SPI DMA transfer error flag
+  135   1                      if(DMA_SPI_STA & 0x04)  DMA_SPI_STA = DMA_SPI_STA & ~0x04;      //clear SPI DMA receive complete flag
+  136   1              
+  137   1      }
+  138          
+  139          
+  140          /*------------------------------------------------------------
+  141          @ function  :   void PWMB_Capture() interrupt PWMB_VECTOR
+  142          @ describe  :   PWMB Capture Interrupt Handler
+  143          @ parameter :   None
+  144          @ date      :   2026-3-2
+  145          -------------------------------------------------------------*/
+  146          static u16 xdata cc1 = 0, cc2 = 0;
+  147          static u16 xdata cc1_last = 0;
+  148          static u16 xdata cc1_rise_last = 0;
+  149          static u16 xdata count = 0;
   150          
-  151          void PWMB_Capture() interrupt PWMB_VECTOR
-  152          {
-  153   1          u8 sr1 = 0;
-  154   1          u32 total_ticks = 0;
-  155   1          u32 high_ticks_temp = 0;
-  156   1          
-  157   1          sr1 = ReadPWMB(PWMB_SR1);
-  158   1          
-  159   1          //1.1 ���������жϣ������
-  160   1          if(sr1 & 0x01)
-  161   1          {
-  162   2              count++;
-  163   2              if(count > 65535)
-  164   2              {
-  165   3                  count = 65535;
-  166   3              }
-  167   2          }
-  168   1          
-  169   1          //1.2 �������������ж�
-  170   1          if(sr1 & 0x04)      //PWM6�����������أ�
-  171   1          {
-  172   2              cc1 = ReadPWMB((u8)(&PWMB_CCR6H));    //�첽��ȡ�Ĵ�������
-  173   2              cc1 = (cc1 << 8) | ReadPWMB((u8)&PWMB_CCR6L);
-  174   2              if(cc1_last != 0)
-  175   2              {
-  176   3                  if(cc1 >= cc1_last)     //û�������ʹ�õ�ǰ��count
-  177   3                  {
-  178   4                      total_ticks = (u32)count * 65536 + (cc1 - cc1_last);
-  179   4                  }
-  180   3                  else                    //�����
-  181   3                  {
-  182   4                      if(count > 0)       //һ����������
-  183   4                      {
-  184   5                          total_ticks = (u32)(count - 1) * 65536 + (65536 - cc1_last + cc1);
-  185   5                      }
-  186   4                      else if(count == 0) //���˲�䲶������
-  187   4                      {
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 4   
+  151          static volatile u32 xdata period_ticks = 0;
+  152          static volatile u32 xdata high_ticks = 0;
+  153          
+  154          void PWMB_Capture() interrupt PWMB_VECTOR
+  155          {
+  156   1          u8 sr1 = 0;
+  157   1          u32 total_ticks = 0;
+  158   1          u32 high_ticks_temp = 0;
+  159   1          
+  160   1          //read status register
+  161   1          sr1 = ReadPWMB(PWMB_SR1);
+  162   1          
+  163   1          //1. Update interrupt
+  164   1          if(sr1 & PWM_UIE)
+  165   1          {
+  166   2              count++;
+  167   2              if(count > 65535)
+  168   2              {
+  169   3                  count = 65535;
+  170   3              }
+  171   2              // WritePWMB(PWMB_SR1, 0x00);  //clear update interrupt flag
+  172   2          }
+  173   1          
+  174   1          //2.Capture compare interrupt
+  175   1          if(sr1 & PWM_CC6IE)      //Capture rising edge interrupt flag
+  176   1          {
+  177   2              cc1 = ReadPWMB((u8)(&PWMB_CCR6H));    //Read PWM capture register
+  178   2              cc1 = (cc1 << 8) | ReadPWMB((u8)&PWMB_CCR6L);
+  179   2              if(cc1_last != 0)
+  180   2              {
+  181   3                  if(cc1 >= cc1_last)     //without overflow
+  182   3                  {
+  183   4                      total_ticks = (u32)count * 65536 + (cc1 - cc1_last);
+  184   4                  }
+  185   3                  else                    //with overflow
+  186   3                  {
+  187   4                      if(count > 0)       //one overflow occurred
+  188   4                      {
+  189   5                          total_ticks = (u32)(count - 1) * 65536 + (65536 - cc1_last + cc1);
+C251 COMPILER V5.60.0,  interrpt                                                           12/06/26  11:05:39  PAGE 4   
 
-  188   5                          total_ticks = (u32)(65536 - cc1_last + cc1);
-  189   5                      }
-  190   4                  }
-  191   3              }
-  192   2              
-  193   2              period_ticks = total_ticks;
-  194   2              count = 0;      //�����������λ
-  195   2          }
-  196   1          cc1_last = cc1;     //������һ�ε�ֵ
-  197   1          cc1_rise_last = cc1;
-  198   1          
-  199   1          //2.1 �������������ж�
-  200   1          if(sr1 & 0x08)     //PWM7�������½��أ�
-  201   1          {
-  202   2              cc2 = ReadPWMB((u8)(&PWMB_CCR7H));    //�첽��ȡ�Ĵ�������
-  203   2              cc2 = (cc2 << 8) | ReadPWMB((u8)(&PWMB_CCR7L));
-  204   2              
-  205   2              //����ߵ�ƽʱ��
-  206   2              if(cc1_rise_last != 0)
-  207   2              {
-  208   3                  if(cc2 >= cc1_rise_last)
-  209   3                  {
-  210   4                      high_ticks_temp = count * 65536ul + (cc2 - cc1_rise_last);
-  211   4                  }
-  212   3                  else
+  190   5                      }
+  191   4                      else if(count == 0) //no overflow occurred
+  192   4                      {
+  193   5                          total_ticks = (u32)(65536 - cc1_last + cc1);
+  194   5                      }
+  195   4                  }
+  196   3              }
+  197   2              
+  198   2              period_ticks = total_ticks;
+  199   2              count = 0;      //reset overflow counter
+  200   2          }
+  201   1          cc1_last = cc1;     //update the last captured value
+  202   1          cc1_rise_last = cc1;
+  203   1      
+  204   1          if(sr1 & PWM_CC7IE)     //capthure falling edge interrupt
+  205   1          {
+  206   2              cc2 = ReadPWMB((u8)(&PWMB_CCR7H));
+  207   2              cc2 = (cc2 << 8) | ReadPWMB((u8)(&PWMB_CCR7L));
+  208   2              
+  209   2              //calculate high level time
+  210   2              if(cc1_rise_last != 0)
+  211   2              {
+  212   3                  if(cc2 >= cc1_rise_last)
   213   3                  {
-  214   4                      if(count > 0)
-  215   4                      {
-  216   5                          high_ticks_temp = (u32)(count - 1) * 65536 + (65536 - cc1_rise_last + cc2);
-  217   5                      }
-  218   4                      else
+  214   4                      high_ticks_temp = count * 65536ul + (cc2 - cc1_rise_last);
+  215   4                  }
+  216   3                  else
+  217   3                  {
+  218   4                      if(count > 0)
   219   4                      {
-  220   5                          high_ticks_temp = (u32)(65536 + (65536 - cc1_rise_last + cc2));
+  220   5                          high_ticks_temp = (u32)(count - 1) * 65536 + (65536 - cc1_rise_last + cc2);
   221   5                      }
-  222   4                  }
-  223   3                  high_ticks = high_ticks_temp;
-  224   3                  
-  225   3                  // ������������ݣ�������������
-  226   3              }
-  227   2          }
-  228   1          
-  229   1          /* ���㲶��PWM�źŵ�Ƶ����ռ�ձ� */
-  230   1          g_ctx->motor_speed.pwm_freq = PWMB_SOURCE_FREQUENCY / period_ticks;
-  231   1          if(high_ticks <= period_ticks)
-  232   1          {
-  233   2              g_ctx->motor_speed.pwm_duty = high_ticks * PWM_DUTY_BASE / period_ticks;
-  234   2          }
-  235   1          else
-  236   1          {
-  237   2              g_ctx->motor_speed.pwm_duty = 0;   //�������
-  238   2          }
-  239   1          
-  240   1          
-  241   1          // ����жϱ�־
-  242   1          WritePWMB((u8)(&PWMB_SR1), 0x00);
+  222   4                      else
+  223   4                      {
+  224   5                          high_ticks_temp = (u32)(65536 + (65536 - cc1_rise_last + cc2));
+  225   5                      }
+  226   4                  }
+  227   3                  high_ticks = high_ticks_temp;
+  228   3      
+  229   3              }
+  230   2          }
+  231   1          
+  232   1          /* calculate PWM frequency and duty cycle */
+  233   1          g_ctx->motor_speed.pwm_freq = PWMB_SOURCE_FREQUENCY / period_ticks;
+  234   1          if(high_ticks <= period_ticks)
+  235   1          {
+  236   2              g_ctx->motor_speed.pwm_duty = high_ticks * PWM_DUTY_BASE / period_ticks;
+  237   2          }
+  238   1          else
+  239   1          {
+  240   2              g_ctx->motor_speed.pwm_duty = 0;   //case error, set duty to 0
+  241   2          }
+  242   1          
   243   1          
-  244   1      }
+  244   1          // clear capture compare interrupt flags
+  245   1          WritePWMB(PWMB_SR1, 0x00);
+  246   1          
+  247   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =        24     ------
-  ecode size           =      1325     ------
+  ecode size           =      1333     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =        16     ------
-C251 COMPILER V5.60.0,  interrpt                                                           22/05/26  15:11:34  PAGE 5   
+C251 COMPILER V5.60.0,  interrpt                                                           12/06/26  11:05:39  PAGE 5   
 
+  xdata size           =        16     ------
   xdata-const size     =    ------     ------
   edata size           =         3          5
   bit size             =    ------     ------

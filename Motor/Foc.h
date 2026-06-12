@@ -34,7 +34,7 @@ typedef struct
 	uint16_t execution_frequency;			//Ö´ÐÐÆµÂÊ(ËÙ¶È»·ÆµÂÊ)
 }Speed_Ramp;
 
-//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+
 void Current_Loop(void);
 void PID(PID_Structure xdata *pid_structure);
 void SVPWM(Alpha_Beta_Axis_Voltage xdata *alpha_beta_voltage, float v_bus, float T_pwm);

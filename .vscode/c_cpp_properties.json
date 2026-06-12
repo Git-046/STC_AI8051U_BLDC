@@ -43,7 +43,7 @@
             "name": "Target_1",
             "cStandard": "c89",
             "cppStandard": "c++17",
-            "intelliSenseMode": "${default}",
+            "intelliSenseMode": "gcc-x86",
             "includePath": [
                 "D:/Keil_v5/C251/INC",
                 "LIB",

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  Foc                                                                22/05/26  15:11:34  PAGE 1   
+C251 COMPILER V5.60.0,  Foc                                                                12/06/26  11:03:19  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE Foc
@@ -66,7 +66,7 @@ stmt  level    source
    56   1          if (angle_rad >= TWO_PI)     angle_rad -= TWO_PI;
    57   1          idx = (uint16)(angle_rad * INDEX_SCALE);
    58   1          return SIN_TABLE_Q15[idx & 0xFF];
-C251 COMPILER V5.60.0,  Foc                                                                22/05/26  15:11:34  PAGE 2   
+C251 COMPILER V5.60.0,  Foc                                                                12/06/26  11:03:19  PAGE 2   
 
    59   1      }
    60          
@@ -134,7 +134,7 @@ stmt  level    source
   118   2              g_ctx->pid_d.I_EN_FLAG = 0;
   119   2              g_ctx->pid_q.I_EN_FLAG = 0;
   120   2              /* voltage limit */
-C251 COMPILER V5.60.0,  Foc                                                                22/05/26  15:11:34  PAGE 3   
+C251 COMPILER V5.60.0,  Foc                                                                12/06/26  11:03:19  PAGE 3   
 
   121   2              g_ctx->dq_voltage_ctl_limit.voltage_d = g_ctx->dq_voltage_ctl.voltage_d * ModulationRatio;
   122   2              g_ctx->dq_voltage_ctl_limit.voltage_q = g_ctx->dq_voltage_ctl.voltage_q * ModulationRatio;
@@ -202,7 +202,7 @@ stmt  level    source
   178   2                      break;
   179   2              case 5:  // Vu>0, Vv<0, Vw>0
   180   2                      timeA = (uint16)((T_pwm - x + y) / 4);
-C251 COMPILER V5.60.0,  Foc                                                                22/05/26  15:11:34  PAGE 4   
+C251 COMPILER V5.60.0,  Foc                                                                12/06/26  11:03:19  PAGE 4   
 
   181   2                      timeB = (uint16)((T_pwm + x + y) / 4);
   182   2                      timeC = (uint16)((T_pwm + x - y) / 4);
@@ -270,7 +270,7 @@ stmt  level    source
   241   1          //derivative
   242   1          pid_structure->D_out = (pid_structure->error - pid_structure->pre_error) * pid_structure->D_gain;
   243   1          pid_structure->pre_error = pid_structure->error;
-C251 COMPILER V5.60.0,  Foc                                                                22/05/26  15:11:34  PAGE 5   
+C251 COMPILER V5.60.0,  Foc                                                                12/06/26  11:03:19  PAGE 5   
 
   244   1      
   245   1          //output
@@ -338,7 +338,7 @@ stmt  level    source
   307   2              {
   308   3                  if(speed->motor_speed - speed->target_speed < -speed->deceleration_speed)
   309   3                  {
-C251 COMPILER V5.60.0,  Foc                                                                22/05/26  15:11:34  PAGE 6   
+C251 COMPILER V5.60.0,  Foc                                                                12/06/26  11:03:19  PAGE 6   
 
   310   4                      speed->set_speed += speed->deceleration_speed;
   311   4                  }

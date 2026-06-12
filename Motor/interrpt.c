@@ -11,7 +11,7 @@
 
 /*---------------------------------------
 @ function  :   void TIM11_ISR() interrupt TMR11_VECTOR
-@ describe  :   ��ʱ�� 11 �жϴ�������
+@ describe  :   Timer 11 Interrupt Handler
 @ time      :   1ms
 @ parameter :   None
 @ date      :   2026-2-24
@@ -20,29 +20,33 @@ void TIM11_ISR() interrupt TMR11_VECTOR
 {
 	if(TCON & 0x20)
     {
-        TCON &= ~0x20;  //�������жϱ�־λ
+        TCON &= ~0x20;  //Clear Timer 11 interrupt flag
     }
     
-    Speed_Update(&g_ctx->motor_speed);     //����ת�١�ռ�ձȵ�
-    Motor_Speed_Ramp(&g_ctx->motor_speed); //ͨ���ٶ�б�����ߣ������ٶȿ����ź�    
-    /* �������� */  
+    Speed_Update(&g_ctx->motor_speed);     //Update motor speed and pwm duty
+    Motor_Speed_Ramp(&g_ctx->motor_speed); //Ramp motor speed
+
+    /* Protection */  
     
     
-    /* ״̬�� */
+    /* State Machine */
     State_Machine();
     Motor_Run_Stop_Control();
 }
 
 /*---------------------------------------
 @ function  :   void TIM4_ISR() interrupt TMR4_VECTOR
-@ describe  :   ��ʱ�� 4 �жϴ�������
+@ describe  :   Timer 4 Interrupt Handler
 @ time      :   1us
 @ parameter :   None
 @ date      :   2026-3-4
 -----------------------------------------*/
 void TIM4_ISR() interrupt TMR4_VECTOR
-		{
-    if(AUXINTIF & 0x04)     //�жϷ�������У�Ӳ���Զ�����
+	{
+    if(AUXINTIF & 0x04)     //Clear Timer 4 interrupt flag
+    {
+        AUXINTIF &= ~0x04;
+    }
     {
         s_delay_ticks.count++;
     }
@@ -50,8 +54,8 @@ void TIM4_ISR() interrupt TMR4_VECTOR
 }
 
 /*---------------------------------------
-@ function  :   void TIM3_ISR() interrupt TMR4_VECTOR
-@ describe  :   ��ʱ�� 3 �жϴ�������
+@ function  :   void TIM3_ISR() interrupt TMR3_VECTOR
+@ describe  :   Timer 3 Interrupt Handler
 @ time      :   1s
 @ parameter :   None
 @ date      :   2026-3-4
@@ -63,28 +67,28 @@ void TIM3_ISR() interrupt TMR3_VECTOR
 
 /*---------------------------------------
 @ function  :   void ADC_ISR() interrupt ADC_VECTOR
-@ describe  :   ADC�жϴ�������
+@ describe  :   ADC Interrupt Handler
 @ parameter :   None
 @ date      :   2026-2-27
 -----------------------------------------*/
 void ADC_ISR() interrupt ADC_VECTOR
 {
-	/*�ж�����*/
-	//1.��ȡ��������
-	/*�Ѿ���DMA���Զ�����ADC���������*/
+	//1.Obtain current sampling results
+
+	/*Auto sampling the current in dma */
 	
-	ADC_CONTR &= ~0x10;	//ADCת��������־λADC_FLAG����
+	ADC_CONTR &= ~0x10;	//Clear ADC convert finish interrupt flag
     
     if(g_ctx->motor_state == motor_run || g_ctx->motor_state == motor_start)
     {
-        /* ������ */
+        /* Current Loop */
         Current_Loop();
     }
 }
 
 /*---------------------------------------
 @ function  :   void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
-@ describe  :   DMA�жϴ�������
+@ describe  :   DMA Interrupt Handler
 @ parameter :   None
 @ date      :   2026-2-27
 -----------------------------------------*/
@@ -92,13 +96,13 @@ void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
 {
 	static u8 i = 4;
 
-	//�����任TLE5012B�Ļ�ȡ��Ϣָ��
-	SPI_TX_Buffer[i] = g_ctx->tx_cmd_arr[i];
-	SPI_TX_Buffer[i+1] = g_ctx->tx_cmd_arr[i+1];
-	i += 2;
-
-	if(DMA_SPI_STA & 0x01)
+	if(DMA_SPI_STA & 0x01)//SPI_DMA interrupt flag (SPIIF)
 	{
+        //Change the CMD of magenitic encoder for the next data acquisition
+        SPI_TX_Buffer[i] = g_ctx->tx_cmd_arr[i];
+	    SPI_TX_Buffer[i+1] = g_ctx->tx_cmd_arr[i+1];
+	    i += 2;
+
 		switch(i)
 		{
 			case 2:
@@ -119,23 +123,23 @@ void DMA_SPI_isr() interrupt DMA_SPI_VECTOR
 				break;
 		}
 		
-		DMA_SPI_STA = DMA_SPI_STA & ~0x01;							//�жϱ�־λ����
-        if(i > 7)	//�ظ�TLE5012B��ָ�������±�
+		DMA_SPI_STA = DMA_SPI_STA & ~0x01;							//clear SPI DMA transfer complete flag
+
+        if(i > 7)	//repete the SPI transmission for the next data acquisition after finishing the current data acquisition
         {
             i = 4;
         }
 	}
 	
-		if(DMA_SPI_STA & 0x02)	DMA_SPI_STA = DMA_SPI_STA & ~0x02;  //�������Զ���������λ����
-		if(DMA_SPI_STA & 0x04)  DMA_SPI_STA = DMA_SPI_STA & ~0x04;	//���ݸ�д���´���ʧ�ܵı�־λ����
-	
+		if(DMA_SPI_STA & 0x02)	DMA_SPI_STA = DMA_SPI_STA & ~0x02;  //clear SPI DMA transfer error flag
+		if(DMA_SPI_STA & 0x04)  DMA_SPI_STA = DMA_SPI_STA & ~0x04;	//clear SPI DMA receive complete flag
 	
 }
 
 
 /*------------------------------------------------------------
 @ function  :   void PWMB_Capture() interrupt PWMB_VECTOR
-@ describe  :   PWMB����/�Ƚ��жϴ�������
+@ describe  :   PWMB Capture Interrupt Handler
 @ parameter :   None
 @ date      :   2026-3-2
 -------------------------------------------------------------*/
@@ -147,43 +151,44 @@ static u16 xdata count = 0;
 static volatile u32 xdata period_ticks = 0;
 static volatile u32 xdata high_ticks = 0;
 
-
 void PWMB_Capture() interrupt PWMB_VECTOR
 {
     u8 sr1 = 0;
     u32 total_ticks = 0;
     u32 high_ticks_temp = 0;
     
+    //read status register
     sr1 = ReadPWMB(PWMB_SR1);
     
-    //1.1 ���������жϣ������
-    if(sr1 & 0x01)
+    //1. Update interrupt
+    if(sr1 & PWM_UIE)
     {
         count++;
         if(count > 65535)
         {
             count = 65535;
         }
+        // WritePWMB(PWMB_SR1, 0x00);  //clear update interrupt flag
     }
     
-    //1.2 �������������ж�
-    if(sr1 & 0x04)      //PWM6�����������أ�
+    //2.Capture compare interrupt
+    if(sr1 & PWM_CC6IE)      //Capture rising edge interrupt flag
     {
-        cc1 = ReadPWMB((u8)(&PWMB_CCR6H));    //�첽��ȡ�Ĵ�������
+        cc1 = ReadPWMB((u8)(&PWMB_CCR6H));    //Read PWM capture register
         cc1 = (cc1 << 8) | ReadPWMB((u8)&PWMB_CCR6L);
         if(cc1_last != 0)
         {
-            if(cc1 >= cc1_last)     //û�������ʹ�õ�ǰ��count
+            if(cc1 >= cc1_last)     //without overflow
             {
                 total_ticks = (u32)count * 65536 + (cc1 - cc1_last);
             }
-            else                    //�����
+            else                    //with overflow
             {
-                if(count > 0)       //һ����������
+                if(count > 0)       //one overflow occurred
                 {
                     total_ticks = (u32)(count - 1) * 65536 + (65536 - cc1_last + cc1);
                 }
-                else if(count == 0) //���˲�䲶������
+                else if(count == 0) //no overflow occurred
                 {
                     total_ticks = (u32)(65536 - cc1_last + cc1);
                 }
@@ -191,18 +196,17 @@ void PWMB_Capture() interrupt PWMB_VECTOR
         }
         
         period_ticks = total_ticks;
-        count = 0;      //�����������λ
+        count = 0;      //reset overflow counter
     }
-    cc1_last = cc1;     //������һ�ε�ֵ
+    cc1_last = cc1;     //update the last captured value
     cc1_rise_last = cc1;
-    
-    //2.1 �������������ж�
-    if(sr1 & 0x08)     //PWM7�������½��أ�
+
+    if(sr1 & PWM_CC7IE)     //capthure falling edge interrupt
     {
-        cc2 = ReadPWMB((u8)(&PWMB_CCR7H));    //�첽��ȡ�Ĵ�������
+        cc2 = ReadPWMB((u8)(&PWMB_CCR7H));
         cc2 = (cc2 << 8) | ReadPWMB((u8)(&PWMB_CCR7L));
         
-        //����ߵ�ƽʱ��
+        //calculate high level time
         if(cc1_rise_last != 0)
         {
             if(cc2 >= cc1_rise_last)
@@ -221,12 +225,11 @@ void PWMB_Capture() interrupt PWMB_VECTOR
                 }
             }
             high_ticks = high_ticks_temp;
-            
-            // ������������ݣ�������������
+
         }
     }
     
-    /* ���㲶��PWM�źŵ�Ƶ����ռ�ձ� */
+    /* calculate PWM frequency and duty cycle */
     g_ctx->motor_speed.pwm_freq = PWMB_SOURCE_FREQUENCY / period_ticks;
     if(high_ticks <= period_ticks)
     {
@@ -234,11 +237,11 @@ void PWMB_Capture() interrupt PWMB_VECTOR
     }
     else
     {
-        g_ctx->motor_speed.pwm_duty = 0;   //�������
+        g_ctx->motor_speed.pwm_duty = 0;   //case error, set duty to 0
     }
     
     
-    // ����жϱ�־
-    WritePWMB((u8)(&PWMB_SR1), 0x00);
+    // clear capture compare interrupt flags
+    WritePWMB(PWMB_SR1, 0x00);
     
 }

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  Soft_UART                                                          21/05/26  11:01:05  PAGE 1   
+C251 COMPILER V5.60.0,  Soft_UART                                                          12/06/26  11:03:18  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE Soft_UART
@@ -66,7 +66,7 @@ stmt  level    source
    56   2              }
    57   1              P_TXD = 1;
    58   1              EA = 1;
-C251 COMPILER V5.60.0,  Soft_UART                                                          21/05/26  11:01:05  PAGE 2   
+C251 COMPILER V5.60.0,  Soft_UART                                                          12/06/26  11:03:18  PAGE 2   
 
    59   1              BitTime();
    60   1              BitTime();
